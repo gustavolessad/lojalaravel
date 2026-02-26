@@ -69,12 +69,49 @@ class ProductList extends Component
             ->where('active', true)
             ->whereHas('categories', fn ($q) => $q->whereIn('categories.id', $this->categoryIds));
 
-        // Filtro de preço
-        if ($this->minPrice !== '') {
-            $query->where('price', '>=', (float) $this->minPrice);
-        }
-        if ($this->maxPrice !== '') {
-            $query->where('price', '<=', (float) $this->maxPrice);
+        // Filtro de preço — considera preço efetivo (promoção + herança variante→produto)
+        if ($this->minPrice !== '' || $this->maxPrice !== '') {
+            $min = $this->minPrice !== '' ? (float) $this->minPrice : null;
+            $max = $this->maxPrice !== '' ? (float) $this->maxPrice : null;
+
+            // Preço efetivo do produto (respeita datas de promoção)
+            $productPrice = "CASE
+                WHEN products.sale_price IS NOT NULL
+                    AND (products.sale_start IS NULL OR products.sale_start <= NOW())
+                    AND (products.sale_end IS NULL OR products.sale_end >= NOW())
+                THEN products.sale_price
+                ELSE products.price
+            END";
+
+            // Preço efetivo da variante: sale_price > price > preço efetivo do produto pai
+            $variantPrice = "COALESCE(
+                product_variants.sale_price,
+                product_variants.price,
+                (SELECT CASE
+                    WHEN p.sale_price IS NOT NULL
+                        AND (p.sale_start IS NULL OR p.sale_start <= NOW())
+                        AND (p.sale_end IS NULL OR p.sale_end >= NOW())
+                    THEN p.sale_price ELSE p.price
+                 END FROM products p WHERE p.id = product_variants.product_id)
+            )";
+
+            $query->where(function ($q) use ($min, $max, $productPrice, $variantPrice) {
+                // Produto simples: filtra pelo preço efetivo do produto
+                $q->where(function ($q) use ($min, $max, $productPrice) {
+                    $q->where('type', 'simple');
+                    if ($min !== null) $q->whereRaw("($productPrice) >= ?", [$min]);
+                    if ($max !== null) $q->whereRaw("($productPrice) <= ?", [$max]);
+                })
+                // Produto variável: alguma variante ativa com preço efetivo no intervalo
+                ->orWhere(function ($q) use ($min, $max, $variantPrice) {
+                    $q->where('type', 'variable')
+                      ->whereHas('variants', function ($q) use ($min, $max, $variantPrice) {
+                          $q->where('active', true);
+                          if ($min !== null) $q->whereRaw("($variantPrice) >= ?", [$min]);
+                          if ($max !== null) $q->whereRaw("($variantPrice) <= ?", [$max]);
+                      });
+                });
+            });
         }
 
         // Filtro de estoque
@@ -250,9 +287,17 @@ class ProductList extends Component
         $base = Product::where('active', true)
             ->whereHas('categories', fn ($q) => $q->whereIn('categories.id', $this->categoryIds));
 
+        $effectivePrice = "CASE
+            WHEN sale_price IS NOT NULL
+                AND (sale_start IS NULL OR sale_start <= NOW())
+                AND (sale_end IS NULL OR sale_end >= NOW())
+            THEN sale_price
+            ELSE price
+        END";
+
         return [
-            'min' => (float) ($base->min('price') ?? 0),
-            'max' => (float) ($base->max('price') ?? 9999),
+            'min' => (float) ($base->clone()->selectRaw("MIN($effectivePrice) as ep")->value('ep') ?? 0),
+            'max' => (float) ($base->clone()->selectRaw("MAX($effectivePrice) as ep")->value('ep') ?? 9999),
         ];
     }
 

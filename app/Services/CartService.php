@@ -37,7 +37,7 @@ class CartService
         $variant = $variantId ? ProductVariant::findOrFail($variantId) : null;
 
         $unitPrice = $variant
-            ? (float) ($variant->price ?? $product->getCurrentPrice())
+            ? $variant->getEffectivePrice()
             : $product->getCurrentPrice();
 
         $item = $cart->items()

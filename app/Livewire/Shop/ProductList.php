@@ -184,8 +184,15 @@ class ProductList extends Component
                     $imageUrl = $product->getFirstMediaUrl('cover') ?: null;
                 }
 
-                $price         = $variant ? $variant->getEffectivePrice() : $product->getCurrentPrice();
-                $originalPrice = ($variant && $variant->isOnSale()) ? (float) $variant->price : null;
+                if ($variant && $variant->price !== null) {
+                    // Variante tem preço próprio
+                    $price         = $variant->getEffectivePrice();
+                    $originalPrice = $variant->isOnSale() ? (float) $variant->price : null;
+                } else {
+                    // Variante sem preço — herda do produto pai
+                    $price         = $product->getCurrentPrice();
+                    $originalPrice = $product->isOnSale() ? (float) $product->price : null;
+                }
 
                 $entries->push(new CatalogEntry(
                     product:       $product,

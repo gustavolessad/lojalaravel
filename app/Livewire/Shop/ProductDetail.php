@@ -115,15 +115,16 @@ class ProductDetail extends Component
     #[Computed]
     public function originalPrice(): ?float
     {
-        if ($this->currentVariant?->isOnSale()) {
-            return (float) $this->currentVariant->price;
+        if ($this->currentVariant) {
+            if ($this->currentVariant->price !== null) {
+                // Variante tem preço próprio
+                return $this->currentVariant->isOnSale() ? (float) $this->currentVariant->price : null;
+            }
+            // Variante sem preço — herda promoção do produto pai
+            return $this->product->isOnSale() ? (float) $this->product->price : null;
         }
 
-        if (! $this->currentVariant && $this->product->isOnSale()) {
-            return (float) $this->product->price;
-        }
-
-        return null;
+        return $this->product->isOnSale() ? (float) $this->product->price : null;
     }
 
     // ── Estoque ───────────────────────────────────────────────────────────

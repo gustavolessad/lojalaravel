@@ -113,7 +113,7 @@
         {{-- Barra de ordenação --}}
         <div class="flex items-center justify-between mb-6">
             <p class="text-sm text-gray-500">
-                <span wire:loading.remove>{{ $this->products->total() }} produto(s)</span>
+                <span wire:loading.remove>{{ $this->products->total() }} item(ns)</span>
                 <span wire:loading class="animate-pulse">Buscando...</span>
             </p>
             <div class="flex items-center gap-2">
@@ -150,15 +150,15 @@
             </div>
         @else
             <div class="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4" wire:loading.class="opacity-60">
-                @foreach ($this->products as $product)
-                    <a href="/{{ $product->slug }}/p"
+                @foreach ($this->products as $entry)
+                    <a href="{{ $entry->url }}"
                        class="group bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow overflow-hidden flex flex-col">
 
                         {{-- Imagem --}}
                         <div class="aspect-square bg-gray-100 overflow-hidden relative">
-                            @if ($product->getFirstMediaUrl('cover'))
-                                <img src="{{ $product->getFirstMediaUrl('cover') }}"
-                                     alt="{{ $product->name }}"
+                            @if ($entry->imageUrl)
+                                <img src="{{ $entry->imageUrl }}"
+                                     alt="{{ $entry->displayName }}"
                                      class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
                             @else
                                 <div class="w-full h-full flex items-center justify-center text-gray-300">
@@ -170,10 +170,10 @@
 
                             {{-- Badges --}}
                             <div class="absolute top-2 left-2 flex flex-col gap-1">
-                                @if ($product->is_new)
+                                @if ($entry->isNew)
                                     <span class="text-xs font-semibold px-2 py-0.5 bg-emerald-500 text-white rounded-full">Novo</span>
                                 @endif
-                                @if ($product->isOnSale())
+                                @if ($entry->isOnSale)
                                     <span class="text-xs font-semibold px-2 py-0.5 bg-red-500 text-white rounded-full">Promoção</span>
                                 @endif
                             </div>
@@ -182,28 +182,24 @@
                         {{-- Informações --}}
                         <div class="p-3 flex flex-col flex-1">
                             <h3 class="text-sm font-medium text-gray-800 line-clamp-2 leading-snug mb-2 flex-1">
-                                {{ $product->name }}
+                                {{ $entry->displayName }}
                             </h3>
 
                             {{-- Preço --}}
                             <div class="mt-auto">
-                                @if ($product->isOnSale())
+                                @if ($entry->originalPrice)
                                     <div class="flex flex-col">
                                         <span class="text-xs text-gray-400 line-through">
-                                            R$ {{ number_format((float) $product->price, 2, ',', '.') }}
+                                            R$ {{ number_format($entry->originalPrice, 2, ',', '.') }}
                                         </span>
                                         <span class="text-base font-bold text-red-600">
-                                            R$ {{ number_format((float) $product->sale_price, 2, ',', '.') }}
+                                            R$ {{ number_format($entry->price, 2, ',', '.') }}
                                         </span>
                                     </div>
                                 @else
                                     <span class="text-base font-bold text-gray-900">
-                                        R$ {{ number_format((float) $product->price, 2, ',', '.') }}
+                                        R$ {{ number_format($entry->price, 2, ',', '.') }}
                                     </span>
-                                @endif
-
-                                @if ($product->type === 'variable' && $product->variants_count > 0)
-                                    <p class="text-xs text-gray-400 mt-0.5">{{ $product->variants_count }} variante(s)</p>
                                 @endif
                             </div>
                         </div>

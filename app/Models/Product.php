@@ -110,7 +110,8 @@ class Product extends Model implements HasMedia
 
     public function attributes(): BelongsToMany
     {
-        return $this->belongsToMany(Attribute::class, 'product_attributes');
+        return $this->belongsToMany(Attribute::class, 'product_attributes')
+            ->withPivot('expand_in_catalog');
     }
 
     public function variants(): HasMany

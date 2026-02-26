@@ -9,13 +9,15 @@ use App\Services\CartService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Collection;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\Url;
 use Livewire\Component;
 
 class ProductDetail extends Component
 {
     public int $productId;
 
-    /** [attribute_id => attribute_value_id] */
+    /** [attribute_id => attribute_value_id] — sincronizado com URL para pré-seleção */
+    #[Url(as: 'v', except: [])]
     public array $selected = [];
 
     public int $quantity = 1;
@@ -41,7 +43,10 @@ class ProductDetail extends Component
 
             if ($first) {
                 foreach ($first->attributeValues as $av) {
-                    $this->selected[$av->attribute_id] = $av->id;
+                    // Respeita valores pré-selecionados via URL (ex: vindo do catálogo expandido)
+                    if (! array_key_exists($av->attribute_id, $this->selected)) {
+                        $this->selected[$av->attribute_id] = $av->id;
+                    }
                 }
             }
         }

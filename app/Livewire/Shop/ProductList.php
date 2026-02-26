@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Shop;
 
+use App\Data\CatalogEntry;
 use App\Models\Attribute;
 use App\Models\Category;
 use App\Models\Product;
@@ -105,10 +106,102 @@ class ProductList extends Component
             default      => $query->latest(),
         };
 
-        return $query
-            ->with(['media'])
+        $rawProducts = $query
+            ->with([
+                'media',
+                'attributes' => fn ($q) => $q->withPivot('expand_in_catalog'),
+                'variants'   => fn ($q) => $q->where('active', true)
+                                             ->with(['attributeValues', 'media'])
+                                             ->orderBy('order'),
+            ])
             ->withCount('variants')
-            ->paginate(24);
+            ->get();
+
+        $entries = $this->expandIntoEntries($rawProducts);
+
+        $page    = $this->getPage();
+        $perPage = 24;
+
+        return new LengthAwarePaginator(
+            $entries->forPage($page, $perPage)->values(),
+            $entries->count(),
+            $perPage,
+            $page,
+            ['path' => request()->url(), 'query' => request()->query()]
+        );
+    }
+
+    /**
+     * Expande produtos com atributo "expand_in_catalog" em múltiplos CatalogEntry.
+     */
+    private function expandIntoEntries(Collection $products): Collection
+    {
+        $entries = collect();
+
+        foreach ($products as $product) {
+            $expandAttr = $product->attributes
+                ->first(fn ($attr) => (bool) $attr->pivot->expand_in_catalog);
+
+            if (! $expandAttr) {
+                // Produto normal — um único card
+                $entries->push(new CatalogEntry(
+                    product:       $product,
+                    displayName:   $product->name,
+                    url:           '/' . $product->slug . '/p',
+                    price:         $product->getCurrentPrice(),
+                    originalPrice: $product->isOnSale() ? (float) $product->price : null,
+                    imageUrl:      $product->getFirstMediaUrl('cover') ?: null,
+                    isNew:         (bool) $product->is_new,
+                    isOnSale:      $product->isOnSale(),
+                ));
+                continue;
+            }
+
+            // Coleta valores do atributo de expansão que têm variantes ativas neste produto
+            $values = $expandAttr->values
+                ->filter(fn ($value) =>
+                    $product->variants->some(fn ($v) =>
+                        $v->attributeValues->contains('id', $value->id)
+                    )
+                );
+
+            foreach ($values as $value) {
+                // Se o atributo de expansão está filtrado, pular outros valores
+                if (
+                    isset($this->attrs[$expandAttr->id]) &&
+                    (int) $this->attrs[$expandAttr->id] !== $value->id
+                ) {
+                    continue;
+                }
+
+                // Primeira variante com este valor
+                $variant = $product->variants->first(
+                    fn ($v) => $v->attributeValues->contains('id', $value->id)
+                );
+
+                $imageUrl = $variant?->getFirstMediaUrl('variant-cover') ?: null;
+                if (! $imageUrl) {
+                    $imageUrl = $product->getFirstMediaUrl('cover') ?: null;
+                }
+
+                $price         = $variant ? $variant->getEffectivePrice() : $product->getCurrentPrice();
+                $originalPrice = ($variant && $variant->isOnSale()) ? (float) $variant->price : null;
+
+                $entries->push(new CatalogEntry(
+                    product:       $product,
+                    displayName:   $product->name . ' ' . $value->getLabel(),
+                    url:           '/' . $product->slug . '/p?v[' . $expandAttr->id . ']=' . $value->id,
+                    price:         $price,
+                    originalPrice: $originalPrice,
+                    imageUrl:      $imageUrl,
+                    isNew:         (bool) $product->is_new,
+                    isOnSale:      $originalPrice !== null,
+                    expandedBy:    $value,
+                ));
+            }
+        }
+
+        return $entries;
     }
 
     #[Computed]

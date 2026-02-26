@@ -16,11 +16,11 @@ class CreateProduct extends CreateRecord
 
     private function syncExpandAttributes(): void
     {
-        $attrIds   = $this->data['attributes'] ?? [];
-        $expandIds = array_map('intval', $this->data['expand_catalog_attributes'] ?? []);
+        $attrIds  = $this->data['attributes'] ?? [];
+        $expandId = (int) ($this->data['expand_catalog_attributes'] ?? 0);
 
         $pivotData = collect($attrIds)->mapWithKeys(fn ($id) => [
-            (int) $id => ['expand_in_catalog' => in_array((int) $id, $expandIds)],
+            (int) $id => ['expand_in_catalog' => $expandId > 0 && (int) $id === $expandId],
         ])->toArray();
 
         $this->record->attributes()->sync($pivotData);

@@ -138,9 +138,9 @@ class ProductResource extends Resource
                             ->live()
                             ->columnSpanFull(),
 
-                        Forms\Components\CheckboxList::make('expand_catalog_attributes')
+                        Forms\Components\Radio::make('expand_catalog_attributes')
                             ->label('Expandir no catálogo por')
-                            ->helperText('Atributos marcados geram um card separado por valor no catálogo (ex: um card por cor).')
+                            ->helperText('O atributo selecionado gerará um card separado por valor no catálogo (ex: um card por cor).')
                             ->options(fn (Forms\Get $get): array =>
                                 collect($get('attributes') ?? [])
                                     ->mapWithKeys(fn ($id) => [$id => Attribute::find((int) $id)?->name ?? ''])
@@ -152,11 +152,10 @@ class ProductResource extends Resource
                             ->dehydrated(true)
                             ->afterStateHydrated(function ($component, $record) {
                                 if ($record?->exists) {
-                                    $expandIds = $record->attributes()
+                                    $expandId = $record->attributes()
                                         ->wherePivot('expand_in_catalog', true)
-                                        ->pluck('attributes.id')
-                                        ->toArray();
-                                    $component->state($expandIds);
+                                        ->value('attributes.id');
+                                    $component->state($expandId);
                                 }
                             })
                             ->columnSpanFull(),

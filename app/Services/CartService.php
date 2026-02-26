@@ -46,7 +46,10 @@ class CartService
             ->first();
 
         if ($item) {
-            $item->increment('quantity', $quantity);
+            $item->update([
+                'quantity'   => $item->quantity + $quantity,
+                'unit_price' => $unitPrice, // garante preço sempre atualizado
+            ]);
         } else {
             $item = $cart->items()->create([
                 'product_id' => $productId,

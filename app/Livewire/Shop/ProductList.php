@@ -232,6 +232,15 @@ class ProductList extends Component
                     $originalPrice = $product->isOnSale() ? (float) $product->price : null;
                 }
 
+                // Filtra entries expandidos pelo intervalo de preço (o SQL filtra por produto,
+                // mas cada entry tem seu próprio preço efetivo que precisa ser validado)
+                if ($this->minPrice !== '' && $price < (float) $this->minPrice) {
+                    continue;
+                }
+                if ($this->maxPrice !== '' && $price > (float) $this->maxPrice) {
+                    continue;
+                }
+
                 $entries->push(new CatalogEntry(
                     product:       $product,
                     displayName:   $product->name . ' ' . $value->getLabel(),

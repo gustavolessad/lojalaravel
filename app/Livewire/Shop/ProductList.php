@@ -23,7 +23,7 @@ class ProductList extends Component
 
     // Filtros sincronizados com a URL (query string)
     #[Url(as: 'attrs', except: [])]
-    public array $attrs = []; // [attribute_id => attribute_value_id]
+    public array $attrs = []; // [attribute_slug => value_slug]
 
     #[Url(as: 'min', except: '')]
     public string $minPrice = '';
@@ -89,11 +89,12 @@ class ProductList extends Component
             });
         }
 
-        // Filtro de atributos (cada atributo selecionado filtra com AND)
-        foreach ($this->attrs as $attrId => $valueId) {
-            if ($valueId) {
+        // Filtro de atributos por slug (cada atributo selecionado filtra com AND)
+        foreach ($this->attrs as $attrSlug => $valueSlug) {
+            if ($valueSlug) {
                 $query->whereHas('variants.attributeValues', fn ($q) =>
-                    $q->where('attribute_values.id', (int) $valueId)
+                    $q->where('attribute_values.slug', $valueSlug)
+                      ->whereHas('attribute', fn ($q) => $q->where('slug', $attrSlug))
                 );
             }
         }
@@ -168,8 +169,8 @@ class ProductList extends Component
             foreach ($values as $value) {
                 // Se o atributo de expansão está filtrado, pular outros valores
                 if (
-                    isset($this->attrs[$expandAttr->id]) &&
-                    (int) $this->attrs[$expandAttr->id] !== $value->id
+                    isset($this->attrs[$expandAttr->slug]) &&
+                    $this->attrs[$expandAttr->slug] !== $value->slug
                 ) {
                     continue;
                 }
@@ -197,7 +198,7 @@ class ProductList extends Component
                 $entries->push(new CatalogEntry(
                     product:       $product,
                     displayName:   $product->name . ' ' . $value->getLabel(),
-                    url:           '/' . $product->slug . '/p?v[' . $expandAttr->id . ']=' . $value->id,
+                    url:           '/' . $product->slug . '/p?v[' . $expandAttr->slug . ']=' . $value->slug,
                     price:         $price,
                     originalPrice: $originalPrice,
                     imageUrl:      $imageUrl,

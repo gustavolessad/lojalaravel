@@ -61,8 +61,8 @@
                     @foreach ($attribute->values as $value)
                         <label class="flex items-center gap-2 cursor-pointer group">
                             <input type="radio"
-                                   wire:model.live="attrs.{{ $attribute->id }}"
-                                   value="{{ $value->id }}"
+                                   wire:model.live="attrs.{{ $attribute->slug }}"
+                                   value="{{ $value->slug }}"
                                    class="text-indigo-600 border-gray-300 focus:ring-indigo-500">
                             @if ($attribute->type === 'color' && $value->color_hex)
                                 <span class="inline-block w-4 h-4 rounded-full border border-gray-300"
@@ -74,8 +74,8 @@
                         </label>
                     @endforeach
                     {{-- Opção de limpar este atributo --}}
-                    @if (!empty($attrs[$attribute->id]))
-                        <button wire:click="$set('attrs.{{ $attribute->id }}', null)"
+                    @if (!empty($attrs[$attribute->slug]))
+                        <button wire:click="$set('attrs.{{ $attribute->slug }}', null)"
                                 class="text-xs text-indigo-600 hover:underline mt-1">
                             Limpar
                         </button>

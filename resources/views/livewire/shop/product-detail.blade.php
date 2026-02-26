@@ -94,9 +94,9 @@
                         <div>
                             <p class="text-sm font-semibold text-gray-800 mb-2">
                                 {{ $attribute->name }}
-                                @if (isset($selected[$attribute->id]))
+                                @if (isset($selected[$attribute->slug]))
                                     @php
-                                        $selectedValue = $attribute->values->firstWhere('id', $selected[$attribute->id]);
+                                        $selectedValue = $attribute->values->firstWhere('slug', $selected[$attribute->slug]);
                                     @endphp
                                     @if ($selectedValue)
                                         <span class="font-normal text-gray-500">
@@ -109,14 +109,14 @@
                             <div class="flex flex-wrap gap-2">
                                 @foreach ($attribute->values as $value)
                                     @php
-                                        $isSelected  = (int) ($selected[$attribute->id] ?? 0) === $value->id;
-                                        $isAvailable = in_array($value->id, $this->availableValueIds[$attribute->id] ?? []);
+                                        $isSelected  = ($selected[$attribute->slug] ?? null) === $value->slug;
+                                        $isAvailable = in_array($value->slug, $this->availableValueSlugs[$attribute->slug] ?? []);
                                     @endphp
 
                                     @if ($attribute->type === 'color' && $value->color_hex)
                                         {{-- Swatch de cor --}}
                                         <button
-                                            wire:click="selectValue({{ $attribute->id }}, {{ $value->id }})"
+                                            wire:click="selectValue('{{ $attribute->slug }}', '{{ $value->slug }}')"
                                             title="{{ $value->getLabel() }}"
                                             @disabled(! $isAvailable)
                                             @class([
@@ -130,7 +130,7 @@
                                     @else
                                         {{-- Chip de texto --}}
                                         <button
-                                            wire:click="selectValue({{ $attribute->id }}, {{ $value->id }})"
+                                            wire:click="selectValue('{{ $attribute->slug }}', '{{ $value->slug }}')"
                                             @disabled(! $isAvailable)
                                             @class([
                                                 'px-3.5 py-1.5 text-sm rounded-lg border font-medium transition-all duration-150',

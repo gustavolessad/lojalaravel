@@ -16,7 +16,7 @@ class ProductDetail extends Component
 {
     public int $productId;
 
-    /** [attribute_id => attribute_value_id] — sincronizado com URL para pré-seleção */
+    /** [attribute_slug => value_slug] — sincronizado com URL para pré-seleção */
     #[Url(as: 'v', except: [])]
     public array $selected = [];
 
@@ -34,7 +34,7 @@ class ProductDetail extends Component
         if ($product->isVariable()) {
             $variants = ProductVariant::where('product_id', $product->id)
                 ->where('active', true)
-                ->with('attributeValues')
+                ->with('attributeValues.attribute')
                 ->orderBy('order')
                 ->get();
 
@@ -44,8 +44,8 @@ class ProductDetail extends Component
             if ($first) {
                 foreach ($first->attributeValues as $av) {
                     // Respeita valores pré-selecionados via URL (ex: vindo do catálogo expandido)
-                    if (! array_key_exists($av->attribute_id, $this->selected)) {
-                        $this->selected[$av->attribute_id] = $av->id;
+                    if (! array_key_exists($av->attribute->slug, $this->selected)) {
+                        $this->selected[$av->attribute->slug] = $av->slug;
                     }
                 }
             }
@@ -90,15 +90,15 @@ class ProductDetail extends Component
         }
 
         return $this->product->variants->first(function (ProductVariant $variant) use ($selected) {
-            $ids = $variant->attributeValues->pluck('id')->toArray();
+            $valueSlugs = $variant->attributeValues->pluck('slug')->toArray();
 
-            foreach ($selected as $valueId) {
-                if (! in_array((int) $valueId, $ids)) {
+            foreach ($selected as $valueSlug) {
+                if (! in_array($valueSlug, $valueSlugs)) {
                     return false;
                 }
             }
 
-            return count($ids) === count($selected);
+            return count($valueSlugs) === count($selected);
         });
     }
 
@@ -187,10 +187,10 @@ class ProductDetail extends Component
         return $images->values();
     }
 
-    // ── Valores disponíveis por atributo (considerando outras seleções) ───
+    // ── Slugs de valores disponíveis por atributo (considerando outras seleções) ──
 
     #[Computed]
-    public function availableValueIds(): array
+    public function availableValueSlugs(): array
     {
         if ($this->product->isSimple()) {
             return [];
@@ -203,25 +203,25 @@ class ProductDetail extends Component
             // Seleções de OUTROS atributos
             $otherSelected = array_filter(
                 $this->selected,
-                fn ($v, $k) => $k != $attribute->id && $v,
+                fn ($v, $k) => $k !== $attribute->slug && $v,
                 ARRAY_FILTER_USE_BOTH
             );
 
             $available = $variants
                 ->filter(function (ProductVariant $variant) use ($otherSelected) {
-                    $ids = $variant->attributeValues->pluck('id')->toArray();
-                    foreach ($otherSelected as $valueId) {
-                        if (! in_array((int) $valueId, $ids)) {
+                    $slugs = $variant->attributeValues->pluck('slug')->toArray();
+                    foreach ($otherSelected as $valueSlug) {
+                        if (! in_array($valueSlug, $slugs)) {
                             return false;
                         }
                     }
                     return true;
                 })
-                ->flatMap(fn ($v) => $v->attributeValues->pluck('id'))
+                ->flatMap(fn ($v) => $v->attributeValues->pluck('slug'))
                 ->unique()
                 ->toArray();
 
-            $result[$attribute->id] = array_values($available);
+            $result[$attribute->slug] = array_values($available);
         }
 
         return $result;
@@ -229,9 +229,9 @@ class ProductDetail extends Component
 
     // ── Ações ─────────────────────────────────────────────────────────────
 
-    public function selectValue(int $attrId, int $valueId): void
+    public function selectValue(string $attrSlug, string $valueSlug): void
     {
-        $this->selected[$attrId] = $valueId;
+        $this->selected[$attrSlug] = $valueSlug;
         $this->notified    = false;
         $this->notifyEmail = '';
     }

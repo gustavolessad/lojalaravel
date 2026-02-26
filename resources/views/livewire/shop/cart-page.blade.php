@@ -87,9 +87,20 @@
                         {{ $item->variant->label }}
                     </p>
                     @endif
-                    <p class="text-sm font-semibold text-indigo-600 mt-1">
-                        R$ {{ number_format($item->unit_price, 2, ',', '.') }}
-                    </p>
+                    @if ($item->original_price)
+                        <div class="flex items-center gap-1.5 mt-1">
+                            <span class="text-xs text-gray-400 line-through">
+                                R$ {{ number_format($item->original_price, 2, ',', '.') }}
+                            </span>
+                            <span class="text-sm font-semibold text-red-600">
+                                R$ {{ number_format($item->unit_price, 2, ',', '.') }}
+                            </span>
+                        </div>
+                    @else
+                        <p class="text-sm font-semibold text-indigo-600 mt-1">
+                            R$ {{ number_format($item->unit_price, 2, ',', '.') }}
+                        </p>
+                    @endif
                     @if ($maxStock > 0 && $maxStock <= 5)
                         <p class="text-xs text-amber-600 mt-1">
                             apenas {{ $maxStock }} {{ $maxStock === 1 ? 'disponível' : 'disponíveis' }}

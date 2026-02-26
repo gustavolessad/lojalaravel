@@ -1,0 +1,133 @@
+<?php
+
+namespace App\Services;
+
+use App\Models\Cart;
+use App\Models\Coupon;
+use App\Models\Order;
+use App\Models\Customer;
+use Illuminate\Support\Facades\DB;
+
+class OrderService
+{
+    /**
+     * Cria um pedido a partir do carrinho atual.
+     *
+     * @param  Cart           $cart     Carrinho com itens carregados
+     * @param  array          $address  Dados do endereço de entrega
+     * @param  array          $shipping ['name' => 'PAC', 'price' => 14.90, 'days' => 8]
+     * @param  string         $paymentMethod  pix | credit_card | boleto
+     * @param  Customer|null  $customer Cliente logado (null = guest)
+     * @param  array          $guest    ['name', 'email', 'phone'] — apenas para guests
+     * @param  string|null    $notes
+     */
+    public function createFromCart(
+        Cart     $cart,
+        array    $address,
+        array    $shipping,
+        string   $paymentMethod,
+        ?Customer $customer = null,
+        array    $guest     = [],
+        ?string  $notes     = null,
+    ): Order {
+        return DB::transaction(function () use ($cart, $address, $shipping, $paymentMethod, $customer, $guest, $notes) {
+
+            $subtotal     = (float) $cart->subtotal;
+            $shippingCost = (float) $shipping['price'];
+            $discount     = (float) ($cart->coupon_discount ?? 0);
+            $total        = max(0, $subtotal - $discount) + $shippingCost;
+
+            // Cria o pedido
+            $order = Order::create([
+                'customer_id' => $customer?->id,
+                'guest_name'  => $customer ? null : ($guest['name'] ?? null),
+                'guest_email' => $customer ? null : ($guest['email'] ?? null),
+                'guest_phone' => $customer ? null : ($guest['phone'] ?? null),
+
+                'status'         => 'pending',
+                'payment_status' => 'pending',
+                'payment_method' => $paymentMethod,
+
+                'shipping_name'       => $address['name'],
+                'shipping_phone'      => $address['phone'] ?? null,
+                'shipping_zip'        => $address['zip'],
+                'shipping_street'     => $address['street'],
+                'shipping_number'     => $address['number'],
+                'shipping_complement' => $address['complement'] ?? null,
+                'shipping_district'   => $address['district'],
+                'shipping_city'       => $address['city'],
+                'shipping_state'      => $address['state'],
+
+                'shipping_method' => $shipping['name'],
+                'shipping_days'   => $shipping['days'],
+                'shipping_cost'   => $shippingCost,
+
+                'subtotal'    => $subtotal,
+                'discount'    => $discount,
+                'total'       => $total,
+                'coupon_code' => $cart->coupon_code,
+
+                'notes' => $notes,
+            ]);
+
+            // Cria os itens (snapshot)
+            foreach ($cart->items as $item) {
+                $order->items()->create([
+                    'product_id'    => $item->product_id,
+                    'variant_id'    => $item->variant_id,
+                    'product_name'  => $item->product->name,
+                    'variant_label' => $item->variant?->label,
+                    'sku'           => $item->variant?->sku ?? $item->product->sku,
+                    'quantity'      => $item->quantity,
+                    'unit_price'    => $item->unit_price,
+                    'total'         => $item->subtotal,
+                ]);
+
+                // Decrementa o estoque
+                if ($item->variant) {
+                    $item->variant->decrement('stock', $item->quantity);
+                } elseif ($item->product->stock !== null) {
+                    $item->product->decrement('stock', $item->quantity);
+                }
+            }
+
+            // Registra uso do cupom
+            if ($cart->coupon_code && $discount > 0) {
+                $coupon = Coupon::where('code', $cart->coupon_code)->first();
+                if ($coupon) {
+                    app(CouponService::class)->recordUsage($coupon, $order, $customer, $discount);
+                }
+            }
+
+            // Limpa o carrinho
+            app(CartService::class)->clear();
+
+            return $order;
+        });
+    }
+
+    /**
+     * Marca o pedido como pago.
+     */
+    public function markAsPaid(Order $order, string $paymentId, array $paymentData = []): void
+    {
+        $order->update([
+            'status'         => 'processing',
+            'payment_status' => 'paid',
+            'payment_id'     => $paymentId,
+            'payment_data'   => array_merge($order->payment_data ?? [], $paymentData),
+            'paid_at'        => now(),
+        ]);
+    }
+
+    /**
+     * Salva os dados de pagamento no pedido (ex: QR code PIX).
+     */
+    public function attachPaymentData(Order $order, string $paymentId, array $data): void
+    {
+        $order->update([
+            'payment_id'   => $paymentId,
+            'payment_data' => $data,
+        ]);
+    }
+}

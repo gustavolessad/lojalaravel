@@ -25,6 +25,39 @@
             <hr class="mb-6 border-gray-200">
         @endif
 
+        {{-- Marcas (apenas em páginas de categoria) --}}
+        @if ($this->availableBrands->isNotEmpty())
+            <div class="mb-6">
+                <h3 class="text-sm font-semibold text-gray-900 uppercase tracking-wide mb-3">Marca</h3>
+                <div class="space-y-1.5">
+                    @foreach ($this->availableBrands as $brand)
+                        <label class="flex items-center gap-2 cursor-pointer group">
+                            <input type="radio"
+                                   wire:model.live="brandId"
+                                   value="{{ $brand->slug }}"
+                                   class="text-indigo-600 border-gray-300 focus:ring-indigo-500">
+                            @if ($brand->getFirstMediaUrl('logo'))
+                                <img src="{{ $brand->getFirstMediaUrl('logo') }}"
+                                     alt="{{ $brand->name }}"
+                                     class="h-4 w-auto object-contain opacity-70 group-hover:opacity-100 transition-opacity">
+                            @else
+                                <span class="text-sm text-gray-600 group-hover:text-gray-900 transition-colors">
+                                    {{ $brand->name }}
+                                </span>
+                            @endif
+                        </label>
+                    @endforeach
+                    @if ($brandId !== '')
+                        <button wire:click="$set('brandId', '')"
+                                class="text-xs text-indigo-600 hover:underline mt-1">
+                            Limpar
+                        </button>
+                    @endif
+                </div>
+            </div>
+            <hr class="mb-6 border-gray-200">
+        @endif
+
         {{-- Preço --}}
         <div class="mb-6">
             <h3 class="text-sm font-semibold text-gray-900 uppercase tracking-wide mb-3">Preço</h3>

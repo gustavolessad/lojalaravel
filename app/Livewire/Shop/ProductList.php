@@ -39,6 +39,9 @@ class ProductList extends Component
     #[Url(as: 'estoque', except: false)]
     public bool $inStock = false;
 
+    #[Url(as: 'marca', except: '')]
+    public string $brandId = ''; // slug da marca selecionada (só usado em scopeType=category)
+
     #[Url(as: 'ordem', except: 'newest')]
     public string $sort = 'newest';
 
@@ -47,6 +50,7 @@ class ProductList extends Component
     public function updatedMinPrice(): void   { $this->resetPage(); }
     public function updatedMaxPrice(): void   { $this->resetPage(); }
     public function updatedInStock(): void    { $this->resetPage(); }
+    public function updatedBrandId(): void    { $this->resetPage(); }
     public function updatedSort(): void       { $this->resetPage(); }
 
     public function resetFilters(): void
@@ -55,6 +59,7 @@ class ProductList extends Component
         $this->minPrice = '';
         $this->maxPrice = '';
         $this->inStock  = false;
+        $this->brandId  = '';
         $this->sort     = 'newest';
         $this->resetPage();
     }
@@ -134,6 +139,11 @@ class ProductList extends Component
                       ->whereHas('variants', fn ($q) => $q->where('active', true)->where('stock', '>', 0));
                 });
             });
+        }
+
+        // Filtro de marca (apenas em páginas de categoria)
+        if ($this->brandId !== '') {
+            $query->whereHas('brand', fn ($q) => $q->where('slug', $this->brandId));
         }
 
         // Filtro de atributos por slug (cada atributo selecionado filtra com AND)
@@ -282,6 +292,21 @@ class ProductList extends Component
     }
 
     #[Computed]
+    public function availableBrands(): Collection
+    {
+        if ($this->scopeType !== 'category') {
+            return collect();
+        }
+
+        return Brand::where('active', true)
+            ->whereHas('products', fn ($q) => $this->scope->applyToQuery(
+                $q->where('active', true)
+            ))
+            ->orderBy('name')
+            ->get();
+    }
+
+    #[Computed]
     public function availableAttributes(): Collection
     {
         $productIds = $this->scope->baseProductIds();
@@ -330,7 +355,8 @@ class ProductList extends Component
         return ! empty(array_filter($this->attrs))
             || $this->minPrice !== ''
             || $this->maxPrice !== ''
-            || $this->inStock;
+            || $this->inStock
+            || $this->brandId !== '';
     }
 
     public function render(): View

@@ -25,6 +25,9 @@ class ProductList extends Component
     public string $scopeType = 'category'; // 'category' | 'brand'
     public int $scopeId;
 
+    // URL base da página (salva no mount para uso em requests AJAX do Livewire)
+    public string $pageUrl = '';
+
     // Filtros — gerenciados manualmente para URL amigável
     public array $attrs    = []; // [attribute_slug => [value_slug, ...]]
     public array $brandIds = []; // [brand_slug, ...]
@@ -40,6 +43,9 @@ class ProductList extends Component
 
     public function mount(): void
     {
+        // Salva a URL real da página — request()->url() em requests AJAX aponta para /livewire/update
+        $this->pageUrl = request()->url();
+
         $q = request()->query();
 
         // Atributos: ?tamanho=p,g&cor=preto,branco
@@ -101,7 +107,7 @@ class ProductList extends Component
         }
 
         $qs = http_build_query($params);
-        return request()->url() . ($qs ? '?' . $qs : '');
+        return $this->pageUrl . ($qs ? '?' . $qs : '');
     }
 
     /** Empurra a URL atual para o histórico do browser via evento JS. */
@@ -289,8 +295,8 @@ class ProductList extends Component
             $entries->count(),
             $perPage,
             $page,
-            // filterParams() garante que os links do paginator sempre refletem os filtros atuais
-            ['path' => request()->url(), 'query' => $this->filterParams()]
+            // pageUrl + filterParams() garantem links corretos mesmo em requests AJAX
+            ['path' => $this->pageUrl, 'query' => $this->filterParams()]
         );
     }
 

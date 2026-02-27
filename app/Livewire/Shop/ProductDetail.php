@@ -276,8 +276,12 @@ class ProductDetail extends Component
     }
 
     /**
-     * Slugs de valores que NÃO têm nenhuma variante com estoque > 0.
-     * Usado para exibir o ícone de indisponível nos botões de atributo.
+     * Slugs de valores cujas variantes compatíveis com a seleção atual de OUTROS
+     * atributos estão todas sem estoque. Mesmo approach contextual de availableValueSlugs.
+     *
+     * Exemplo: branco-M (sem estoque) + branco-P (com estoque).
+     * Com M selecionado → branco aparece aqui (única compatível, branco-M, tem stock=0).
+     * Sem M selecionado → branco NÃO aparece (branco-P tem estoque).
      */
     #[Computed]
     public function outOfStockValueSlugs(): array
@@ -290,13 +294,29 @@ class ProductDetail extends Component
         $result   = [];
 
         foreach ($this->product->attributes as $attribute) {
+            $otherSelected = array_filter(
+                $this->selected,
+                fn ($v, $k) => $k !== $attribute->slug && $v,
+                ARRAY_FILTER_USE_BOTH
+            );
+
             $result[$attribute->slug] = $attribute->values
-                ->filter(function ($value) use ($variants) {
-                    $withValue = $variants->filter(
-                        fn ($v) => $v->attributeValues->contains('id', $value->id)
-                    );
-                    return $withValue->isNotEmpty()
-                        && $withValue->every(fn ($v) => ($v->stock ?? 0) === 0);
+                ->filter(function ($value) use ($variants, $otherSelected) {
+                    $compatible = $variants->filter(function ($v) use ($value, $otherSelected) {
+                        $slugs = $v->attributeValues->pluck('slug')->toArray();
+                        if (! in_array($value->slug, $slugs)) {
+                            return false;
+                        }
+                        foreach ($otherSelected as $otherSlug) {
+                            if (! in_array($otherSlug, $slugs)) {
+                                return false;
+                            }
+                        }
+                        return true;
+                    });
+
+                    return $compatible->isNotEmpty()
+                        && $compatible->every(fn ($v) => ($v->stock ?? 0) === 0);
                 })
                 ->pluck('slug')
                 ->toArray();

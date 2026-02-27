@@ -362,9 +362,9 @@ class ProductList extends Component
                     continue;
                 }
 
-                // Busca variante que satisfaça TANTO o valor de expansão QUANTO os carry params.
-                // Se não houver tal combinação, este card não faz sentido exibir.
-                $variant = $product->variants->first(function ($v) use ($value, $carryParams) {
+                // Coleta TODAS as variantes que satisfazem o valor de expansão + carry params.
+                // Se não houver nenhuma, este card não faz sentido exibir.
+                $matchingVariants = $product->variants->filter(function ($v) use ($value, $carryParams) {
                     $slugs = $v->attributeValues->pluck('slug')->toArray();
                     if (! in_array($value->slug, $slugs)) {
                         return false;
@@ -377,14 +377,21 @@ class ProductList extends Component
                     return true;
                 });
 
-                if (! $variant) continue;
+                if ($matchingVariants->isEmpty()) continue;
 
-                $imageUrl = $variant?->getFirstMediaUrl('variant-cover') ?: null;
+                // Variante representativa para imagem e preço: prefere a com estoque
+                // (ex: G-Vermelho sem estoque + M-Vermelho com estoque → usa M-Vermelho)
+                $variant = $matchingVariants->where('stock', '>', 0)->first()
+                    ?? $matchingVariants->first();
+
+                $inStock = $matchingVariants->where('stock', '>', 0)->isNotEmpty();
+
+                $imageUrl = $variant->getFirstMediaUrl('variant-cover') ?: null;
                 if (! $imageUrl) {
                     $imageUrl = $product->getFirstMediaUrl('cover') ?: null;
                 }
 
-                if ($variant && $variant->price !== null) {
+                if ($variant->price !== null) {
                     $price         = $variant->getEffectivePrice();
                     $originalPrice = $variant->isOnSale() ? (float) $variant->price : null;
                 } else {
@@ -407,7 +414,7 @@ class ProductList extends Component
                     imageUrl:      $imageUrl,
                     isNew:         (bool) $product->is_new,
                     isOnSale:      $originalPrice !== null,
-                    inStock:       ($variant?->stock ?? 0) > 0,
+                    inStock:       $inStock,
                     expandedBy:    $value,
                 ));
             }

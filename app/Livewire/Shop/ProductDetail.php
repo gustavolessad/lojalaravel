@@ -9,16 +9,17 @@ use App\Services\CartService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Collection;
 use Livewire\Attributes\Computed;
-use Livewire\Attributes\Url;
 use Livewire\Component;
 
 class ProductDetail extends Component
 {
     public int $productId;
 
-    /** [attribute_slug => value_slug] — sincronizado com URL para pré-seleção */
-    #[Url(as: 'v', except: [])]
+    /** [attribute_slug => value_slug] — gerenciado manualmente para URL amigável */
     public array $selected = [];
+
+    // URL base da página (salva no mount para uso em requests AJAX do Livewire)
+    public string $pageUrl = '';
 
     public int $quantity = 1;
 
@@ -29,6 +30,15 @@ class ProductDetail extends Component
     public function mount(Product $product): void
     {
         $this->productId = $product->id;
+        $this->pageUrl   = request()->url();
+
+        // Pré-seleção via URL amigável: ?cor=vermelho&tamanho=g
+        $q = request()->query();
+        foreach ($q as $key => $value) {
+            if (is_string($value) && $value !== '') {
+                $this->selected[$key] = $value;
+            }
+        }
 
         // Auto-seleciona a primeira variante disponível (com estoque primeiro)
         if ($product->isVariable()) {
@@ -50,6 +60,20 @@ class ProductDetail extends Component
                 }
             }
         }
+    }
+
+    // ── URL amigável ──────────────────────────────────────────────────────
+
+    private function buildUrl(): string
+    {
+        $params = array_filter($this->selected);
+        $qs     = http_build_query($params);
+        return $this->pageUrl . ($qs ? '?' . $qs : '');
+    }
+
+    private function pushUrl(): void
+    {
+        $this->dispatch('update-url', url: $this->buildUrl());
     }
 
     // ── Produto completo com todas as relações ────────────────────────────
@@ -235,6 +259,7 @@ class ProductDetail extends Component
         $this->selected[$attrSlug] = $valueSlug;
         $this->notified    = false;
         $this->notifyEmail = '';
+        $this->pushUrl();
     }
 
     public function incrementQty(): void

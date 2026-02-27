@@ -362,11 +362,11 @@ class ProductList extends Component
                 if ($this->minPrice !== '' && $price < (float) $this->minPrice) continue;
                 if ($this->maxPrice !== '' && $price > (float) $this->maxPrice) continue;
 
-                // URL para o produto com variante pré-selecionada (lida pelo ProductDetail via #[Url(as:'v')])
+                // URL para o produto com variante pré-selecionada (lida pelo ProductDetail via query amigável)
                 $entries->push(new CatalogEntry(
                     product:       $product,
                     displayName:   $product->name . ' ' . $value->getLabel(),
-                    url:           '/' . $product->slug . '/p?v[' . $expandAttr->slug . ']=' . $value->slug,
+                    url:           '/' . $product->slug . '/p?' . $expandAttr->slug . '=' . $value->slug,
                     price:         $price,
                     originalPrice: $originalPrice,
                     imageUrl:      $imageUrl,

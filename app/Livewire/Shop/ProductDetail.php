@@ -275,6 +275,36 @@ class ProductDetail extends Component
         return $result;
     }
 
+    /**
+     * Slugs de valores que NÃO têm nenhuma variante com estoque > 0.
+     * Usado para exibir o ícone de indisponível nos botões de atributo.
+     */
+    #[Computed]
+    public function outOfStockValueSlugs(): array
+    {
+        if ($this->product->isSimple()) {
+            return [];
+        }
+
+        $variants = $this->product->variants;
+        $result   = [];
+
+        foreach ($this->product->attributes as $attribute) {
+            $result[$attribute->slug] = $attribute->values
+                ->filter(function ($value) use ($variants) {
+                    $withValue = $variants->filter(
+                        fn ($v) => $v->attributeValues->contains('id', $value->id)
+                    );
+                    return $withValue->isNotEmpty()
+                        && $withValue->every(fn ($v) => ($v->stock ?? 0) === 0);
+                })
+                ->pluck('slug')
+                ->toArray();
+        }
+
+        return $result;
+    }
+
     // ── Ações ─────────────────────────────────────────────────────────────
 
     public function selectValue(string $attrSlug, string $valueSlug): void

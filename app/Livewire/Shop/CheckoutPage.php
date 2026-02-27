@@ -7,6 +7,7 @@ use App\Models\Customer;
 use App\Models\CustomerAddress;
 use App\Models\Order;
 use App\Services\AsaasService;
+use App\Services\PaymentCalculator;
 use App\Services\CartService;
 use App\Services\OrderService;
 use App\Services\ShippingCalculator;
@@ -160,24 +161,19 @@ class CheckoutPage extends Component
     #[Computed]
     public function installmentOptions(): array
     {
-        $total   = $this->total;
-        $options = [];
+        return app(PaymentCalculator::class)->installmentOptions($this->total);
+    }
 
-        for ($i = 1; $i <= 12; $i++) {
-            $value = round($total / $i, 2);
+    #[Computed]
+    public function pixTotal(): ?float
+    {
+        return app(PaymentCalculator::class)->pixPrice($this->total);
+    }
 
-            if ($value < 10.00) {
-                break;
-            }
-
-            $label = $i === 1
-                ? "1× de R$ " . number_format($value, 2, ',', '.') . " (à vista)"
-                : "{$i}× de R$ " . number_format($value, 2, ',', '.') . " sem juros";
-
-            $options[] = ['value' => $i, 'label' => $label];
-        }
-
-        return $options;
+    #[Computed]
+    public function pixSavings(): float
+    {
+        return app(PaymentCalculator::class)->pixSavings($this->total);
     }
 
     // ── Etapa 0: Autenticação ─────────────────────────────────────────────
@@ -497,6 +493,13 @@ class CheckoutPage extends Component
                 'state'      => strtoupper($this->addrState),
             ];
 
+            // Calcula descontos/acréscimos de pagamento
+            $calc = app(PaymentCalculator::class);
+            $pixDiscount = 0.0;
+            if ($this->paymentMethod === 'pix') {
+                $pixDiscount = $calc->pixSavings($this->total);
+            }
+
             // 1. Cria o pedido no banco
             $order = app(OrderService::class)->createFromCart(
                 cart:          $cart,
@@ -506,6 +509,7 @@ class CheckoutPage extends Component
                 customer:      $customer,
                 guest:         [],
                 notes:         $this->notes ?: null,
+                pixDiscount:   $pixDiscount,
             );
 
             // 2. Processa o pagamento no Asaas
@@ -517,6 +521,13 @@ class CheckoutPage extends Component
                     $paymentData = $asaas->createPixPayment($order, $asaasCustomerId);
                 } else {
                     [$month, $year] = explode('/', $this->cardExpiry);
+
+                    // Captura detalhes do parcelamento selecionado
+                    $installmentOpts    = $calc->installmentOptions($this->total);
+                    $chosenInstallment  = collect($installmentOpts)->firstWhere('value', $this->installments);
+                    $installmentValue   = $chosenInstallment['installment_value'] ?? round($this->total / $this->installments, 2);
+                    $interestFree       = $chosenInstallment['interest_free'] ?? true;
+
                     $paymentData = $asaas->createCreditCardPayment(
                         order:           $order,
                         asaasCustomerId: $asaasCustomerId,
@@ -529,6 +540,14 @@ class CheckoutPage extends Component
                         ],
                         installments: $this->installments,
                     );
+
+                    // Enriquece o payload com detalhes do parcelamento
+                    if ($paymentData) {
+                        $paymentData['installments']       = $this->installments;
+                        $paymentData['installment_value']  = $installmentValue;
+                        $paymentData['interest_free']      = $interestFree;
+                        $paymentData['total_with_interest'] = round($installmentValue * $this->installments, 2);
+                    }
                 }
 
                 if ($paymentData) {

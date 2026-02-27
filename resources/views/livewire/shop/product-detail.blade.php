@@ -80,6 +80,23 @@
                 </span>
             </div>
 
+            {{-- Hints PIX / Parcelamento --}}
+            @php
+                $calc      = app(\App\Services\PaymentCalculator::class);
+                $cardMode  = $calc->cardDisplayMode();
+                $pixP      = $calc->pixPrice($this->currentPrice);
+                $instLabel = $calc->bestFreeInstallmentLabel($this->currentPrice);
+            @endphp
+            @if (($cardMode === 'pix' || $cardMode === 'both') && $pixP)
+                <p class="text-sm text-green-600 font-medium -mt-3">
+                    <span class="font-bold">R$ {{ number_format($pixP, 2, ',', '.') }}</span> no PIX
+                    <span class="text-xs text-green-500">(você economiza R$ {{ number_format($calc->pixSavings($this->currentPrice), 2, ',', '.') }})</span>
+                </p>
+            @endif
+            @if (($cardMode === 'installments' || $cardMode === 'both') && $instLabel)
+                <p class="text-sm text-gray-500 -mt-3">ou {{ $instLabel }}</p>
+            @endif
+
             {{-- Descrição curta --}}
             @if ($this->product->short_description)
                 <p class="text-sm text-gray-600 leading-relaxed">

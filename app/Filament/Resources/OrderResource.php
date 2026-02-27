@@ -293,7 +293,7 @@ class OrderResource extends Resource
                             ->money('BRL'),
 
                         Infolists\Components\TextEntry::make('discount')
-                            ->label('Desconto')
+                            ->label('Desconto Cupom')
                             ->formatStateUsing(fn (Order $record): string =>
                                 'R$ ' . number_format((float) $record->discount, 2, ',', '.') .
                                 ($record->coupon_code
@@ -302,11 +302,52 @@ class OrderResource extends Resource
                             )
                             ->html(),
 
+                        Infolists\Components\TextEntry::make('pix_discount')
+                            ->label('Desconto PIX')
+                            ->formatStateUsing(fn (Order $record): string =>
+                                $record->pix_discount > 0
+                                    ? '− R$ ' . number_format((float) $record->pix_discount, 2, ',', '.')
+                                    : '—'
+                            )
+                            ->color(fn (Order $record): string => $record->pix_discount > 0 ? 'success' : 'gray'),
+
                         Infolists\Components\TextEntry::make('total')
                             ->label('Total')
                             ->money('BRL')
                             ->weight('bold')
-                            ->size(Infolists\Components\TextEntry\TextEntrySize::Large)
+                            ->size(Infolists\Components\TextEntry\TextEntrySize::Large),
+
+                        Infolists\Components\TextEntry::make('payment_summary')
+                            ->label('Detalhe Pgto.')
+                            ->columnSpanFull()
+                            ->formatStateUsing(function (Order $record): string {
+                                if ($record->payment_method === 'pix' && $record->pix_discount > 0) {
+                                    $pct = $record->subtotal + (float) $record->shipping_cost > 0
+                                        ? round((float) $record->pix_discount / ($record->subtotal + (float) $record->shipping_cost - (float) $record->discount) * 100, 1)
+                                        : 0;
+                                    return 'Desconto PIX de ' . $pct . '% — economia de R$ ' . number_format((float) $record->pix_discount, 2, ',', '.');
+                                }
+                                if ($record->payment_method === 'credit_card') {
+                                    $inst    = $record->payment_data['installments'] ?? 1;
+                                    $instVal = $record->payment_data['installment_value'] ?? 0;
+                                    $noJuros = $record->payment_data['interest_free'] ?? true;
+                                    $totalWI = $record->payment_data['total_with_interest'] ?? 0;
+                                    if ($inst <= 1) {
+                                        return 'À vista';
+                                    }
+                                    $label = $inst . '× de R$ ' . number_format((float) $instVal, 2, ',', '.') . ($noJuros ? ' sem juros' : ' com juros');
+                                    if (! $noJuros && $totalWI > $record->total) {
+                                        $surcharge = round($totalWI - (float) $record->total, 2);
+                                        $label .= ' (acréscimo de R$ ' . number_format($surcharge, 2, ',', '.') . ')';
+                                    }
+                                    return $label;
+                                }
+                                return '—';
+                            })
+                            ->visible(fn (Order $record): bool =>
+                                ($record->payment_method === 'pix' && $record->pix_discount > 0) ||
+                                ($record->payment_method === 'credit_card' && ! empty($record->payment_data['installments']))
+                            ),
                     ]),
 
                 // ── Pagamento ─────────────────────────────────────────────

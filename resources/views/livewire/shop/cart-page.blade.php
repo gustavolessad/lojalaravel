@@ -250,6 +250,25 @@
                     <span>R$ {{ number_format($cart->total, 2, ',', '.') }}</span>
                 </div>
 
+                {{-- Hints de pagamento --}}
+                @php
+                    $calc       = app(\App\Services\PaymentCalculator::class);
+                    $pixTotal   = $calc->pixPrice((float) $cart->total);
+                    $instLabel  = $calc->bestFreeInstallmentLabel((float) $cart->total);
+                @endphp
+                @if ($pixTotal || $instLabel)
+                    <div class="mt-3 space-y-1 text-sm text-center">
+                        @if ($pixTotal)
+                            <p class="text-green-700">
+                                ou <span class="font-semibold">R$ {{ number_format($pixTotal, 2, ',', '.') }}</span> no PIX
+                            </p>
+                        @endif
+                        @if ($instLabel)
+                            <p class="text-gray-500">ou {{ $instLabel }}</p>
+                        @endif
+                    </div>
+                @endif
+
                 <a href="{{ route('checkout.index') }}"
                     class="mt-5 w-full flex items-center justify-center px-6 py-3 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition-colors text-sm">
                     Finalizar compra

@@ -201,6 +201,22 @@
                                         R$ {{ number_format($entry->price, 2, ',', '.') }}
                                     </span>
                                 @endif
+
+                                {{-- Hints PIX / Parcelamento --}}
+                                @php
+                                    $calc      = app(\App\Services\PaymentCalculator::class);
+                                    $cardMode  = $calc->cardDisplayMode();
+                                    $pixP      = $calc->pixPrice($entry->price);
+                                    $instLabel = $calc->bestFreeInstallmentLabel($entry->price);
+                                @endphp
+                                @if (($cardMode === 'pix' || $cardMode === 'both') && $pixP)
+                                    <p class="text-xs text-green-600 mt-0.5 font-medium">
+                                        R$ {{ number_format($pixP, 2, ',', '.') }} no PIX
+                                    </p>
+                                @endif
+                                @if (($cardMode === 'installments' || $cardMode === 'both') && $instLabel)
+                                    <p class="text-xs text-gray-500 mt-0.5">ou {{ $instLabel }}</p>
+                                @endif
                             </div>
                         </div>
                     </a>

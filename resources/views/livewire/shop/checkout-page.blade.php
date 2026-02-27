@@ -491,7 +491,7 @@
                                    class="accent-indigo-600">
                             <div>
                                 <p class="text-sm font-semibold text-gray-900">Cartão de crédito</p>
-                                <p class="text-xs text-gray-500">Em até 12×</p>
+                                <p class="text-xs text-gray-500">Em até {{ app(\App\Services\PaymentCalculator::class)->installmentsMax() }}×</p>
                             </div>
                         </label>
                     </div>
@@ -536,6 +536,24 @@
                             </div>
                         </div>
                     @else
+                        {{-- Desconto PIX --}}
+                        @if ($this->pixTotal)
+                            <div class="flex items-center gap-3 p-4 bg-green-50 border border-green-200 rounded-xl">
+                                <svg class="w-5 h-5 text-green-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                                <div>
+                                    <p class="text-sm font-semibold text-green-800">
+                                        Pagando no PIX:
+                                        <span class="text-lg">R$ {{ number_format($this->pixTotal, 2, ',', '.') }}</span>
+                                    </p>
+                                    <p class="text-xs text-green-600 mt-0.5">
+                                        Você economiza R$ {{ number_format($this->pixSavings, 2, ',', '.') }} pagando à vista
+                                    </p>
+                                </div>
+                            </div>
+                        @endif
+                        {{-- Info QR Code --}}
                         <div class="flex items-center gap-3 p-4 bg-blue-50 border border-blue-200 rounded-xl">
                             <svg class="w-5 h-5 text-blue-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
@@ -693,6 +711,25 @@
                         <span>Total</span>
                         <span>R$ {{ number_format($this->total, 2, ',', '.') }}</span>
                     </div>
+
+                    {{-- Hints PIX / Parcelamento --}}
+                    @php
+                        $calc      = app(\App\Services\PaymentCalculator::class);
+                        $pixHint   = $calc->pixPrice($this->total);
+                        $instHint  = $calc->bestFreeInstallmentLabel($this->total);
+                    @endphp
+                    @if ($pixHint || $instHint)
+                        <div class="pt-3 border-t border-gray-100 space-y-1">
+                            @if ($pixHint)
+                                <p class="text-sm text-green-700 text-center">
+                                    ou <span class="font-semibold">R$ {{ number_format($pixHint, 2, ',', '.') }}</span> no PIX
+                                </p>
+                            @endif
+                            @if ($instHint)
+                                <p class="text-xs text-gray-500 text-center">ou {{ $instHint }}</p>
+                            @endif
+                        </div>
+                    @endif
                 </div>
             </div>
         </div>

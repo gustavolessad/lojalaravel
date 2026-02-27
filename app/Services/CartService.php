@@ -137,6 +137,14 @@ class CartService
             }
         }
 
+        // Copia o cupom do carrinho anônimo se o carrinho do cliente ainda não tiver um
+        if ($sessionCart->coupon_code && ! $customerCart->coupon_code) {
+            $customerCart->update([
+                'coupon_code'     => $sessionCart->coupon_code,
+                'coupon_discount' => $sessionCart->coupon_discount,
+            ]);
+        }
+
         $sessionCart->delete();
         Session::forget('cart_session_id');
     }

@@ -308,15 +308,30 @@ class ProductList extends Component
     {
         $entries = collect();
 
+        // Filtros de atributo com seleção única são carregados na URL do produto,
+        // para que o ProductDetail pré-selecione a variante correspondente ao filtro ativo.
+        // Multi-seleção é ignorada (não dá para pré-selecionar múltiplos valores).
+        $carryParams = [];
+        foreach ($this->attrs as $attrSlug => $valueSlugs) {
+            if (count($valueSlugs) === 1) {
+                $carryParams[$attrSlug] = $valueSlugs[0];
+            }
+        }
+
         foreach ($products as $product) {
             $expandAttr = $product->attributes
                 ->first(fn ($attr) => (bool) $attr->pivot->expand_in_catalog);
 
             if (! $expandAttr) {
+                $url = '/' . $product->slug . '/p';
+                if (! empty($carryParams)) {
+                    $url .= '?' . http_build_query($carryParams);
+                }
+
                 $entries->push(new CatalogEntry(
                     product:       $product,
                     displayName:   $product->name,
-                    url:           '/' . $product->slug . '/p',
+                    url:           $url,
                     price:         $product->getCurrentPrice(),
                     originalPrice: $product->isOnSale() ? (float) $product->price : null,
                     imageUrl:      $product->getFirstMediaUrl('cover') ?: null,
@@ -362,11 +377,13 @@ class ProductList extends Component
                 if ($this->minPrice !== '' && $price < (float) $this->minPrice) continue;
                 if ($this->maxPrice !== '' && $price > (float) $this->maxPrice) continue;
 
-                // URL para o produto com variante pré-selecionada (lida pelo ProductDetail via query amigável)
+                // URL: atributo de expansão + demais filtros ativos de atributo (carry)
+                // O atributo de expansão sobrescreve o carry caso haja sobreposição.
+                $urlParams = array_merge($carryParams, [$expandAttr->slug => $value->slug]);
                 $entries->push(new CatalogEntry(
                     product:       $product,
                     displayName:   $product->name . ' ' . $value->getLabel(),
-                    url:           '/' . $product->slug . '/p?' . $expandAttr->slug . '=' . $value->slug,
+                    url:           '/' . $product->slug . '/p?' . http_build_query($urlParams),
                     price:         $price,
                     originalPrice: $originalPrice,
                     imageUrl:      $imageUrl,

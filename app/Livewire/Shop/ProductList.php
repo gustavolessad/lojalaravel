@@ -328,6 +328,10 @@ class ProductList extends Component
                     $url .= '?' . http_build_query($carryParams);
                 }
 
+                $inStock = $product->type === 'simple'
+                    ? ($product->stock ?? 0) > 0
+                    : $product->variants->where('stock', '>', 0)->isNotEmpty();
+
                 $entries->push(new CatalogEntry(
                     product:       $product,
                     displayName:   $product->name,
@@ -337,6 +341,7 @@ class ProductList extends Component
                     imageUrl:      $product->getFirstMediaUrl('cover') ?: null,
                     isNew:         (bool) $product->is_new,
                     isOnSale:      $product->isOnSale(),
+                    inStock:       $inStock,
                 ));
                 continue;
             }
@@ -389,12 +394,14 @@ class ProductList extends Component
                     imageUrl:      $imageUrl,
                     isNew:         (bool) $product->is_new,
                     isOnSale:      $originalPrice !== null,
+                    inStock:       ($variant?->stock ?? 0) > 0,
                     expandedBy:    $value,
                 ));
             }
         }
 
-        return $entries;
+        // Produtos sem estoque sempre ao final, preservando a ordem relativa dentro de cada grupo
+        return $entries->sortBy(fn ($e) => $e->inStock ? 0 : 1)->values();
     }
 
     #[Computed]

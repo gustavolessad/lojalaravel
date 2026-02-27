@@ -721,12 +721,12 @@
                     @if ($pixHint || $instHint)
                         <div class="pt-3 border-t border-gray-100 space-y-1">
                             @if ($pixHint)
-                                <p class="text-sm text-green-700 text-center">
+                                <p class="text-sm text-green-700 text-end">
                                     ou <span class="font-semibold">R$ {{ number_format($pixHint, 2, ',', '.') }}</span> no PIX
                                 </p>
                             @endif
                             @if ($instHint)
-                                <p class="text-xs text-gray-500 text-center">ou {{ $instHint }}</p>
+                                <p class="text-xs text-gray-500 text-end">ou {{ $instHint }}</p>
                             @endif
                         </div>
                     @endif

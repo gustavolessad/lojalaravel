@@ -257,7 +257,7 @@
                     $instLabel  = $calc->bestFreeInstallmentLabel((float) $cart->total);
                 @endphp
                 @if ($pixTotal || $instLabel)
-                    <div class="mt-3 space-y-1 text-sm text-center">
+                    <div class="mt-3 space-y-1 text-sm text-end">
                         @if ($pixTotal)
                             <p class="text-green-700">
                                 ou <span class="font-semibold">R$ {{ number_format($pixTotal, 2, ',', '.') }}</span> no PIX

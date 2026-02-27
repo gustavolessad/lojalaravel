@@ -50,11 +50,32 @@
         ═══════════════════════════════════════════════════════════════ --}}
         <div class="flex flex-col space-y-5">
 
-            {{-- Categoria --}}
-            @if ($this->product->categories->isNotEmpty())
-                <p class="text-sm font-medium text-indigo-600">
-                    {{ $this->product->categories->first()->name }}
-                </p>
+            {{-- Categoria + Marca --}}
+            @if ($this->product->categories->isNotEmpty() || $this->product->brand)
+                <div class="flex items-center gap-2 text-sm flex-wrap">
+                    @if ($this->product->categories->isNotEmpty())
+                        @php $cat = $this->product->categories->first(); @endphp
+                        <a href="{{ $cat->url }}"
+                           class="font-medium text-indigo-600 hover:text-indigo-800 transition-colors">
+                            {{ $cat->name }}
+                        </a>
+                    @endif
+                    @if ($this->product->categories->isNotEmpty() && $this->product->brand)
+                        <span class="text-gray-300">·</span>
+                    @endif
+                    @if ($this->product->brand)
+                        <a href="{{ $this->product->brand->url }}"
+                           class="flex items-center gap-1.5 text-gray-500 hover:text-gray-800 transition-colors">
+                            @if ($this->product->brand->getFirstMediaUrl('logo'))
+                                <img src="{{ $this->product->brand->getFirstMediaUrl('logo') }}"
+                                     alt="{{ $this->product->brand->name }}"
+                                     class="h-4 w-auto object-contain">
+                            @else
+                                {{ $this->product->brand->name }}
+                            @endif
+                        </a>
+                    @endif
+                </div>
             @endif
 
             {{-- Título --}}

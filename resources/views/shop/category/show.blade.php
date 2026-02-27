@@ -26,6 +26,6 @@
     </div>
 
     {{-- Listagem com filtros (Livewire) --}}
-    @livewire('shop.product-list', ['category' => $category])
+    @livewire('shop.product-list', ['scopeType' => 'category', 'scopeId' => $category->id])
 
 @endsection

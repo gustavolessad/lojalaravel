@@ -4,6 +4,7 @@ use App\Http\Controllers\Account\AddressController;
 use App\Http\Controllers\Account\AuthController;
 use App\Http\Controllers\Account\DashboardController;
 use App\Http\Controllers\Shop\CartController;
+use App\Http\Controllers\Shop\BrandController;
 use App\Http\Controllers\Shop\CategoryController;
 use App\Http\Controllers\Shop\CheckoutController;
 use App\Http\Controllers\Shop\ProductController;
@@ -67,6 +68,14 @@ Route::prefix('minha-conta')->name('account.')->middleware(AuthenticateCustomer:
 Route::get('{slug}/p', [ProductController::class, 'show'])
     ->where('slug', '[a-z0-9\-]+')
     ->name('product.show');
+
+// Listagem de marcas: /marcas
+Route::get('/marcas', [BrandController::class, 'index'])->name('brand.index');
+
+// Marca: /nike/m
+Route::get('{slug}/m', [BrandController::class, 'show'])
+    ->where('slug', '[a-z0-9\-]+')
+    ->name('brand.show');
 
 // Categorias: /eletronicos/c, /eletronicos/smartphones/c, ...
 Route::get('{categoryPath}/c', [CategoryController::class, 'show'])

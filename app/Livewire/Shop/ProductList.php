@@ -2,8 +2,12 @@
 
 namespace App\Livewire\Shop;
 
+use App\Catalog\BrandScope;
+use App\Catalog\CategoryScope;
+use App\Contracts\ProductScopeInterface;
 use App\Data\CatalogEntry;
 use App\Models\Attribute;
+use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Product;
 use Illuminate\Contracts\View\View;
@@ -19,7 +23,8 @@ class ProductList extends Component
 {
     use WithPagination;
 
-    public Category $category;
+    public string $scopeType = 'category'; // 'category' | 'brand'
+    public int $scopeId;
 
     // Filtros sincronizados com a URL (query string)
     #[Url(as: 'attrs', except: [])]
@@ -54,20 +59,25 @@ class ProductList extends Component
         $this->resetPage();
     }
 
-    // ── Dados computados ──────────────────────────────────────────────────
+    // ── Escopo ────────────────────────────────────────────────────────────
 
     #[Computed]
-    public function categoryIds(): array
+    public function scope(): ProductScopeInterface
     {
-        return $this->category->getAllDescendantIds();
+        return match ($this->scopeType) {
+            'brand'  => new BrandScope(Brand::findOrFail($this->scopeId)),
+            default  => new CategoryScope(Category::findOrFail($this->scopeId)),
+        };
     }
+
+    // ── Dados computados ──────────────────────────────────────────────────
 
     #[Computed]
     public function products(): LengthAwarePaginator
     {
-        $query = Product::query()
-            ->where('active', true)
-            ->whereHas('categories', fn ($q) => $q->whereIn('categories.id', $this->categoryIds));
+        $query = $this->scope->applyToQuery(
+            Product::query()->where('active', true)
+        );
 
         // Filtro de preço — considera preço efetivo (promoção + herança variante→produto)
         if ($this->minPrice !== '' || $this->maxPrice !== '') {
@@ -261,15 +271,20 @@ class ProductList extends Component
     #[Computed]
     public function subcategories(): Collection
     {
-        return $this->category->children()->where('active', true)->get();
+        if ($this->scopeType !== 'category') {
+            return collect();
+        }
+
+        return Category::findOrFail($this->scopeId)
+            ->children()
+            ->where('active', true)
+            ->get();
     }
 
     #[Computed]
     public function availableAttributes(): Collection
     {
-        $productIds = Product::where('active', true)
-            ->whereHas('categories', fn ($q) => $q->whereIn('categories.id', $this->categoryIds))
-            ->pluck('id');
+        $productIds = $this->scope->baseProductIds();
 
         if ($productIds->isEmpty()) {
             return collect();
@@ -293,8 +308,7 @@ class ProductList extends Component
     #[Computed]
     public function priceRange(): array
     {
-        $base = Product::where('active', true)
-            ->whereHas('categories', fn ($q) => $q->whereIn('categories.id', $this->categoryIds));
+        $base = $this->scope->applyToQuery(Product::where('active', true));
 
         $effectivePrice = "CASE
             WHEN sale_price IS NOT NULL

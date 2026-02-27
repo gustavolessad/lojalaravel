@@ -71,6 +71,7 @@ class ProductDetail extends Component
             ]),
             'media',
             'categories',
+            'brand',
         ])->findOrFail($this->productId);
     }
 

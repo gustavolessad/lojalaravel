@@ -37,7 +37,7 @@ class CartService
         $variant = $variantId ? ProductVariant::findOrFail($variantId) : null;
 
         $unitPrice = $variant
-            ? (float) ($variant->price ?? $product->getCurrentPrice())
+            ? $variant->getEffectivePrice()
             : $product->getCurrentPrice();
 
         $item = $cart->items()
@@ -46,7 +46,10 @@ class CartService
             ->first();
 
         if ($item) {
-            $item->increment('quantity', $quantity);
+            $item->update([
+                'quantity'   => $item->quantity + $quantity,
+                'unit_price' => $unitPrice, // garante preço sempre atualizado
+            ]);
         } else {
             $item = $cart->items()->create([
                 'product_id' => $productId,
@@ -132,6 +135,14 @@ class CartService
                     'unit_price' => $item->unit_price,
                 ]);
             }
+        }
+
+        // Copia o cupom do carrinho anônimo se o carrinho do cliente ainda não tiver um
+        if ($sessionCart->coupon_code && ! $customerCart->coupon_code) {
+            $customerCart->update([
+                'coupon_code'     => $sessionCart->coupon_code,
+                'coupon_discount' => $sessionCart->coupon_discount,
+            ]);
         }
 
         $sessionCart->delete();

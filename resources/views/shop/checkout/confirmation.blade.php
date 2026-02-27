@@ -99,14 +99,48 @@
                 <span>Subtotal</span>
                 <span>R$ {{ number_format($order->subtotal, 2, ',', '.') }}</span>
             </div>
+            @if ($order->discount > 0)
+                <div class="flex justify-between text-green-600">
+                    <span>Desconto{{ $order->coupon_code ? ' (' . $order->coupon_code . ')' : '' }}</span>
+                    <span>− R$ {{ number_format($order->discount, 2, ',', '.') }}</span>
+                </div>
+            @endif
             <div class="flex justify-between text-gray-600">
                 <span>Frete ({{ $order->shipping_method }})</span>
                 <span>{{ $order->shipping_cost == 0 ? 'Grátis' : 'R$ ' . number_format($order->shipping_cost, 2, ',', '.') }}</span>
             </div>
+            @if ($order->pix_discount > 0)
+                <div class="flex justify-between text-green-600">
+                    <span>Desconto PIX</span>
+                    <span>− R$ {{ number_format($order->pix_discount, 2, ',', '.') }}</span>
+                </div>
+            @endif
             <div class="flex justify-between font-bold text-gray-900 text-base pt-2 border-t border-gray-100">
                 <span>Total</span>
                 <span>R$ {{ number_format($order->total, 2, ',', '.') }}</span>
             </div>
+
+            {{-- Informação complementar de pagamento --}}
+            @if ($order->payment_method === 'pix' && $order->pix_discount > 0)
+                <p class="text-xs text-green-600 text-center pt-1">
+                    Você economizou R$ {{ number_format($order->pix_discount, 2, ',', '.') }} pagando no PIX!
+                </p>
+            @elseif ($order->payment_method === 'credit_card' && ! empty($order->payment_data['installments']) && $order->payment_data['installments'] > 1)
+                @php
+                    $inst      = $order->payment_data['installments'];
+                    $instVal   = $order->payment_data['installment_value'] ?? 0;
+                    $noJuros   = $order->payment_data['interest_free'] ?? true;
+                    $totalWI   = $order->payment_data['total_with_interest'] ?? 0;
+                    $surcharge = round($totalWI - $order->total, 2);
+                @endphp
+                <p class="text-xs text-gray-500 text-center pt-1">
+                    {{ $inst }}× de R$ {{ number_format($instVal, 2, ',', '.') }}
+                    {{ $noJuros ? 'sem juros' : 'com juros' }}
+                    @if (! $noJuros && $surcharge > 0)
+                        (acréscimo de R$ {{ number_format($surcharge, 2, ',', '.') }})
+                    @endif
+                </p>
+            @endif
         </div>
     </div>
 

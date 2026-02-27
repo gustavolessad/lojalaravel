@@ -138,6 +138,29 @@ class ProductResource extends Resource
                             ->live()
                             ->columnSpanFull(),
 
+                        Forms\Components\Select::make('expand_catalog_attributes')
+                            ->label('Expandir no catálogo por')
+                            ->helperText('O atributo selecionado gerará um card separado por valor no catálogo (ex: um card por cor). Deixe em branco para não expandir.')
+                            ->placeholder('Não expandir')
+                            ->options(fn (Forms\Get $get): array =>
+                                collect($get('attributes') ?? [])
+                                    ->mapWithKeys(fn ($id) => [$id => Attribute::find((int) $id)?->name ?? ''])
+                                    ->filter()
+                                    ->toArray()
+                            )
+                            ->nullable()
+                            ->live()
+                            ->visible(fn (Forms\Get $get) => count($get('attributes') ?? []) > 0)
+                            ->dehydrated(true)
+                            ->afterStateHydrated(function ($component, $record) {
+                                if ($record?->exists) {
+                                    $expandId = $record->attributes()
+                                        ->wherePivot('expand_in_catalog', true)
+                                        ->value('attributes.id');
+                                    $component->state($expandId);
+                                }
+                            }),
+
                         Forms\Components\Repeater::make('variants')
                             ->label('Variantes')
                             ->relationship()

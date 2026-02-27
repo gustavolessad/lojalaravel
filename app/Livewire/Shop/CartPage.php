@@ -179,7 +179,8 @@ class CartPage extends Component
             ->current()
             ->load(['items.product', 'items.variant.attributeValues.attribute']);
 
-        $removed = [];
+        $removed      = [];
+        $priceChanged = false;
 
         foreach ($this->cart->items as $item) {
             $stock = $item->variant
@@ -193,10 +194,21 @@ class CartPage extends Component
                 }
                 $removed[] = $label;
                 $cartService->remove($item->id);
+                continue;
+            }
+
+            // Sincroniza unit_price com o preço efetivo atual do produto/variante
+            $currentPrice = $item->variant
+                ? $item->variant->getEffectivePrice()
+                : $item->product->getCurrentPrice();
+
+            if ((float) $item->unit_price !== $currentPrice) {
+                $item->update(['unit_price' => $currentPrice]);
+                $priceChanged = true;
             }
         }
 
-        if (! empty($removed)) {
+        if (! empty($removed) || $priceChanged) {
             $this->removedItems = array_merge($this->removedItems, $removed);
 
             $this->cart = $cartService

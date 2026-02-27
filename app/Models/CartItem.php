@@ -38,6 +38,18 @@ class CartItem extends Model
         return $this->belongsTo(ProductVariant::class, 'variant_id');
     }
 
+    public function getOriginalPriceAttribute(): ?float
+    {
+        if ($this->variant) {
+            if ($this->variant->price !== null) {
+                return $this->variant->isOnSale() ? (float) $this->variant->price : null;
+            }
+            return $this->product->isOnSale() ? (float) $this->product->price : null;
+        }
+
+        return $this->product->isOnSale() ? (float) $this->product->price : null;
+    }
+
     public function getSubtotalAttribute(): float
     {
         return (float) $this->unit_price * $this->quantity;

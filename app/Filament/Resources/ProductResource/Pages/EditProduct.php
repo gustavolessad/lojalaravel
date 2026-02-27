@@ -16,4 +16,21 @@ class EditProduct extends EditRecord
             Actions\DeleteAction::make(),
         ];
     }
+
+    protected function afterSave(): void
+    {
+        $this->syncExpandAttributes();
+    }
+
+    private function syncExpandAttributes(): void
+    {
+        $attrIds  = $this->data['attributes'] ?? [];
+        $expandId = (int) ($this->data['expand_catalog_attributes'] ?? 0);
+
+        $pivotData = collect($attrIds)->mapWithKeys(fn ($id) => [
+            (int) $id => ['expand_in_catalog' => $expandId > 0 && (int) $id === $expandId],
+        ])->toArray();
+
+        $this->record->attributes()->sync($pivotData);
+    }
 }

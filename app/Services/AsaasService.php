@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Order;
+use App\Models\Setting;
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -14,8 +15,8 @@ class AsaasService
 
     public function __construct()
     {
-        $sandbox      = config('services.asaas.sandbox', true);
-        $this->apiKey = config('services.asaas.key', '');
+        $sandbox      = (bool) Setting::get('payment_asaas_sandbox', true);
+        $this->apiKey = (string) Setting::get('payment_asaas_token', '');
         $this->baseUrl = $sandbox
             ? 'https://sandbox.asaas.com/api/v3'
             : 'https://api.asaas.com/api/v3';

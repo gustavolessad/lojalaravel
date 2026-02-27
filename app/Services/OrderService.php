@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Cart;
 use App\Models\Coupon;
+use App\Services\PaymentCalculator;
 use App\Models\Order;
 use App\Models\Customer;
 use Illuminate\Support\Facades\DB;
@@ -28,14 +29,16 @@ class OrderService
         string   $paymentMethod,
         ?Customer $customer = null,
         array    $guest     = [],
-        ?string  $notes     = null,
+        ?string  $notes       = null,
+        float    $pixDiscount  = 0.0,
     ): Order {
-        return DB::transaction(function () use ($cart, $address, $shipping, $paymentMethod, $customer, $guest, $notes) {
+        return DB::transaction(function () use ($cart, $address, $shipping, $paymentMethod, $customer, $guest, $notes, $pixDiscount) {
 
             $subtotal     = (float) $cart->subtotal;
             $shippingCost = (float) $shipping['price'];
             $discount     = (float) ($cart->coupon_discount ?? 0);
-            $total        = max(0, $subtotal - $discount) + $shippingCost;
+            $baseTotal    = max(0, $subtotal - $discount) + $shippingCost;
+            $total        = max(0, $baseTotal - $pixDiscount);
 
             // Cria o pedido
             $order = Order::create([
@@ -63,8 +66,9 @@ class OrderService
                 'shipping_cost'   => $shippingCost,
 
                 'subtotal'    => $subtotal,
-                'discount'    => $discount,
-                'total'       => $total,
+                'discount'     => $discount,
+                'pix_discount' => $pixDiscount,
+                'total'        => $total,
                 'coupon_code' => $cart->coupon_code,
 
                 'notes' => $notes,

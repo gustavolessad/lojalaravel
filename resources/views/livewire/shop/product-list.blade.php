@@ -1,4 +1,6 @@
-<div class="flex gap-8">
+<div class="flex gap-8"
+     x-data
+     x-on:update-url.window="history.replaceState(null, '', $event.detail.url)">
 
     {{-- ═══════════════════════════════════════════════════════════════════
          SIDEBAR DE FILTROS

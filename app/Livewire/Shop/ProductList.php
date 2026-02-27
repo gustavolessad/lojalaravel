@@ -15,7 +15,6 @@ use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Computed;
-use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -26,32 +25,101 @@ class ProductList extends Component
     public string $scopeType = 'category'; // 'category' | 'brand'
     public int $scopeId;
 
-    // Filtros sincronizados com a URL (query string)
-    #[Url(as: 'attrs', except: [])]
-    public array $attrs = []; // [attribute_slug => value_slug]
-
-    #[Url(as: 'min', except: '')]
+    // Filtros — gerenciados manualmente para URL amigável
+    public array $attrs    = []; // [attribute_slug => [value_slug, ...]]
+    public array $brandIds = []; // [brand_slug, ...]
     public string $minPrice = '';
-
-    #[Url(as: 'max', except: '')]
     public string $maxPrice = '';
+    public bool $inStock    = false;
+    public string $sort     = 'newest';
 
-    #[Url(as: 'estoque', except: false)]
-    public bool $inStock = false;
+    // Parâmetros reservados que não são slugs de atributos na URL
+    private const RESERVED_PARAMS = ['min', 'max', 'estoque', 'ordem', 'marca', 'page', 'v'];
 
-    #[Url(as: 'marca', except: [])]
-    public array $brandIds = []; // slugs das marcas selecionadas (só usado em scopeType=category)
+    // ── Inicialização ─────────────────────────────────────────────────────
 
-    #[Url(as: 'ordem', except: 'newest')]
-    public string $sort = 'newest';
+    public function mount(): void
+    {
+        $q = request()->query();
 
-    // Reinicia a paginação ao mudar filtros via wire:model.live
-    public function updatedMinPrice(): void { $this->resetPage(); }
-    public function updatedMaxPrice(): void { $this->resetPage(); }
-    public function updatedInStock(): void  { $this->resetPage(); }
-    public function updatedSort(): void     { $this->resetPage(); }
+        // Atributos: ?tamanho=p,g&cor=preto,branco
+        foreach ($q as $key => $value) {
+            if (! in_array($key, self::RESERVED_PARAMS) && is_string($value) && $value !== '') {
+                $parsed = array_values(array_filter(array_map('trim', explode(',', $value))));
+                if (! empty($parsed)) {
+                    $this->attrs[$key] = $parsed;
+                }
+            }
+        }
 
-    // Toggle multi-select de atributo (OR dentro do grupo, AND entre grupos)
+        // Marcas: ?marca=nike,adidas
+        if (! empty($q['marca']) && is_string($q['marca'])) {
+            $this->brandIds = array_values(array_filter(array_map('trim', explode(',', $q['marca']))));
+        }
+
+        // Preço, estoque, ordenação
+        if (! empty($q['min']))    $this->minPrice = (string) $q['min'];
+        if (! empty($q['max']))    $this->maxPrice = (string) $q['max'];
+        if (! empty($q['estoque'])) $this->inStock = $q['estoque'] !== '0';
+        if (! empty($q['ordem']))  $this->sort     = $q['ordem'];
+    }
+
+    // ── URL amigável ──────────────────────────────────────────────────────
+
+    /**
+     * Parâmetros de filtro atuais como array (sem página).
+     * Usado pelo paginator e por buildUrl().
+     */
+    private function filterParams(): array
+    {
+        $params = [];
+
+        foreach ($this->attrs as $slug => $values) {
+            if (! empty($values)) {
+                $params[$slug] = implode(',', $values);
+            }
+        }
+
+        if (! empty($this->brandIds)) {
+            $params['marca'] = implode(',', $this->brandIds);
+        }
+
+        if ($this->minPrice !== '') $params['min']    = $this->minPrice;
+        if ($this->maxPrice !== '') $params['max']    = $this->maxPrice;
+        if ($this->inStock)         $params['estoque'] = '1';
+        if ($this->sort !== 'newest') $params['ordem'] = $this->sort;
+
+        return $params;
+    }
+
+    private function buildUrl(): string
+    {
+        $params = $this->filterParams();
+        $page   = $this->getPage();
+        if ($page > 1) {
+            $params['page'] = $page;
+        }
+
+        $qs = http_build_query($params);
+        return request()->url() . ($qs ? '?' . $qs : '');
+    }
+
+    /** Empurra a URL atual para o histórico do browser via evento JS. */
+    private function pushUrl(): void
+    {
+        $this->dispatch('update-url', url: $this->buildUrl());
+    }
+
+    // ── Lifecycle hooks ───────────────────────────────────────────────────
+
+    public function updatedMinPrice(): void { $this->resetPage(); $this->pushUrl(); }
+    public function updatedMaxPrice(): void { $this->resetPage(); $this->pushUrl(); }
+    public function updatedInStock(): void  { $this->resetPage(); $this->pushUrl(); }
+    public function updatedSort(): void     { $this->resetPage(); $this->pushUrl(); }
+
+    // ── Ações de filtro ───────────────────────────────────────────────────
+
+    /** Toggle multi-select de atributo (OR dentro do grupo, AND entre grupos). */
     public function toggleAttr(string $attrSlug, string $valueSlug): void
     {
         $current = $this->attrs[$attrSlug] ?? [];
@@ -64,15 +132,16 @@ class ProductList extends Component
 
         if (empty($current)) {
             unset($this->attrs[$attrSlug]);
-            $this->attrs = $this->attrs; // força re-render
+            $this->attrs = $this->attrs;
         } else {
             $this->attrs[$attrSlug] = $current;
         }
 
         $this->resetPage();
+        $this->pushUrl();
     }
 
-    // Toggle multi-select de marca
+    /** Toggle multi-select de marca. */
     public function toggleBrand(string $brandSlug): void
     {
         if (in_array($brandSlug, $this->brandIds)) {
@@ -81,6 +150,7 @@ class ProductList extends Component
             $this->brandIds[] = $brandSlug;
         }
         $this->resetPage();
+        $this->pushUrl();
     }
 
     public function clearPriceFilter(): void
@@ -88,6 +158,7 @@ class ProductList extends Component
         $this->minPrice = '';
         $this->maxPrice = '';
         $this->resetPage();
+        $this->pushUrl();
     }
 
     public function resetFilters(): void
@@ -99,6 +170,7 @@ class ProductList extends Component
         $this->brandIds = [];
         $this->sort     = 'newest';
         $this->resetPage();
+        $this->pushUrl();
     }
 
     // ── Escopo ────────────────────────────────────────────────────────────
@@ -126,7 +198,6 @@ class ProductList extends Component
             $min = $this->minPrice !== '' ? (float) $this->minPrice : null;
             $max = $this->maxPrice !== '' ? (float) $this->maxPrice : null;
 
-            // Preço efetivo do produto (respeita datas de promoção)
             $productPrice = "CASE
                 WHEN products.sale_price IS NOT NULL
                     AND (products.sale_start IS NULL OR products.sale_start <= NOW())
@@ -135,7 +206,6 @@ class ProductList extends Component
                 ELSE products.price
             END";
 
-            // Preço efetivo da variante: sale_price > price > preço efetivo do produto pai
             $variantPrice = "COALESCE(
                 product_variants.sale_price,
                 product_variants.price,
@@ -148,14 +218,11 @@ class ProductList extends Component
             )";
 
             $query->where(function ($q) use ($min, $max, $productPrice, $variantPrice) {
-                // Produto simples: filtra pelo preço efetivo do produto
                 $q->where(function ($q) use ($min, $max, $productPrice) {
                     $q->where('type', 'simple');
                     if ($min !== null) $q->whereRaw("($productPrice) >= ?", [$min]);
                     if ($max !== null) $q->whereRaw("($productPrice) <= ?", [$max]);
-                })
-                // Produto variável: alguma variante ativa com preço efetivo no intervalo
-                ->orWhere(function ($q) use ($min, $max, $variantPrice) {
+                })->orWhere(function ($q) use ($min, $max, $variantPrice) {
                     $q->where('type', 'variable')
                       ->whereHas('variants', function ($q) use ($min, $max, $variantPrice) {
                           $q->where('active', true);
@@ -178,7 +245,7 @@ class ProductList extends Component
             });
         }
 
-        // Filtro de marca: OR entre marcas selecionadas (apenas em páginas de categoria)
+        // Filtro de marca: OR entre marcas selecionadas
         if (! empty($this->brandIds)) {
             $query->whereHas('brand', fn ($q) => $q->whereIn('slug', $this->brandIds));
         }
@@ -222,12 +289,14 @@ class ProductList extends Component
             $entries->count(),
             $perPage,
             $page,
-            ['path' => request()->url(), 'query' => request()->query()]
+            // filterParams() garante que os links do paginator sempre refletem os filtros atuais
+            ['path' => request()->url(), 'query' => $this->filterParams()]
         );
     }
 
     /**
      * Expande produtos com atributo "expand_in_catalog" em múltiplos CatalogEntry.
+     * URLs geradas usam ?v[attr]=value para pré-selecionar variante no ProductDetail.
      */
     private function expandIntoEntries(Collection $products): Collection
     {
@@ -238,7 +307,6 @@ class ProductList extends Component
                 ->first(fn ($attr) => (bool) $attr->pivot->expand_in_catalog);
 
             if (! $expandAttr) {
-                // Produto normal — um único card
                 $entries->push(new CatalogEntry(
                     product:       $product,
                     displayName:   $product->name,
@@ -252,7 +320,6 @@ class ProductList extends Component
                 continue;
             }
 
-            // Coleta valores do atributo de expansão que têm variantes ativas neste produto
             $values = $expandAttr->values
                 ->filter(fn ($value) =>
                     $product->variants->some(fn ($v) =>
@@ -269,7 +336,6 @@ class ProductList extends Component
                     continue;
                 }
 
-                // Primeira variante com este valor
                 $variant = $product->variants->first(
                     fn ($v) => $v->attributeValues->contains('id', $value->id)
                 );
@@ -280,24 +346,17 @@ class ProductList extends Component
                 }
 
                 if ($variant && $variant->price !== null) {
-                    // Variante tem preço próprio
                     $price         = $variant->getEffectivePrice();
                     $originalPrice = $variant->isOnSale() ? (float) $variant->price : null;
                 } else {
-                    // Variante sem preço — herda do produto pai
                     $price         = $product->getCurrentPrice();
                     $originalPrice = $product->isOnSale() ? (float) $product->price : null;
                 }
 
-                // Filtra entries expandidos pelo intervalo de preço (o SQL filtra por produto,
-                // mas cada entry tem seu próprio preço efetivo que precisa ser validado)
-                if ($this->minPrice !== '' && $price < (float) $this->minPrice) {
-                    continue;
-                }
-                if ($this->maxPrice !== '' && $price > (float) $this->maxPrice) {
-                    continue;
-                }
+                if ($this->minPrice !== '' && $price < (float) $this->minPrice) continue;
+                if ($this->maxPrice !== '' && $price > (float) $this->maxPrice) continue;
 
+                // URL para o produto com variante pré-selecionada (lida pelo ProductDetail via #[Url(as:'v')])
                 $entries->push(new CatalogEntry(
                     product:       $product,
                     displayName:   $product->name . ' ' . $value->getLabel(),

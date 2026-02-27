@@ -39,19 +39,56 @@ class ProductList extends Component
     #[Url(as: 'estoque', except: false)]
     public bool $inStock = false;
 
-    #[Url(as: 'marca', except: '')]
-    public string $brandId = ''; // slug da marca selecionada (só usado em scopeType=category)
+    #[Url(as: 'marca', except: [])]
+    public array $brandIds = []; // slugs das marcas selecionadas (só usado em scopeType=category)
 
     #[Url(as: 'ordem', except: 'newest')]
     public string $sort = 'newest';
 
-    // Reinicia a paginação ao mudar qualquer filtro
-    public function updatedAttrs(): void      { $this->resetPage(); }
-    public function updatedMinPrice(): void   { $this->resetPage(); }
-    public function updatedMaxPrice(): void   { $this->resetPage(); }
-    public function updatedInStock(): void    { $this->resetPage(); }
-    public function updatedBrandId(): void    { $this->resetPage(); }
-    public function updatedSort(): void       { $this->resetPage(); }
+    // Reinicia a paginação ao mudar filtros via wire:model.live
+    public function updatedMinPrice(): void { $this->resetPage(); }
+    public function updatedMaxPrice(): void { $this->resetPage(); }
+    public function updatedInStock(): void  { $this->resetPage(); }
+    public function updatedSort(): void     { $this->resetPage(); }
+
+    // Toggle multi-select de atributo (OR dentro do grupo, AND entre grupos)
+    public function toggleAttr(string $attrSlug, string $valueSlug): void
+    {
+        $current = $this->attrs[$attrSlug] ?? [];
+
+        if (in_array($valueSlug, $current)) {
+            $current = array_values(array_filter($current, fn ($v) => $v !== $valueSlug));
+        } else {
+            $current[] = $valueSlug;
+        }
+
+        if (empty($current)) {
+            unset($this->attrs[$attrSlug]);
+            $this->attrs = $this->attrs; // força re-render
+        } else {
+            $this->attrs[$attrSlug] = $current;
+        }
+
+        $this->resetPage();
+    }
+
+    // Toggle multi-select de marca
+    public function toggleBrand(string $brandSlug): void
+    {
+        if (in_array($brandSlug, $this->brandIds)) {
+            $this->brandIds = array_values(array_filter($this->brandIds, fn ($s) => $s !== $brandSlug));
+        } else {
+            $this->brandIds[] = $brandSlug;
+        }
+        $this->resetPage();
+    }
+
+    public function clearPriceFilter(): void
+    {
+        $this->minPrice = '';
+        $this->maxPrice = '';
+        $this->resetPage();
+    }
 
     public function resetFilters(): void
     {
@@ -59,7 +96,7 @@ class ProductList extends Component
         $this->minPrice = '';
         $this->maxPrice = '';
         $this->inStock  = false;
-        $this->brandId  = '';
+        $this->brandIds = [];
         $this->sort     = 'newest';
         $this->resetPage();
     }
@@ -141,16 +178,16 @@ class ProductList extends Component
             });
         }
 
-        // Filtro de marca (apenas em páginas de categoria)
-        if ($this->brandId !== '') {
-            $query->whereHas('brand', fn ($q) => $q->where('slug', $this->brandId));
+        // Filtro de marca: OR entre marcas selecionadas (apenas em páginas de categoria)
+        if (! empty($this->brandIds)) {
+            $query->whereHas('brand', fn ($q) => $q->whereIn('slug', $this->brandIds));
         }
 
-        // Filtro de atributos por slug (cada atributo selecionado filtra com AND)
-        foreach ($this->attrs as $attrSlug => $valueSlug) {
-            if ($valueSlug) {
+        // Filtro de atributos: OR dentro do mesmo atributo, AND entre atributos diferentes
+        foreach ($this->attrs as $attrSlug => $valueSlugs) {
+            if (! empty($valueSlugs)) {
                 $query->whereHas('variants.attributeValues', fn ($q) =>
-                    $q->where('attribute_values.slug', $valueSlug)
+                    $q->whereIn('attribute_values.slug', $valueSlugs)
                       ->whereHas('attribute', fn ($q) => $q->where('slug', $attrSlug))
                 );
             }
@@ -224,10 +261,10 @@ class ProductList extends Component
                 );
 
             foreach ($values as $value) {
-                // Se o atributo de expansão está filtrado, pular outros valores
+                // Se o atributo de expansão está filtrado, pular valores não selecionados
                 if (
-                    isset($this->attrs[$expandAttr->slug]) &&
-                    $this->attrs[$expandAttr->slug] !== $value->slug
+                    ! empty($this->attrs[$expandAttr->slug]) &&
+                    ! in_array($value->slug, $this->attrs[$expandAttr->slug])
                 ) {
                     continue;
                 }
@@ -352,11 +389,11 @@ class ProductList extends Component
     #[Computed]
     public function hasActiveFilters(): bool
     {
-        return ! empty(array_filter($this->attrs))
+        return collect($this->attrs)->some(fn ($v) => ! empty($v))
             || $this->minPrice !== ''
             || $this->maxPrice !== ''
             || $this->inStock
-            || $this->brandId !== '';
+            || ! empty($this->brandIds);
     }
 
     public function render(): View

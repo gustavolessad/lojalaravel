@@ -18,7 +18,7 @@ class StockNotificationResource extends Resource
     protected static ?string $navigationLabel = 'Avise-me';
     protected static ?string $modelLabel      = 'Aviso de Estoque';
     protected static ?string $pluralModelLabel = 'Avisos de Estoque';
-    protected static ?int    $navigationSort  = 2;
+    protected static ?int    $navigationSort  = 3;
 
     /** Badge vermelho com a contagem de pendentes no menu lateral. */
     public static function getNavigationBadge(): ?string

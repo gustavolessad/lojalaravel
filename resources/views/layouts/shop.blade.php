@@ -64,7 +64,18 @@
         @yield('content')
     </main>
 
-    <footer class="bg-white border-t border-gray-200 mt-16">
+    {{-- ═══ Pre-footer: Newsletter ═══ --}}
+    <section class="bg-indigo-700 mt-16">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+            <div class="text-center mb-7">
+                <h2 class="text-2xl font-bold text-white">Fique por dentro das novidades</h2>
+                <p class="mt-2 text-indigo-200 text-sm">Cadastre-se e receba promoções exclusivas, lançamentos e dicas em primeira mão.</p>
+            </div>
+            @livewire('shop.newsletter-form')
+        </div>
+    </section>
+
+    <footer class="bg-white border-t border-gray-200">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 text-center text-sm text-gray-500">
             &copy; {{ date('Y') }} {{ config('app.name') }}. Todos os direitos reservados.
         </div>

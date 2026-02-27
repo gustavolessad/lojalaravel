@@ -6,6 +6,7 @@ use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\StockNotification;
 use App\Services\CartService;
+use App\Services\ShippingCalculator;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Collection;
 use Livewire\Attributes\Computed;
@@ -26,6 +27,11 @@ class ProductDetail extends Component
     // Formulário "Avise-me"
     public string $notifyEmail = '';
     public bool $notified = false;
+
+    // Simulador de frete
+    public string $shippingCep = '';
+    public array $shippingOptions = [];
+    public ?string $shippingError = null;
 
     public function mount(Product $product): void
     {
@@ -330,8 +336,10 @@ class ProductDetail extends Component
     public function selectValue(string $attrSlug, string $valueSlug): void
     {
         $this->selected[$attrSlug] = $valueSlug;
-        $this->notified    = false;
-        $this->notifyEmail = '';
+        $this->notified      = false;
+        $this->notifyEmail   = '';
+        $this->shippingOptions = [];
+        $this->shippingError   = null;
 
         // Verifica se a nova combinação tem uma variante válida.
         // Se não tiver (ex: cor=vermelho com tamanho=P que não existe),
@@ -425,6 +433,58 @@ class ProductDetail extends Component
 
         $this->notified    = true;
         $this->notifyEmail = '';
+    }
+
+    public function calculateShipping(): void
+    {
+        $digits = preg_replace('/\D/', '', $this->shippingCep);
+
+        if (strlen($digits) !== 8) {
+            $this->shippingError   = 'Informe um CEP válido com 8 dígitos.';
+            $this->shippingOptions = [];
+            return;
+        }
+
+        // Para produtos variáveis exige variante selecionada (para ter peso/dimensões corretos)
+        if ($this->product->isVariable() && ! $this->currentVariant) {
+            $this->shippingError   = 'Selecione as opções do produto antes de calcular o frete.';
+            $this->shippingOptions = [];
+            return;
+        }
+
+        // Constrói item simulado com dados do produto/variante atual
+        $variant = $this->currentVariant;
+        $product = $this->product;
+
+        $fakeProduct = (object) [
+            'id'     => $product->id,
+            'weight' => $variant?->weight ?? $product->weight,
+            'width'  => $variant?->width  ?? $product->width,
+            'height' => $variant?->height ?? $product->height,
+            'length' => $variant?->length ?? $product->length,
+        ];
+
+        $fakeItem = (object) [
+            'id'         => $variant?->id ?? $product->id,
+            'product_id' => $product->id,
+            'quantity'   => 1,
+            'unit_price' => $this->currentPrice,
+            'product'    => $fakeProduct,
+        ];
+
+        $options = app(ShippingCalculator::class)->calculate(
+            $digits,
+            $this->currentPrice,
+            collect([$fakeItem]),
+        );
+
+        if (empty($options)) {
+            $this->shippingError   = 'Não foi possível calcular o frete para este CEP.';
+            $this->shippingOptions = [];
+        } else {
+            $this->shippingError   = null;
+            $this->shippingOptions = $options;
+        }
     }
 
     public function render(): View

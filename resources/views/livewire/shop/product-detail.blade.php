@@ -189,7 +189,7 @@
                                             <button
                                                 wire:click="selectValue('{{ $attribute->slug }}', '{{ $value->slug }}')"
                                                 @class([
-                                                    'px-3.5 py-1.5 text-sm rounded-lg border font-medium transition-all duration-150',
+                                                    'px-4 py-2 text-sm rounded-lg border font-medium transition-all duration-150',
                                                     // Selecionado
                                                     'border-indigo-600 bg-indigo-50 text-indigo-700'                       => $isSelected,
                                                     // Disponível com seleção atual, em estoque
@@ -354,6 +354,55 @@
                     {{ session('cart-error') }}
                 </p>
             @endif
+
+            {{-- ─── Simulador de frete ─────────────────────────── --}}
+            <div class="pt-4 border-t border-gray-100">
+                <h3 class="font-semibold text-gray-900 mb-3">Calcular frete</h3>
+
+                @if ($this->product->isVariable() && $this->currentVariant === null)
+                    <p class="text-xs text-gray-400">Selecione as opções do produto para calcular o frete.</p>
+                @else
+                    <form wire:submit.prevent="calculateShipping" class="flex gap-2">
+                        <input type="text"
+                            wire:model="shippingCep"
+                            wire:keydown.enter.prevent="calculateShipping"
+                            placeholder="00000-000"
+                            maxlength="9"
+                            class="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        <button type="submit"
+                            wire:loading.attr="disabled"
+                            class="px-4 py-2 border border-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50 transition-colors">
+                            <span wire:loading.remove wire:target="calculateShipping">Calcular</span>
+                            <span wire:loading wire:target="calculateShipping">
+                                <svg class="size-3 animate-spin text-gray-700" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                            </span>
+                        </button>
+                    </form>
+
+                    @if ($shippingError)
+                        <p class="mt-2 text-xs text-red-600">{{ $shippingError }}</p>
+                    @endif
+
+                    @if (! empty($shippingOptions))
+                        <ul class="mt-3 space-y-2">
+                            @foreach ($shippingOptions as $option)
+                                <li class="flex justify-between text-sm">
+                                    <span class="text-gray-700">
+                                        {{ trim(($option['company'] ?? '') . ' ' . $option['name']) }}
+                                        <span class="text-gray-400 text-xs">({{ $option['days'] }} dias)</span>
+                                    </span>
+                                    <span class="font-semibold {{ $option['price'] == 0 ? 'text-green-600' : 'text-gray-900' }}">
+                                        {{ $option['price'] == 0 ? 'Grátis' : 'R$ ' . number_format($option['price'], 2, ',', '.') }}
+                                    </span>
+                                </li>
+                            @endforeach
+                        </ul>
+                    @endif
+                @endif
+            </div>
 
         </div>{{-- /info --}}
     </div>{{-- /grid --}}

@@ -40,7 +40,9 @@ class ProductDetail extends Component
             }
         }
 
-        // Auto-seleciona a primeira variante disponível (com estoque primeiro)
+        // Auto-seleciona completando as seleções do URL com a variante mais adequada.
+        // Usa somente variantes COMPATÍVEIS com os valores já selecionados (ex: ?cor=vermelho
+        // deve completar com tamanho G, não P — pois vermelho P não existe).
         if ($product->isVariable()) {
             $variants = ProductVariant::where('product_id', $product->id)
                 ->where('active', true)
@@ -48,12 +50,33 @@ class ProductDetail extends Component
                 ->orderBy('order')
                 ->get();
 
-            $first = $variants->where('stock', '>', 0)->first()
-                ?? $variants->first();
+            $urlSlugs = array_values($this->selected); // slugs vindos da URL
+
+            // Filtra variantes compatíveis com os valores pré-selecionados
+            $compatible = empty($urlSlugs)
+                ? $variants
+                : $variants->filter(function ($v) use ($urlSlugs) {
+                    $slugs = $v->attributeValues->pluck('slug')->toArray();
+                    foreach ($urlSlugs as $slug) {
+                        if (! in_array($slug, $slugs)) {
+                            return false;
+                        }
+                    }
+                    return true;
+                });
+
+            // Se a combinação da URL não existe (ex: cor=vermelho&tamanho=P inválido),
+            // ignora as seleções do URL e cai no auto-select geral
+            if ($compatible->isEmpty()) {
+                $this->selected = [];
+                $compatible     = $variants;
+            }
+
+            $first = $compatible->where('stock', '>', 0)->first()
+                ?? $compatible->first();
 
             if ($first) {
                 foreach ($first->attributeValues as $av) {
-                    // Respeita valores pré-selecionados via URL (ex: vindo do catálogo expandido)
                     if (! array_key_exists($av->attribute->slug, $this->selected)) {
                         $this->selected[$av->attribute->slug] = $av->slug;
                     }
@@ -259,6 +282,38 @@ class ProductDetail extends Component
         $this->selected[$attrSlug] = $valueSlug;
         $this->notified    = false;
         $this->notifyEmail = '';
+
+        // Verifica se a nova combinação tem uma variante válida.
+        // Se não tiver (ex: cor=vermelho com tamanho=P que não existe),
+        // faz cascade: mantém o valor clicado e ajusta os demais atributos
+        // para a variante mais próxima (com estoque, se possível).
+        $currentSlugs = array_values(array_filter($this->selected));
+        $variants     = $this->product->variants;
+
+        $isValid = $variants->some(function ($v) use ($currentSlugs) {
+            $slugs = $v->attributeValues->pluck('slug')->toArray();
+            foreach ($currentSlugs as $slug) {
+                if (! in_array($slug, $slugs)) {
+                    return false;
+                }
+            }
+            return true;
+        });
+
+        if (! $isValid) {
+            // Pega a melhor variante que contenha o valor recém-selecionado
+            $best = $variants
+                ->filter(fn ($v) => $v->attributeValues->pluck('slug')->contains($valueSlug))
+                ->sortByDesc('stock')
+                ->first();
+
+            if ($best) {
+                foreach ($best->attributeValues as $av) {
+                    $this->selected[$av->attribute->slug] = $av->slug;
+                }
+            }
+        }
+
         $this->pushUrl();
     }
 

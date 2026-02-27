@@ -156,28 +156,28 @@
 
                                     @if ($attribute->type === 'color' && $value->color_hex)
                                         {{-- Swatch de cor --}}
+                                        {{-- Sempre clicável: selectValue faz cascade se a combinação não existir --}}
                                         <button
                                             wire:click="selectValue('{{ $attribute->slug }}', '{{ $value->slug }}')"
                                             title="{{ $value->getLabel() }}"
-                                            @disabled(! $isAvailable)
                                             @class([
                                                 'w-9 h-9 rounded-full border-2 transition-all duration-150',
                                                 'border-indigo-600 ring-2 ring-indigo-300 scale-110' => $isSelected,
                                                 'border-gray-300 hover:scale-105'                    => ! $isSelected && $isAvailable,
-                                                'border-gray-200 opacity-30 cursor-not-allowed'      => ! $isAvailable,
+                                                'border-gray-200 opacity-40'                         => ! $isAvailable,
                                             ])
                                             style="background-color: {{ $value->color_hex }}"
                                         ></button>
                                     @else
                                         {{-- Chip de texto --}}
+                                        {{-- Sempre clicável: selectValue faz cascade se a combinação não existir --}}
                                         <button
                                             wire:click="selectValue('{{ $attribute->slug }}', '{{ $value->slug }}')"
-                                            @disabled(! $isAvailable)
                                             @class([
                                                 'px-3.5 py-1.5 text-sm rounded-lg border font-medium transition-all duration-150',
-                                                'border-indigo-600 bg-indigo-50 text-indigo-700'       => $isSelected,
-                                                'border-gray-300 text-gray-700 hover:border-gray-400'  => ! $isSelected && $isAvailable,
-                                                'border-gray-200 text-gray-300 cursor-not-allowed line-through' => ! $isAvailable,
+                                                'border-indigo-600 bg-indigo-50 text-indigo-700'            => $isSelected,
+                                                'border-gray-300 text-gray-700 hover:border-gray-400'       => ! $isSelected && $isAvailable,
+                                                'border-gray-200 text-gray-300 line-through hover:opacity-70' => ! $isAvailable,
                                             ])
                                         >{{ $value->getLabel() }}</button>
                                     @endif

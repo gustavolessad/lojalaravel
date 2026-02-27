@@ -362,9 +362,22 @@ class ProductList extends Component
                     continue;
                 }
 
-                $variant = $product->variants->first(
-                    fn ($v) => $v->attributeValues->contains('id', $value->id)
-                );
+                // Busca variante que satisfaça TANTO o valor de expansão QUANTO os carry params.
+                // Se não houver tal combinação, este card não faz sentido exibir.
+                $variant = $product->variants->first(function ($v) use ($value, $carryParams) {
+                    $slugs = $v->attributeValues->pluck('slug')->toArray();
+                    if (! in_array($value->slug, $slugs)) {
+                        return false;
+                    }
+                    foreach ($carryParams as $carrySlug) {
+                        if (! in_array($carrySlug, $slugs)) {
+                            return false;
+                        }
+                    }
+                    return true;
+                });
+
+                if (! $variant) continue;
 
                 $imageUrl = $variant?->getFirstMediaUrl('variant-cover') ?: null;
                 if (! $imageUrl) {

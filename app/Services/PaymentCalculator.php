@@ -99,8 +99,8 @@ class PaymentCalculator
             }
 
             $label = $i === 1
-                ? '1× de R$ ' . number_format($installmentValue, 2, ',', '.') . ' (à vista)'
-                : "{$i}× de R$ " . number_format($installmentValue, 2, ',', '.') . ($interestFree ? ' sem juros' : ' com juros');
+                ? '1x de R$ ' . number_format($installmentValue, 2, ',', '.') . ' (à vista)'
+                : "{$i}x de R$ " . number_format($installmentValue, 2, ',', '.') . ($interestFree ? ' sem juros' : ' com juros');
 
             $options[] = [
                 'value'             => $i,
@@ -114,7 +114,7 @@ class PaymentCalculator
     }
 
     /**
-     * Retorna o label do melhor parcelamento sem juros (ex: "3× de R$ 33,33 sem juros"),
+     * Retorna o label do melhor parcelamento sem juros (ex: "3x de R$ 33,33 sem juros"),
      * ou null quando não há parcelamento livre (free < 2) ou o total é muito baixo.
      */
     public function bestFreeInstallmentLabel(float $total): ?string
@@ -131,7 +131,7 @@ class PaymentCalculator
             $installmentValue = round($total / $i, 2);
 
             if ($installmentValue >= $minValue) {
-                return "{$i}× de R$ " . number_format($installmentValue, 2, ',', '.') . ' sem juros';
+                return "{$i}x de R$ " . number_format($installmentValue, 2, ',', '.') . ' sem juros';
             }
         }
 

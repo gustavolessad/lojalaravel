@@ -92,33 +92,37 @@
                 <p class="text-xs text-gray-400 -mt-2">REF: {{ $sku }}</p>
             @endif
 
-            {{-- Preço --}}
-            <div>
-                @if ($this->originalPrice)
-                    <span class="block text-sm text-gray-400 line-through">
-                        R$ {{ number_format($this->originalPrice, 2, ',', '.') }}
+            {{-- Preço + hints PIX/Parcelamento --}}
+            {{-- Oculto quando a variante resolvida está sem estoque (produto simples oos
+                 ou variável com variante selecionada oos). Mostrado enquanto o usuário
+                 ainda está escolhendo (produto variável sem variante resolvida). --}}
+            @if ($this->inStock || ($this->product->isVariable() && $this->currentVariant === null))
+                <div>
+                    @if ($this->originalPrice)
+                        <span class="block text-sm text-gray-400 line-through">
+                            R$ {{ number_format($this->originalPrice, 2, ',', '.') }}
+                        </span>
+                    @endif
+                    <span class="text-3xl font-bold {{ $this->originalPrice ? 'text-green-700' : 'text-green-700' }}">
+                        R$ {{ number_format($this->currentPrice, 2, ',', '.') }}
                     </span>
-                @endif
-                <span class="text-3xl font-bold {{ $this->originalPrice ? 'text-red-600' : 'text-gray-900' }}">
-                    R$ {{ number_format($this->currentPrice, 2, ',', '.') }}
-                </span>
-            </div>
+                </div>
 
-            {{-- Hints PIX / Parcelamento --}}
-            @php
-                $calc      = app(\App\Services\PaymentCalculator::class);
-                $cardMode  = $calc->cardDisplayMode();
-                $pixP      = $calc->pixPrice($this->currentPrice);
-                $instLabel = $calc->bestFreeInstallmentLabel($this->currentPrice);
-            @endphp
-            @if (($cardMode === 'pix' || $cardMode === 'both') && $pixP)
-                <p class="text-sm text-green-600 font-medium -mt-3">
-                    <span class="font-bold">R$ {{ number_format($pixP, 2, ',', '.') }}</span> no PIX
-                    <span class="text-xs text-green-500">(você economiza R$ {{ number_format($calc->pixSavings($this->currentPrice), 2, ',', '.') }})</span>
-                </p>
-            @endif
-            @if (($cardMode === 'installments' || $cardMode === 'both') && $instLabel)
-                <p class="text-sm text-gray-500 -mt-3">ou {{ $instLabel }}</p>
+                @php
+                    $calc      = app(\App\Services\PaymentCalculator::class);
+                    $cardMode  = $calc->cardDisplayMode();
+                    $pixP      = $calc->pixPrice($this->currentPrice);
+                    $instLabel = $calc->bestFreeInstallmentLabel($this->currentPrice);
+                @endphp
+                @if (($cardMode === 'pix' || $cardMode === 'both') && $pixP)
+                    <p class="text-sm text-green-600 font-medium -mt-3">
+                        <span class="font-bold">R$ {{ number_format($pixP, 2, ',', '.') }}</span> no PIX
+                        <span class="ml-2 text-xs text-white bg-green-600 py-[2px] px-[8px] rounded-full">economize R$ {{ number_format($calc->pixSavings($this->currentPrice), 2, ',', '.') }}</span>
+                    </p>
+                @endif
+                @if (($cardMode === 'installments' || $cardMode === 'both') && $instLabel)
+                    <p class="text-sm text-gray-700 font-medium -mt-3">ou {{ $instLabel }}</p>
+                @endif
             @endif
 
             {{-- Descrição curta --}}
@@ -267,7 +271,7 @@
                         wire:loading.attr="disabled"
                         wire:target="addToCart"
                         class="flex-1 py-3 px-6 rounded-xl text-sm font-semibold
-                               bg-indigo-600 text-white hover:bg-indigo-700
+                               bg-green-700 text-white hover:bg-green-800
                                active:scale-95 transition-colors
                                disabled:opacity-60 disabled:cursor-not-allowed"
                     >

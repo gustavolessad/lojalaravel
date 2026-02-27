@@ -273,7 +273,7 @@
                 @endif
             </div>
         @else
-            <div class="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4" wire:loading.class="opacity-60">
+            <div class="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-3 gap-4" wire:loading.class="opacity-60">
                 @foreach ($this->products as $entry)
                     <a href="{{ $entry->url }}"
                        @class([
@@ -329,12 +329,12 @@
                                             <span class="text-xs text-gray-400 line-through">
                                                 R$ {{ number_format($entry->originalPrice, 2, ',', '.') }}
                                             </span>
-                                            <span class="text-base font-bold text-red-600">
+                                            <span class="text-base font-bold text-green-700">
                                                 R$ {{ number_format($entry->price, 2, ',', '.') }}
                                             </span>
                                         </div>
                                     @else
-                                        <span class="text-base font-bold text-gray-900">
+                                        <span class="text-base font-bold text-green-700">
                                             R$ {{ number_format($entry->price, 2, ',', '.') }}
                                         </span>
                                     @endif

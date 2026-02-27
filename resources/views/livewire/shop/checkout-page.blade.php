@@ -616,7 +616,7 @@
                             @if ($paymentMethod === 'credit_card' && $cardNumber)
                                 — **** {{ substr(preg_replace('/\D/', '', $cardNumber), -4) }}
                                 @if ($installments > 1)
-                                    em {{ $installments }}× sem juros
+                                    em {{ $installments }}x sem juros
                                 @endif
                             @endif
                         </p>

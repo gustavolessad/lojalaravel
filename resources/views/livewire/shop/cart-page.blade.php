@@ -2,28 +2,28 @@
 
     {{-- ── Aviso de itens removidos por falta de estoque ───────────────── --}}
     @if (! empty($removedItems))
-        <div class="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-xl flex items-start gap-3">
-            <svg class="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
-            </svg>
-            <div class="flex-1">
-                <p class="text-sm font-semibold text-amber-800">
-                    {{ count($removedItems) === 1 ? 'Um item foi removido' : count($removedItems) . ' itens foram removidos' }}
-                    do carrinho por falta de estoque:
-                </p>
-                <ul class="mt-1 space-y-0.5">
-                    @foreach ($removedItems as $name)
-                        <li class="text-sm text-amber-700">• {{ $name }}</li>
-                    @endforeach
-                </ul>
-            </div>
-            <button wire:click="dismissRemovedNotice" class="text-amber-400 hover:text-amber-600 transition-colors flex-shrink-0" aria-label="Fechar">
-                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                </svg>
-            </button>
+    <div class="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-xl flex items-start gap-3">
+        <svg class="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+        </svg>
+        <div class="flex-1">
+            <p class="text-sm font-semibold text-amber-800">
+                {{ count($removedItems) === 1 ? 'Um item foi removido' : count($removedItems) . ' itens foram removidos' }}
+                do carrinho por falta de estoque:
+            </p>
+            <ul class="mt-1 space-y-0.5">
+                @foreach ($removedItems as $name)
+                <li class="text-sm text-amber-700">• {{ $name }}</li>
+                @endforeach
+            </ul>
         </div>
+        <button wire:click="dismissRemovedNotice" class="text-amber-400 hover:text-amber-600 transition-colors flex-shrink-0" aria-label="Fechar">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+        </button>
+    </div>
     @endif
 
     @if (!$cart || $cart->items->isEmpty())
@@ -76,36 +76,36 @@
                 {{-- Detalhes --}}
                 <div class="flex-1 min-w-0">
 
-                        <h3 class="font-medium text-sm truncate">
-                            <a href="{{ route('product.show', $item->product->slug) }}"
-                               class="text-gray-900 hover:text-indigo-600 transition-colors">
-                                {{ $item->product->name }}
-                            </a>
-                        </h3>
+                    <h3 class="font-medium text-sm truncate">
+                        <a href="{{ route('product.show', $item->product->slug) }}"
+                            class="text-gray-900 hover:text-indigo-600 transition-colors">
+                            {{ $item->product->name }}
+                        </a>
+                    </h3>
                     @if ($item->variant)
                     <p class="text-xs text-gray-500 mt-0.5">
                         {{ $item->variant->label }}
                     </p>
                     @endif
                     @if ($item->original_price)
-                        <div class="flex items-center gap-1.5 mt-1">
-                            <span class="text-xs text-gray-400 line-through">
-                                R$ {{ number_format($item->original_price, 2, ',', '.') }}
-                            </span>
-                            <span class="text-sm font-semibold text-red-600">
-                                R$ {{ number_format($item->unit_price, 2, ',', '.') }}
-                            </span>
-                        </div>
-                    @else
-                        <p class="text-sm font-semibold text-indigo-600 mt-1">
+                    <div class="flex items-center gap-1.5 mt-1">
+                        <span class="text-xs text-gray-400 line-through">
+                            R$ {{ number_format($item->original_price, 2, ',', '.') }}
+                        </span>
+                        <span class="text-sm font-semibold text-red-600">
                             R$ {{ number_format($item->unit_price, 2, ',', '.') }}
-                        </p>
+                        </span>
+                    </div>
+                    @else
+                    <p class="text-sm font-semibold text-indigo-600 mt-1">
+                        R$ {{ number_format($item->unit_price, 2, ',', '.') }}
+                    </p>
                     @endif
                     @if ($maxStock > 0 && $maxStock <= 5)
                         <p class="text-xs text-amber-600 mt-1">
-                            apenas {{ $maxStock }} {{ $maxStock === 1 ? 'disponível' : 'disponíveis' }}
+                        apenas {{ $maxStock }} {{ $maxStock === 1 ? 'disponível' : 'disponíveis' }}
                         </p>
-                    @endif
+                        @endif
                 </div>
 
                 {{-- Controles --}}
@@ -115,14 +115,13 @@
                         <button
                             wire:click="updateQuantity({{ $item->id }}, {{ $item->quantity - 1 }})"
                             @disabled($item->quantity <= 1)
-                            class="px-2 py-1 text-gray-500 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed"
-                        >−</button>
+                                class="px-2 py-1 text-gray-500 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed">−</button>
                         <span class="px-3 font-medium tabular-nums">{{ $item->quantity }}</span>
                         <button
                             wire:click="updateQuantity({{ $item->id }}, {{ $item->quantity + 1 }})"
                             @disabled($item->quantity >= $maxStock)
                             class="px-2 py-1 text-gray-500 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed"
-                        >+</button>
+                            >+</button>
                     </div>
 
                     {{-- Subtotal --}}
@@ -154,9 +153,12 @@
                         class="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
                     <button type="submit"
                         wire:loading.attr="disabled"
-                        class="px-4 py-2 bg-gray-800 text-white text-sm font-medium rounded-lg hover:bg-gray-700 transition-colors">
-                        <span wire:loading.remove wire:target="simulateShipping">OK</span>
-                        <span wire:loading wire:target="simulateShipping">...</span>
+                        class="px-4 py-2 border border-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50 transition-colors">
+                        <span wire:loading.remove wire:target="simulateShipping">Simular</span>
+                        <span wire:loading wire:target="simulateShipping"><svg class="size-5 animate-spin text-gray-700" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg></span>
                     </button>
                 </form>
 
@@ -186,39 +188,39 @@
                 <h3 class="font-semibold text-gray-900 mb-3">Cupom de desconto</h3>
 
                 @if ($cart->coupon_code)
-                    {{-- Cupom aplicado --}}
-                    <div class="flex items-center justify-between bg-green-50 border border-green-200 rounded-lg px-3 py-2">
-                        <div>
-                            <span class="font-mono font-semibold text-green-700 text-sm">{{ $cart->coupon_code }}</span>
-                            <span class="ml-2 text-xs text-green-600">
-                                − R$ {{ number_format($cart->coupon_discount, 2, ',', '.') }}
-                            </span>
-                        </div>
-                        <button wire:click="removeCoupon"
-                                class="text-green-500 hover:text-red-500 transition-colors ml-3 text-xs underline">
-                            Remover
-                        </button>
+                {{-- Cupom aplicado --}}
+                <div class="flex items-center justify-between bg-green-50 border border-green-200 rounded-lg px-3 py-2">
+                    <div>
+                        <span class="font-mono font-semibold text-green-700 text-sm">{{ $cart->coupon_code }}</span>
+                        <span class="ml-2 text-xs text-green-600">
+                            − R$ {{ number_format($cart->coupon_discount, 2, ',', '.') }}
+                        </span>
                     </div>
+                    <button wire:click="removeCoupon"
+                        class="text-green-500 hover:text-red-500 transition-colors ml-3 text-xs underline">
+                        Remover
+                    </button>
+                </div>
                 @else
-                    {{-- Campo de cupom --}}
-                    <form wire:submit.prevent="applyCoupon" class="flex gap-2">
-                        <input wire:model="couponCode"
-                               type="text"
-                               placeholder="Código do cupom"
-                               class="flex-1 text-sm border border-gray-300 rounded-lg px-3 py-2 uppercase focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:border-indigo-400">
-                        <button type="submit"
-                                wire:loading.attr="disabled"
-                                class="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50">
-                            Aplicar
-                        </button>
-                    </form>
+                {{-- Campo de cupom --}}
+                <form wire:submit.prevent="applyCoupon" class="flex gap-2">
+                    <input wire:model="couponCode"
+                        type="text"
+                        placeholder="Código do cupom"
+                        class="flex-1 text-sm border border-gray-300 rounded-lg px-3 py-2 uppercase focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:border-indigo-400">
+                    <button type="submit"
+                        wire:loading.attr="disabled"
+                        class="px-4 py-2 border border-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50">
+                        Aplicar
+                    </button>
+                </form>
 
-                    @if ($couponError)
-                        <p class="mt-2 text-xs text-red-600">{{ $couponError }}</p>
-                    @endif
-                    @if ($couponSuccess)
-                        <p class="mt-2 text-xs text-green-600">{{ $couponSuccess }}</p>
-                    @endif
+                @if ($couponError)
+                <p class="mt-2 text-xs text-red-600">{{ $couponError }}</p>
+                @endif
+                @if ($couponSuccess)
+                <p class="mt-2 text-xs text-green-600">{{ $couponSuccess }}</p>
+                @endif
                 @endif
             </div>
 
@@ -233,10 +235,10 @@
                     </div>
 
                     @if ($cart->coupon_discount > 0)
-                        <div class="flex justify-between text-green-600">
-                            <span>Desconto ({{ $cart->coupon_code }})</span>
-                            <span>− R$ {{ number_format($cart->coupon_discount, 2, ',', '.') }}</span>
-                        </div>
+                    <div class="flex justify-between text-green-600">
+                        <span>Desconto ({{ $cart->coupon_code }})</span>
+                        <span>− R$ {{ number_format($cart->coupon_discount, 2, ',', '.') }}</span>
+                    </div>
                     @endif
 
                     <div class="flex justify-between text-gray-600">
@@ -252,25 +254,25 @@
 
                 {{-- Hints de pagamento --}}
                 @php
-                    $calc       = app(\App\Services\PaymentCalculator::class);
-                    $pixTotal   = $calc->pixPrice((float) $cart->total);
-                    $instLabel  = $calc->bestFreeInstallmentLabel((float) $cart->total);
+                $calc = app(\App\Services\PaymentCalculator::class);
+                $pixTotal = $calc->pixPrice((float) $cart->total);
+                $instLabel = $calc->bestFreeInstallmentLabel((float) $cart->total);
                 @endphp
                 @if ($pixTotal || $instLabel)
-                    <div class="mt-3 space-y-1 text-sm text-end">
-                        @if ($pixTotal)
-                            <p class="text-green-700">
-                                ou <span class="font-semibold">R$ {{ number_format($pixTotal, 2, ',', '.') }}</span> no PIX
-                            </p>
-                        @endif
-                        @if ($instLabel)
-                            <p class="text-gray-500">ou {{ $instLabel }}</p>
-                        @endif
-                    </div>
+                <div class="mt-3 space-y-1 text-sm text-end">
+                    @if ($pixTotal)
+                    <p class="text-green-700">
+                        ou <span class="font-semibold">R$ {{ number_format($pixTotal, 2, ',', '.') }}</span> no PIX
+                    </p>
+                    @endif
+                    @if ($instLabel)
+                    <p class="text-gray-500">ou {{ $instLabel }}</p>
+                    @endif
+                </div>
                 @endif
 
                 <a href="{{ route('checkout.index') }}"
-                    class="mt-5 w-full flex items-center justify-center px-6 py-3 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition-colors text-sm">
+                    class="mt-5 w-full flex items-center justify-center px-6 py-3 bg-green-700 text-white font-semibold rounded-lg hover:bg-green-800 transition-colors text-sm">
                     Finalizar compra
                 </a>
 

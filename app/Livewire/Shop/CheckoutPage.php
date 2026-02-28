@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Shop;
 
+use App\Mail\CustomerWelcome;
 use App\Models\Cart;
 use App\Models\Customer;
 use App\Models\CustomerAddress;
@@ -14,6 +15,8 @@ use App\Services\ShippingCalculator;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
 
@@ -271,6 +274,16 @@ class CheckoutPage extends Component
 
         Auth::guard('customer')->login($customer);
 
+        try {
+            Log::channel('email')->info('Checkout: disparando CustomerWelcome', ['email' => $customer->email]);
+            Mail::to($customer->email)->send(new CustomerWelcome($customer));
+        } catch (\Throwable $e) {
+            Log::channel('email')->error('Checkout: FALHA ao enviar CustomerWelcome', [
+                'email'     => $customer->email,
+                'exception' => $e->getMessage(),
+            ]);
+        }
+
         $this->afterAuth();
     }
 
@@ -481,6 +494,14 @@ class CheckoutPage extends Component
                 return;
             }
 
+            // 0. Verifica se o gateway está configurado ANTES de criar o pedido
+            $asaas = app(AsaasService::class);
+            if (! $asaas->isConfigured()) {
+                $this->errorMessage = 'O gateway de pagamento não está configurado. Entre em contato com a loja.';
+                Log::error('Checkout: tentativa de finalizar pedido sem token Asaas configurado');
+                return;
+            }
+
             $address = [
                 'name'       => $this->addrName,
                 'phone'      => $this->addrPhone,
@@ -513,68 +534,77 @@ class CheckoutPage extends Component
             );
 
             // 2. Processa o pagamento no Asaas
-            $asaas           = app(AsaasService::class);
             $asaasCustomerId = $asaas->findOrCreateCustomer($order);
 
-            if ($asaasCustomerId) {
-                if ($this->paymentMethod === 'pix') {
-                    $paymentData = $asaas->createPixPayment($order, $asaasCustomerId);
-                } else {
-                    [$month, $year] = explode('/', $this->cardExpiry);
+            if (! $asaasCustomerId) {
+                // Falha ao criar/localizar cliente no Asaas (ex: timeout, API fora do ar)
+                Log::error('Checkout: falha ao obter asaasCustomerId', ['order' => $order->order_number]);
+                $this->errorMessage = "Falha ao conectar com o gateway de pagamento. "
+                    . "Seu pedido #{$order->order_number} foi registrado — entre em contato com a loja para efetuar o pagamento.";
+                return;
+            }
 
-                    // Captura detalhes do parcelamento selecionado
-                    $installmentOpts    = $calc->installmentOptions($this->total);
-                    $chosenInstallment  = collect($installmentOpts)->firstWhere('value', $this->installments);
-                    $installmentValue   = $chosenInstallment['installment_value'] ?? round($this->total / $this->installments, 2);
-                    $interestFree       = $chosenInstallment['interest_free'] ?? true;
+            if ($this->paymentMethod === 'pix') {
+                $paymentData = $asaas->createPixPayment($order, $asaasCustomerId);
+            } else {
+                [$month, $year] = explode('/', $this->cardExpiry);
 
-                    $paymentData = $asaas->createCreditCardPayment(
-                        order:           $order,
-                        asaasCustomerId: $asaasCustomerId,
-                        card: [
-                            'holderName'  => $this->cardHolder,
-                            'number'      => $this->cardNumber,
-                            'expiryMonth' => $month,
-                            'expiryYear'  => '20' . $year,
-                            'ccv'         => $this->cardCvv,
-                        ],
-                        installments: $this->installments,
-                    );
+                $installmentOpts   = $calc->installmentOptions($this->total);
+                $chosenInstallment = collect($installmentOpts)->firstWhere('value', $this->installments);
+                $installmentValue  = $chosenInstallment['installment_value'] ?? round($this->total / $this->installments, 2);
+                $interestFree      = $chosenInstallment['interest_free'] ?? true;
 
-                    // Enriquece o payload com detalhes do parcelamento
-                    if ($paymentData) {
-                        $paymentData['installments']       = $this->installments;
-                        $paymentData['installment_value']  = $installmentValue;
-                        $paymentData['interest_free']      = $interestFree;
-                        $paymentData['total_with_interest'] = round($installmentValue * $this->installments, 2);
-                    }
-                }
+                $paymentData = $asaas->createCreditCardPayment(
+                    order:           $order,
+                    asaasCustomerId: $asaasCustomerId,
+                    card: [
+                        'holderName'  => $this->cardHolder,
+                        'number'      => $this->cardNumber,
+                        'expiryMonth' => $month,
+                        'expiryYear'  => '20' . $year,
+                        'ccv'         => $this->cardCvv,
+                    ],
+                    installments: $this->installments,
+                );
 
                 if ($paymentData) {
-                    app(OrderService::class)->attachPaymentData(
-                        order:     $order,
-                        paymentId: $paymentData['payment_id'],
-                        data:      $paymentData,
-                    );
-
-                    if (
-                        $this->paymentMethod === 'credit_card'
-                        && in_array($paymentData['status'] ?? '', ['CONFIRMED', 'RECEIVED'])
-                    ) {
-                        app(OrderService::class)->markAsPaid(
-                            order:     $order,
-                            paymentId: $paymentData['payment_id'],
-                        );
-                    }
+                    $paymentData['installments']        = $this->installments;
+                    $paymentData['installment_value']   = $installmentValue;
+                    $paymentData['interest_free']       = $interestFree;
+                    $paymentData['total_with_interest'] = round($installmentValue * $this->installments, 2);
                 }
+            }
+
+            if (! $paymentData) {
+                // Asaas retornou erro ao criar o pagamento
+                Log::error('Checkout: Asaas não retornou payment_data', ['order' => $order->order_number]);
+                $this->errorMessage = "Falha ao gerar o pagamento. "
+                    . "Seu pedido #{$order->order_number} foi registrado — entre em contato com a loja.";
+                return;
+            }
+
+            app(OrderService::class)->attachPaymentData(
+                order:     $order,
+                paymentId: $paymentData['payment_id'],
+                data:      $paymentData,
+            );
+
+            if (
+                $this->paymentMethod === 'credit_card'
+                && in_array($paymentData['status'] ?? '', ['CONFIRMED', 'RECEIVED'])
+            ) {
+                app(OrderService::class)->markAsPaid(
+                    order:     $order,
+                    paymentId: $paymentData['payment_id'],
+                );
             }
 
             // 3. Redireciona para a confirmação
             $this->redirect(route('order.confirmation', $order->order_number), navigate: false);
 
         } catch (\Throwable $e) {
-            \Illuminate\Support\Facades\Log::error('Checkout error', ['error' => $e->getMessage()]);
-            $this->errorMessage = 'Ocorreu um erro ao processar seu pedido. Por favor, tente novamente.';
+            Log::error('Checkout error', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
+            $this->errorMessage = 'Ocorreu um erro inesperado ao processar seu pedido. Por favor, tente novamente.';
         } finally {
             $this->processing = false;
         }

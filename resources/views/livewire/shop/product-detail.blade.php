@@ -1,4 +1,7 @@
-<div>
+<div
+    x-data
+    x-on:update-url.window="history.replaceState(null, '', $event.detail.url)"
+>
 
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
 
@@ -50,11 +53,32 @@
         ═══════════════════════════════════════════════════════════════ --}}
         <div class="flex flex-col space-y-5">
 
-            {{-- Categoria --}}
-            @if ($this->product->categories->isNotEmpty())
-                <p class="text-sm font-medium text-indigo-600">
-                    {{ $this->product->categories->first()->name }}
-                </p>
+            {{-- Categoria + Marca --}}
+            @if ($this->product->categories->isNotEmpty() || $this->product->brand)
+                <div class="flex items-center gap-2 text-sm flex-wrap">
+                    @if ($this->product->categories->isNotEmpty())
+                        @php $cat = $this->product->categories->first(); @endphp
+                        <a href="{{ $cat->url }}"
+                           class="font-medium text-indigo-600 hover:text-indigo-800 transition-colors">
+                            {{ $cat->name }}
+                        </a>
+                    @endif
+                    @if ($this->product->categories->isNotEmpty() && $this->product->brand)
+                        <span class="text-gray-300">·</span>
+                    @endif
+                    @if ($this->product->brand)
+                        <a href="{{ $this->product->brand->url }}"
+                           class="flex items-center gap-1.5 text-gray-500 hover:text-gray-800 transition-colors">
+                            @if ($this->product->brand->getFirstMediaUrl('logo'))
+                                <img src="{{ $this->product->brand->getFirstMediaUrl('logo') }}"
+                                     alt="{{ $this->product->brand->name }}"
+                                     class="h-4 w-auto object-contain">
+                            @else
+                                {{ $this->product->brand->name }}
+                            @endif
+                        </a>
+                    @endif
+                </div>
             @endif
 
             {{-- Título --}}
@@ -68,33 +92,37 @@
                 <p class="text-xs text-gray-400 -mt-2">REF: {{ $sku }}</p>
             @endif
 
-            {{-- Preço --}}
-            <div>
-                @if ($this->originalPrice)
-                    <span class="block text-sm text-gray-400 line-through">
-                        R$ {{ number_format($this->originalPrice, 2, ',', '.') }}
+            {{-- Preço + hints PIX/Parcelamento --}}
+            {{-- Oculto quando a variante resolvida está sem estoque (produto simples oos
+                 ou variável com variante selecionada oos). Mostrado enquanto o usuário
+                 ainda está escolhendo (produto variável sem variante resolvida). --}}
+            @if ($this->inStock || ($this->product->isVariable() && $this->currentVariant === null))
+                <div>
+                    @if ($this->originalPrice)
+                        <span class="block text-sm text-gray-400 line-through">
+                            R$ {{ number_format($this->originalPrice, 2, ',', '.') }}
+                        </span>
+                    @endif
+                    <span class="text-3xl font-bold {{ $this->originalPrice ? 'text-green-700' : 'text-green-700' }}">
+                        R$ {{ number_format($this->currentPrice, 2, ',', '.') }}
                     </span>
-                @endif
-                <span class="text-3xl font-bold {{ $this->originalPrice ? 'text-red-600' : 'text-gray-900' }}">
-                    R$ {{ number_format($this->currentPrice, 2, ',', '.') }}
-                </span>
-            </div>
+                </div>
 
-            {{-- Hints PIX / Parcelamento --}}
-            @php
-                $calc      = app(\App\Services\PaymentCalculator::class);
-                $cardMode  = $calc->cardDisplayMode();
-                $pixP      = $calc->pixPrice($this->currentPrice);
-                $instLabel = $calc->bestFreeInstallmentLabel($this->currentPrice);
-            @endphp
-            @if (($cardMode === 'pix' || $cardMode === 'both') && $pixP)
-                <p class="text-sm text-green-600 font-medium -mt-3">
-                    <span class="font-bold">R$ {{ number_format($pixP, 2, ',', '.') }}</span> no PIX
-                    <span class="text-xs text-green-500">(você economiza R$ {{ number_format($calc->pixSavings($this->currentPrice), 2, ',', '.') }})</span>
-                </p>
-            @endif
-            @if (($cardMode === 'installments' || $cardMode === 'both') && $instLabel)
-                <p class="text-sm text-gray-500 -mt-3">ou {{ $instLabel }}</p>
+                @php
+                    $calc      = app(\App\Services\PaymentCalculator::class);
+                    $cardMode  = $calc->cardDisplayMode();
+                    $pixP      = $calc->pixPrice($this->currentPrice);
+                    $instLabel = $calc->bestFreeInstallmentLabel($this->currentPrice);
+                @endphp
+                @if (($cardMode === 'pix' || $cardMode === 'both') && $pixP)
+                    <p class="text-sm text-green-600 font-medium -mt-3">
+                        <span class="font-bold">R$ {{ number_format($pixP, 2, ',', '.') }}</span> no PIX
+                        <span class="ml-2 text-xs text-white bg-green-600 py-[2px] px-[8px] rounded-full">economize R$ {{ number_format($calc->pixSavings($this->currentPrice), 2, ',', '.') }}</span>
+                    </p>
+                @endif
+                @if (($cardMode === 'installments' || $cardMode === 'both') && $instLabel)
+                    <p class="text-sm text-gray-700 font-medium -mt-3">ou {{ $instLabel }}</p>
+                @endif
             @endif
 
             {{-- Descrição curta --}}
@@ -126,36 +154,56 @@
                             <div class="flex flex-wrap gap-2">
                                 @foreach ($attribute->values as $value)
                                     @php
-                                        $isSelected  = ($selected[$attribute->slug] ?? null) === $value->slug;
-                                        $isAvailable = in_array($value->slug, $this->availableValueSlugs[$attribute->slug] ?? []);
+                                        $isSelected   = ($selected[$attribute->slug] ?? null) === $value->slug;
+                                        $isAvailable  = in_array($value->slug, $this->availableValueSlugs[$attribute->slug] ?? []);
+                                        $isOutOfStock = in_array($value->slug, $this->outOfStockValueSlugs[$attribute->slug] ?? []);
+                                        // cascade = clicável mas muda outra seleção para manter combinação válida
+                                        $isCascade    = ! $isSelected && ! $isAvailable && ! $isOutOfStock;
+                                    @endphp
+
+                                    @php
+                                        // SVG reutilizado nos dois tipos de botão
+                                        $xBadge = '<span class="absolute -top-1 -right-1 z-10 w-4 h-4 bg-red-500 border-2 border-white rounded-full flex items-center justify-center pointer-events-none"><svg class="w-2 h-2 text-white" viewBox="0 0 8 8" fill="none"><path d="M1.5 1.5l5 5M6.5 1.5l-5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></span>';
                                     @endphp
 
                                     @if ($attribute->type === 'color' && $value->color_hex)
-                                        {{-- Swatch de cor --}}
-                                        <button
-                                            wire:click="selectValue('{{ $attribute->slug }}', '{{ $value->slug }}')"
-                                            title="{{ $value->getLabel() }}"
-                                            @disabled(! $isAvailable)
-                                            @class([
-                                                'w-9 h-9 rounded-full border-2 transition-all duration-150',
-                                                'border-indigo-600 ring-2 ring-indigo-300 scale-110' => $isSelected,
-                                                'border-gray-300 hover:scale-105'                    => ! $isSelected && $isAvailable,
-                                                'border-gray-200 opacity-30 cursor-not-allowed'      => ! $isAvailable,
-                                            ])
-                                            style="background-color: {{ $value->color_hex }}"
-                                        ></button>
+                                        {{-- ── Swatch de cor — wrapper relative para o X não herdar opacity do botão ── --}}
+                                        <span class="relative inline-block">
+                                            <button
+                                                wire:click="selectValue('{{ $attribute->slug }}', '{{ $value->slug }}')"
+                                                title="{{ $value->getLabel() }}{{ $isOutOfStock ? ' (sem estoque)' : ($isCascade ? ' — vai alterar outra seleção' : '') }}"
+                                                @class([
+                                                    'w-9 h-9 rounded-full border-2 transition-all duration-150',
+                                                    'border-indigo-600 ring-2 ring-indigo-300 scale-110'                => $isSelected,
+                                                    'border-gray-300 hover:scale-105 hover:border-gray-400'             => ! $isSelected && $isAvailable && ! $isOutOfStock,
+                                                    'border-dashed border-gray-400 hover:scale-105 hover:border-indigo-400' => $isCascade,
+                                                    'border-gray-200 opacity-40'                                        => $isOutOfStock,
+                                                ])
+                                                style="background-color: {{ $value->color_hex }}"
+                                            ></button>
+                                            @if ($isOutOfStock) {!! $xBadge !!} @endif
+                                        </span>
                                     @else
-                                        {{-- Chip de texto --}}
-                                        <button
-                                            wire:click="selectValue('{{ $attribute->slug }}', '{{ $value->slug }}')"
-                                            @disabled(! $isAvailable)
-                                            @class([
-                                                'px-3.5 py-1.5 text-sm rounded-lg border font-medium transition-all duration-150',
-                                                'border-indigo-600 bg-indigo-50 text-indigo-700'       => $isSelected,
-                                                'border-gray-300 text-gray-700 hover:border-gray-400'  => ! $isSelected && $isAvailable,
-                                                'border-gray-200 text-gray-300 cursor-not-allowed line-through' => ! $isAvailable,
-                                            ])
-                                        >{{ $value->getLabel() }}</button>
+                                        {{-- ── Chip de texto — wrapper relative para o X não herdar opacity do botão ── --}}
+                                        <span class="relative inline-block">
+                                            <button
+                                                wire:click="selectValue('{{ $attribute->slug }}', '{{ $value->slug }}')"
+                                                @class([
+                                                    'px-4 py-2 text-sm rounded-lg border font-medium transition-all duration-150',
+                                                    // Selecionado
+                                                    'border-indigo-600 bg-indigo-50 text-indigo-700'                       => $isSelected,
+                                                    // Disponível com seleção atual, em estoque
+                                                    'border-gray-300 text-gray-700 hover:border-indigo-400'                => ! $isSelected && $isAvailable && ! $isOutOfStock,
+                                                    // Disponível mas sem estoque (context-aware)
+                                                    'border-gray-200 text-gray-400'                                        => $isAvailable && $isOutOfStock,
+                                                    // Cascade: vai alterar outra seleção — borda tracejada
+                                                    'border-dashed border-gray-400 text-gray-600 hover:border-indigo-400 hover:text-gray-800' => $isCascade,
+                                                    // Sem estoque + cascade (fora do alcance com seleção atual)
+                                                    'border-dashed border-gray-200 text-gray-300'                          => ! $isAvailable && $isOutOfStock,
+                                                ])
+                                            >{{ $value->getLabel() }}</button>
+                                            @if ($isOutOfStock) {!! $xBadge !!} @endif
+                                        </span>
                                     @endif
                                 @endforeach
                             </div>
@@ -223,7 +271,7 @@
                         wire:loading.attr="disabled"
                         wire:target="addToCart"
                         class="flex-1 py-3 px-6 rounded-xl text-sm font-semibold
-                               bg-indigo-600 text-white hover:bg-indigo-700
+                               bg-green-700 text-white hover:bg-green-800
                                active:scale-95 transition-colors
                                disabled:opacity-60 disabled:cursor-not-allowed"
                     >
@@ -306,6 +354,55 @@
                     {{ session('cart-error') }}
                 </p>
             @endif
+
+            {{-- ─── Simulador de frete ─────────────────────────── --}}
+            <div class="pt-4 border-t border-gray-100">
+                <h3 class="font-semibold text-gray-900 mb-3">Calcular frete</h3>
+
+                @if ($this->product->isVariable() && $this->currentVariant === null)
+                    <p class="text-xs text-gray-400">Selecione as opções do produto para calcular o frete.</p>
+                @else
+                    <form wire:submit.prevent="calculateShipping" class="flex gap-2">
+                        <input type="text"
+                            wire:model="shippingCep"
+                            wire:keydown.enter.prevent="calculateShipping"
+                            placeholder="00000-000"
+                            maxlength="9"
+                            class="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        <button type="submit"
+                            wire:loading.attr="disabled"
+                            class="px-4 py-2 border border-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50 transition-colors">
+                            <span wire:loading.remove wire:target="calculateShipping">Calcular</span>
+                            <span wire:loading wire:target="calculateShipping">
+                                <svg class="size-3 animate-spin text-gray-700" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                            </span>
+                        </button>
+                    </form>
+
+                    @if ($shippingError)
+                        <p class="mt-2 text-xs text-red-600">{{ $shippingError }}</p>
+                    @endif
+
+                    @if (! empty($shippingOptions))
+                        <ul class="mt-3 space-y-2">
+                            @foreach ($shippingOptions as $option)
+                                <li class="flex justify-between text-sm">
+                                    <span class="text-gray-700">
+                                        {{ trim(($option['company'] ?? '') . ' ' . $option['name']) }}
+                                        <span class="text-gray-400 text-xs">({{ $option['days'] }} dias)</span>
+                                    </span>
+                                    <span class="font-semibold {{ $option['price'] == 0 ? 'text-green-600' : 'text-gray-900' }}">
+                                        {{ $option['price'] == 0 ? 'Grátis' : 'R$ ' . number_format($option['price'], 2, ',', '.') }}
+                                    </span>
+                                </li>
+                            @endforeach
+                        </ul>
+                    @endif
+                @endif
+            </div>
 
         </div>{{-- /info --}}
     </div>{{-- /grid --}}

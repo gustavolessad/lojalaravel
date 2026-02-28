@@ -3,16 +3,27 @@
 use App\Http\Controllers\Account\AddressController;
 use App\Http\Controllers\Account\AuthController;
 use App\Http\Controllers\Account\DashboardController;
+use App\Http\Controllers\Account\OrderController;
+use App\Http\Controllers\Account\ProfileController;
 use App\Http\Controllers\Shop\CartController;
+use App\Http\Controllers\Shop\BrandController;
 use App\Http\Controllers\Shop\CategoryController;
 use App\Http\Controllers\Shop\CheckoutController;
 use App\Http\Controllers\Shop\ProductController;
+use App\Http\Controllers\Webhook\AsaasWebhookController;
 use App\Http\Middleware\AuthenticateCustomer;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     return view('welcome');
 });
+
+/*
+|--------------------------------------------------------------------------
+| Webhooks (sem CSRF — excluído em bootstrap/app.php)
+|--------------------------------------------------------------------------
+*/
+Route::post('/webhook/asaas', [AsaasWebhookController::class, 'handle'])->name('webhook.asaas');
 
 /*
 |--------------------------------------------------------------------------
@@ -45,6 +56,20 @@ Route::prefix('minha-conta')->name('account.')->middleware(AuthenticateCustomer:
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
     Route::post('/sair', [AuthController::class, 'logout'])->name('logout');
 
+    // Pedidos
+    Route::prefix('pedidos')->name('orders.')->group(function () {
+        Route::get('/', [OrderController::class, 'index'])->name('index');
+        Route::get('/{orderNumber}', [OrderController::class, 'show'])->name('show');
+    });
+
+    // Perfil
+    Route::get('/meus-dados', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::put('/meus-dados', [ProfileController::class, 'update'])->name('profile.update');
+    Route::put('/meus-dados/senha', [ProfileController::class, 'updatePassword'])->name('profile.password');
+
+    // Trocas e Devoluções
+    Route::get('/trocas-devolucoes', fn () => view('account.returns.index'))->name('returns.index');
+
     // Endereços
     Route::prefix('enderecos')->name('addresses.')->group(function () {
         Route::get('/', [AddressController::class, 'index'])->name('index');
@@ -67,6 +92,14 @@ Route::prefix('minha-conta')->name('account.')->middleware(AuthenticateCustomer:
 Route::get('{slug}/p', [ProductController::class, 'show'])
     ->where('slug', '[a-z0-9\-]+')
     ->name('product.show');
+
+// Listagem de marcas: /marcas
+Route::get('/marcas', [BrandController::class, 'index'])->name('brand.index');
+
+// Marca: /nike/m
+Route::get('{slug}/m', [BrandController::class, 'show'])
+    ->where('slug', '[a-z0-9\-]+')
+    ->name('brand.show');
 
 // Categorias: /eletronicos/c, /eletronicos/smartphones/c, ...
 Route::get('{categoryPath}/c', [CategoryController::class, 'show'])

@@ -2,8 +2,12 @@
 
 namespace App\Livewire\Shop;
 
+use App\Catalog\BrandScope;
+use App\Catalog\CategoryScope;
+use App\Contracts\ProductScopeInterface;
 use App\Data\CatalogEntry;
 use App\Models\Attribute;
+use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Product;
 use Illuminate\Contracts\View\View;
@@ -11,7 +15,6 @@ use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Computed;
-use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -19,30 +22,150 @@ class ProductList extends Component
 {
     use WithPagination;
 
-    public Category $category;
+    public string $scopeType = 'category'; // 'category' | 'brand'
+    public int $scopeId;
 
-    // Filtros sincronizados com a URL (query string)
-    #[Url(as: 'attrs', except: [])]
-    public array $attrs = []; // [attribute_slug => value_slug]
+    // URL base da página (salva no mount para uso em requests AJAX do Livewire)
+    public string $pageUrl = '';
 
-    #[Url(as: 'min', except: '')]
+    // Filtros — gerenciados manualmente para URL amigável
+    public array $attrs    = []; // [attribute_slug => [value_slug, ...]]
+    public array $brandIds = []; // [brand_slug, ...]
     public string $minPrice = '';
-
-    #[Url(as: 'max', except: '')]
     public string $maxPrice = '';
+    public bool $inStock    = false;
+    public string $sort     = 'newest';
 
-    #[Url(as: 'estoque', except: false)]
-    public bool $inStock = false;
+    // Parâmetros reservados que não são slugs de atributos na URL
+    private const RESERVED_PARAMS = ['min', 'max', 'estoque', 'ordem', 'marca', 'page', 'v'];
 
-    #[Url(as: 'ordem', except: 'newest')]
-    public string $sort = 'newest';
+    // ── Inicialização ─────────────────────────────────────────────────────
 
-    // Reinicia a paginação ao mudar qualquer filtro
-    public function updatedAttrs(): void      { $this->resetPage(); }
-    public function updatedMinPrice(): void   { $this->resetPage(); }
-    public function updatedMaxPrice(): void   { $this->resetPage(); }
-    public function updatedInStock(): void    { $this->resetPage(); }
-    public function updatedSort(): void       { $this->resetPage(); }
+    public function mount(): void
+    {
+        // Salva a URL real da página — request()->url() em requests AJAX aponta para /livewire/update
+        $this->pageUrl = request()->url();
+
+        $q = request()->query();
+
+        // Atributos: ?tamanho=p,g&cor=preto,branco
+        foreach ($q as $key => $value) {
+            if (! in_array($key, self::RESERVED_PARAMS) && is_string($value) && $value !== '') {
+                $parsed = array_values(array_filter(array_map('trim', explode(',', $value))));
+                if (! empty($parsed)) {
+                    $this->attrs[$key] = $parsed;
+                }
+            }
+        }
+
+        // Marcas: ?marca=nike,adidas
+        if (! empty($q['marca']) && is_string($q['marca'])) {
+            $this->brandIds = array_values(array_filter(array_map('trim', explode(',', $q['marca']))));
+        }
+
+        // Preço, estoque, ordenação
+        if (! empty($q['min']))    $this->minPrice = (string) $q['min'];
+        if (! empty($q['max']))    $this->maxPrice = (string) $q['max'];
+        if (! empty($q['estoque'])) $this->inStock = $q['estoque'] !== '0';
+        if (! empty($q['ordem']))  $this->sort     = $q['ordem'];
+    }
+
+    // ── URL amigável ──────────────────────────────────────────────────────
+
+    /**
+     * Parâmetros de filtro atuais como array (sem página).
+     * Usado pelo paginator e por buildUrl().
+     */
+    private function filterParams(): array
+    {
+        $params = [];
+
+        foreach ($this->attrs as $slug => $values) {
+            if (! empty($values)) {
+                $params[$slug] = implode(',', $values);
+            }
+        }
+
+        if (! empty($this->brandIds)) {
+            $params['marca'] = implode(',', $this->brandIds);
+        }
+
+        if ($this->minPrice !== '') $params['min']    = $this->minPrice;
+        if ($this->maxPrice !== '') $params['max']    = $this->maxPrice;
+        if ($this->inStock)         $params['estoque'] = '1';
+        if ($this->sort !== 'newest') $params['ordem'] = $this->sort;
+
+        return $params;
+    }
+
+    private function buildUrl(): string
+    {
+        $params = $this->filterParams();
+        $page   = $this->getPage();
+        if ($page > 1) {
+            $params['page'] = $page;
+        }
+
+        $qs = http_build_query($params);
+        return $this->pageUrl . ($qs ? '?' . $qs : '');
+    }
+
+    /** Empurra a URL atual para o histórico do browser via evento JS. */
+    private function pushUrl(): void
+    {
+        $this->dispatch('update-url', url: $this->buildUrl());
+    }
+
+    // ── Lifecycle hooks ───────────────────────────────────────────────────
+
+    public function updatedMinPrice(): void { $this->resetPage(); $this->pushUrl(); }
+    public function updatedMaxPrice(): void { $this->resetPage(); $this->pushUrl(); }
+    public function updatedInStock(): void  { $this->resetPage(); $this->pushUrl(); }
+    public function updatedSort(): void     { $this->resetPage(); $this->pushUrl(); }
+
+    // ── Ações de filtro ───────────────────────────────────────────────────
+
+    /** Toggle multi-select de atributo (OR dentro do grupo, AND entre grupos). */
+    public function toggleAttr(string $attrSlug, string $valueSlug): void
+    {
+        $current = $this->attrs[$attrSlug] ?? [];
+
+        if (in_array($valueSlug, $current)) {
+            $current = array_values(array_filter($current, fn ($v) => $v !== $valueSlug));
+        } else {
+            $current[] = $valueSlug;
+        }
+
+        if (empty($current)) {
+            unset($this->attrs[$attrSlug]);
+            $this->attrs = $this->attrs;
+        } else {
+            $this->attrs[$attrSlug] = $current;
+        }
+
+        $this->resetPage();
+        $this->pushUrl();
+    }
+
+    /** Toggle multi-select de marca. */
+    public function toggleBrand(string $brandSlug): void
+    {
+        if (in_array($brandSlug, $this->brandIds)) {
+            $this->brandIds = array_values(array_filter($this->brandIds, fn ($s) => $s !== $brandSlug));
+        } else {
+            $this->brandIds[] = $brandSlug;
+        }
+        $this->resetPage();
+        $this->pushUrl();
+    }
+
+    public function clearPriceFilter(): void
+    {
+        $this->minPrice = '';
+        $this->maxPrice = '';
+        $this->resetPage();
+        $this->pushUrl();
+    }
 
     public function resetFilters(): void
     {
@@ -50,31 +173,37 @@ class ProductList extends Component
         $this->minPrice = '';
         $this->maxPrice = '';
         $this->inStock  = false;
+        $this->brandIds = [];
         $this->sort     = 'newest';
         $this->resetPage();
+        $this->pushUrl();
+    }
+
+    // ── Escopo ────────────────────────────────────────────────────────────
+
+    #[Computed]
+    public function scope(): ProductScopeInterface
+    {
+        return match ($this->scopeType) {
+            'brand'  => new BrandScope(Brand::findOrFail($this->scopeId)),
+            default  => new CategoryScope(Category::findOrFail($this->scopeId)),
+        };
     }
 
     // ── Dados computados ──────────────────────────────────────────────────
 
     #[Computed]
-    public function categoryIds(): array
-    {
-        return $this->category->getAllDescendantIds();
-    }
-
-    #[Computed]
     public function products(): LengthAwarePaginator
     {
-        $query = Product::query()
-            ->where('active', true)
-            ->whereHas('categories', fn ($q) => $q->whereIn('categories.id', $this->categoryIds));
+        $query = $this->scope->applyToQuery(
+            Product::query()->where('active', true)
+        );
 
         // Filtro de preço — considera preço efetivo (promoção + herança variante→produto)
         if ($this->minPrice !== '' || $this->maxPrice !== '') {
             $min = $this->minPrice !== '' ? (float) $this->minPrice : null;
             $max = $this->maxPrice !== '' ? (float) $this->maxPrice : null;
 
-            // Preço efetivo do produto (respeita datas de promoção)
             $productPrice = "CASE
                 WHEN products.sale_price IS NOT NULL
                     AND (products.sale_start IS NULL OR products.sale_start <= NOW())
@@ -83,7 +212,6 @@ class ProductList extends Component
                 ELSE products.price
             END";
 
-            // Preço efetivo da variante: sale_price > price > preço efetivo do produto pai
             $variantPrice = "COALESCE(
                 product_variants.sale_price,
                 product_variants.price,
@@ -96,14 +224,11 @@ class ProductList extends Component
             )";
 
             $query->where(function ($q) use ($min, $max, $productPrice, $variantPrice) {
-                // Produto simples: filtra pelo preço efetivo do produto
                 $q->where(function ($q) use ($min, $max, $productPrice) {
                     $q->where('type', 'simple');
                     if ($min !== null) $q->whereRaw("($productPrice) >= ?", [$min]);
                     if ($max !== null) $q->whereRaw("($productPrice) <= ?", [$max]);
-                })
-                // Produto variável: alguma variante ativa com preço efetivo no intervalo
-                ->orWhere(function ($q) use ($min, $max, $variantPrice) {
+                })->orWhere(function ($q) use ($min, $max, $variantPrice) {
                     $q->where('type', 'variable')
                       ->whereHas('variants', function ($q) use ($min, $max, $variantPrice) {
                           $q->where('active', true);
@@ -126,11 +251,16 @@ class ProductList extends Component
             });
         }
 
-        // Filtro de atributos por slug (cada atributo selecionado filtra com AND)
-        foreach ($this->attrs as $attrSlug => $valueSlug) {
-            if ($valueSlug) {
+        // Filtro de marca: OR entre marcas selecionadas
+        if (! empty($this->brandIds)) {
+            $query->whereHas('brand', fn ($q) => $q->whereIn('slug', $this->brandIds));
+        }
+
+        // Filtro de atributos: OR dentro do mesmo atributo, AND entre atributos diferentes
+        foreach ($this->attrs as $attrSlug => $valueSlugs) {
+            if (! empty($valueSlugs)) {
                 $query->whereHas('variants.attributeValues', fn ($q) =>
-                    $q->where('attribute_values.slug', $valueSlug)
+                    $q->whereIn('attribute_values.slug', $valueSlugs)
                       ->whereHas('attribute', fn ($q) => $q->where('slug', $attrSlug))
                 );
             }
@@ -165,37 +295,57 @@ class ProductList extends Component
             $entries->count(),
             $perPage,
             $page,
-            ['path' => request()->url(), 'query' => request()->query()]
+            // pageUrl + filterParams() garantem links corretos mesmo em requests AJAX
+            ['path' => $this->pageUrl, 'query' => $this->filterParams()]
         );
     }
 
     /**
      * Expande produtos com atributo "expand_in_catalog" em múltiplos CatalogEntry.
+     * URLs geradas usam ?v[attr]=value para pré-selecionar variante no ProductDetail.
      */
     private function expandIntoEntries(Collection $products): Collection
     {
         $entries = collect();
+
+        // Filtros de atributo com seleção única são carregados na URL do produto,
+        // para que o ProductDetail pré-selecione a variante correspondente ao filtro ativo.
+        // Multi-seleção é ignorada (não dá para pré-selecionar múltiplos valores).
+        $carryParams = [];
+        foreach ($this->attrs as $attrSlug => $valueSlugs) {
+            if (count($valueSlugs) === 1) {
+                $carryParams[$attrSlug] = $valueSlugs[0];
+            }
+        }
 
         foreach ($products as $product) {
             $expandAttr = $product->attributes
                 ->first(fn ($attr) => (bool) $attr->pivot->expand_in_catalog);
 
             if (! $expandAttr) {
-                // Produto normal — um único card
+                $url = '/' . $product->slug . '/p';
+                if (! empty($carryParams)) {
+                    $url .= '?' . http_build_query($carryParams);
+                }
+
+                $inStock = $product->type === 'simple'
+                    ? ($product->stock ?? 0) > 0
+                    : $product->variants->where('stock', '>', 0)->isNotEmpty();
+
                 $entries->push(new CatalogEntry(
                     product:       $product,
                     displayName:   $product->name,
-                    url:           '/' . $product->slug . '/p',
+                    url:           $url,
                     price:         $product->getCurrentPrice(),
                     originalPrice: $product->isOnSale() ? (float) $product->price : null,
                     imageUrl:      $product->getFirstMediaUrl('cover') ?: null,
                     isNew:         (bool) $product->is_new,
                     isOnSale:      $product->isOnSale(),
+                    inStock:       $inStock,
                 ));
                 continue;
             }
 
-            // Coleta valores do atributo de expansão que têm variantes ativas neste produto
             $values = $expandAttr->values
                 ->filter(fn ($value) =>
                     $product->variants->some(fn ($v) =>
@@ -204,72 +354,108 @@ class ProductList extends Component
                 );
 
             foreach ($values as $value) {
-                // Se o atributo de expansão está filtrado, pular outros valores
+                // Se o atributo de expansão está filtrado, pular valores não selecionados
                 if (
-                    isset($this->attrs[$expandAttr->slug]) &&
-                    $this->attrs[$expandAttr->slug] !== $value->slug
+                    ! empty($this->attrs[$expandAttr->slug]) &&
+                    ! in_array($value->slug, $this->attrs[$expandAttr->slug])
                 ) {
                     continue;
                 }
 
-                // Primeira variante com este valor
-                $variant = $product->variants->first(
-                    fn ($v) => $v->attributeValues->contains('id', $value->id)
-                );
+                // Coleta TODAS as variantes que satisfazem o valor de expansão + carry params.
+                // Se não houver nenhuma, este card não faz sentido exibir.
+                $matchingVariants = $product->variants->filter(function ($v) use ($value, $carryParams) {
+                    $slugs = $v->attributeValues->pluck('slug')->toArray();
+                    if (! in_array($value->slug, $slugs)) {
+                        return false;
+                    }
+                    foreach ($carryParams as $carrySlug) {
+                        if (! in_array($carrySlug, $slugs)) {
+                            return false;
+                        }
+                    }
+                    return true;
+                });
 
-                $imageUrl = $variant?->getFirstMediaUrl('variant-cover') ?: null;
+                if ($matchingVariants->isEmpty()) continue;
+
+                // Variante representativa para imagem e preço: prefere a com estoque
+                // (ex: G-Vermelho sem estoque + M-Vermelho com estoque → usa M-Vermelho)
+                $variant = $matchingVariants->where('stock', '>', 0)->first()
+                    ?? $matchingVariants->first();
+
+                $inStock = $matchingVariants->where('stock', '>', 0)->isNotEmpty();
+
+                $imageUrl = $variant->getFirstMediaUrl('variant-cover') ?: null;
                 if (! $imageUrl) {
                     $imageUrl = $product->getFirstMediaUrl('cover') ?: null;
                 }
 
-                if ($variant && $variant->price !== null) {
-                    // Variante tem preço próprio
+                if ($variant->price !== null) {
                     $price         = $variant->getEffectivePrice();
                     $originalPrice = $variant->isOnSale() ? (float) $variant->price : null;
                 } else {
-                    // Variante sem preço — herda do produto pai
                     $price         = $product->getCurrentPrice();
                     $originalPrice = $product->isOnSale() ? (float) $product->price : null;
                 }
 
-                // Filtra entries expandidos pelo intervalo de preço (o SQL filtra por produto,
-                // mas cada entry tem seu próprio preço efetivo que precisa ser validado)
-                if ($this->minPrice !== '' && $price < (float) $this->minPrice) {
-                    continue;
-                }
-                if ($this->maxPrice !== '' && $price > (float) $this->maxPrice) {
-                    continue;
-                }
+                if ($this->minPrice !== '' && $price < (float) $this->minPrice) continue;
+                if ($this->maxPrice !== '' && $price > (float) $this->maxPrice) continue;
 
+                // URL: atributo de expansão + demais filtros ativos de atributo (carry)
+                // O atributo de expansão sobrescreve o carry caso haja sobreposição.
+                $urlParams = array_merge($carryParams, [$expandAttr->slug => $value->slug]);
                 $entries->push(new CatalogEntry(
                     product:       $product,
                     displayName:   $product->name . ' ' . $value->getLabel(),
-                    url:           '/' . $product->slug . '/p?v[' . $expandAttr->slug . ']=' . $value->slug,
+                    url:           '/' . $product->slug . '/p?' . http_build_query($urlParams),
                     price:         $price,
                     originalPrice: $originalPrice,
                     imageUrl:      $imageUrl,
                     isNew:         (bool) $product->is_new,
                     isOnSale:      $originalPrice !== null,
+                    inStock:       $inStock,
                     expandedBy:    $value,
                 ));
             }
         }
 
-        return $entries;
+        // Produtos sem estoque sempre ao final, preservando a ordem relativa dentro de cada grupo
+        return $entries->sortBy(fn ($e) => $e->inStock ? 0 : 1)->values();
     }
 
     #[Computed]
     public function subcategories(): Collection
     {
-        return $this->category->children()->where('active', true)->get();
+        if ($this->scopeType !== 'category') {
+            return collect();
+        }
+
+        return Category::findOrFail($this->scopeId)
+            ->children()
+            ->where('active', true)
+            ->get();
+    }
+
+    #[Computed]
+    public function availableBrands(): Collection
+    {
+        if ($this->scopeType !== 'category') {
+            return collect();
+        }
+
+        return Brand::where('active', true)
+            ->whereHas('products', fn ($q) => $this->scope->applyToQuery(
+                $q->where('active', true)
+            ))
+            ->orderBy('name')
+            ->get();
     }
 
     #[Computed]
     public function availableAttributes(): Collection
     {
-        $productIds = Product::where('active', true)
-            ->whereHas('categories', fn ($q) => $q->whereIn('categories.id', $this->categoryIds))
-            ->pluck('id');
+        $productIds = $this->scope->baseProductIds();
 
         if ($productIds->isEmpty()) {
             return collect();
@@ -293,8 +479,7 @@ class ProductList extends Component
     #[Computed]
     public function priceRange(): array
     {
-        $base = Product::where('active', true)
-            ->whereHas('categories', fn ($q) => $q->whereIn('categories.id', $this->categoryIds));
+        $base = $this->scope->applyToQuery(Product::where('active', true));
 
         $effectivePrice = "CASE
             WHEN sale_price IS NOT NULL
@@ -313,10 +498,11 @@ class ProductList extends Component
     #[Computed]
     public function hasActiveFilters(): bool
     {
-        return ! empty(array_filter($this->attrs))
+        return collect($this->attrs)->some(fn ($v) => ! empty($v))
             || $this->minPrice !== ''
             || $this->maxPrice !== ''
-            || $this->inStock;
+            || $this->inStock
+            || ! empty($this->brandIds);
     }
 
     public function render(): View

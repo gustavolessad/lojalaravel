@@ -5,6 +5,7 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\ProductResource\Pages;
 use App\Models\Attribute;
 use App\Models\AttributeValue;
+use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\ProductTag;
@@ -58,6 +59,14 @@ class ProductResource extends Resource
 
                     Forms\Components\RichEditor::make('description')
                         ->label('Descrição completa')
+                        ->columnSpanFull(),
+
+                    Forms\Components\Select::make('brand_id')
+                        ->label('Marca')
+                        ->relationship('brand', 'name')
+                        ->searchable()
+                        ->preload()
+                        ->placeholder('Sem marca')
                         ->columnSpanFull(),
                 ])->columns(2),
 

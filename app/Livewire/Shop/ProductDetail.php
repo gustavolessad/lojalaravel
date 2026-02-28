@@ -6,19 +6,21 @@ use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\StockNotification;
 use App\Services\CartService;
+use App\Services\ShippingCalculator;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Collection;
 use Livewire\Attributes\Computed;
-use Livewire\Attributes\Url;
 use Livewire\Component;
 
 class ProductDetail extends Component
 {
     public int $productId;
 
-    /** [attribute_slug => value_slug] — sincronizado com URL para pré-seleção */
-    #[Url(as: 'v', except: [])]
+    /** [attribute_slug => value_slug] — gerenciado manualmente para URL amigável */
     public array $selected = [];
+
+    // URL base da página (salva no mount para uso em requests AJAX do Livewire)
+    public string $pageUrl = '';
 
     public int $quantity = 1;
 
@@ -26,11 +28,27 @@ class ProductDetail extends Component
     public string $notifyEmail = '';
     public bool $notified = false;
 
+    // Simulador de frete
+    public string $shippingCep = '';
+    public array $shippingOptions = [];
+    public ?string $shippingError = null;
+
     public function mount(Product $product): void
     {
         $this->productId = $product->id;
+        $this->pageUrl   = request()->url();
 
-        // Auto-seleciona a primeira variante disponível (com estoque primeiro)
+        // Pré-seleção via URL amigável: ?cor=vermelho&tamanho=g
+        $q = request()->query();
+        foreach ($q as $key => $value) {
+            if (is_string($value) && $value !== '') {
+                $this->selected[$key] = $value;
+            }
+        }
+
+        // Auto-seleciona completando as seleções do URL com a variante mais adequada.
+        // Usa somente variantes COMPATÍVEIS com os valores já selecionados (ex: ?cor=vermelho
+        // deve completar com tamanho G, não P — pois vermelho P não existe).
         if ($product->isVariable()) {
             $variants = ProductVariant::where('product_id', $product->id)
                 ->where('active', true)
@@ -38,18 +56,53 @@ class ProductDetail extends Component
                 ->orderBy('order')
                 ->get();
 
-            $first = $variants->where('stock', '>', 0)->first()
-                ?? $variants->first();
+            $urlSlugs = array_values($this->selected); // slugs vindos da URL
+
+            // Filtra variantes compatíveis com os valores pré-selecionados
+            $compatible = empty($urlSlugs)
+                ? $variants
+                : $variants->filter(function ($v) use ($urlSlugs) {
+                    $slugs = $v->attributeValues->pluck('slug')->toArray();
+                    foreach ($urlSlugs as $slug) {
+                        if (! in_array($slug, $slugs)) {
+                            return false;
+                        }
+                    }
+                    return true;
+                });
+
+            // Se a combinação da URL não existe (ex: cor=vermelho&tamanho=P inválido),
+            // ignora as seleções do URL e cai no auto-select geral
+            if ($compatible->isEmpty()) {
+                $this->selected = [];
+                $compatible     = $variants;
+            }
+
+            $first = $compatible->where('stock', '>', 0)->first()
+                ?? $compatible->first();
 
             if ($first) {
                 foreach ($first->attributeValues as $av) {
-                    // Respeita valores pré-selecionados via URL (ex: vindo do catálogo expandido)
                     if (! array_key_exists($av->attribute->slug, $this->selected)) {
                         $this->selected[$av->attribute->slug] = $av->slug;
                     }
                 }
             }
         }
+    }
+
+    // ── URL amigável ──────────────────────────────────────────────────────
+
+    private function buildUrl(): string
+    {
+        $params = array_filter($this->selected);
+        $qs     = http_build_query($params);
+        return $this->pageUrl . ($qs ? '?' . $qs : '');
+    }
+
+    private function pushUrl(): void
+    {
+        $this->dispatch('update-url', url: $this->buildUrl());
     }
 
     // ── Produto completo com todas as relações ────────────────────────────
@@ -71,6 +124,7 @@ class ProductDetail extends Component
             ]),
             'media',
             'categories',
+            'brand',
         ])->findOrFail($this->productId);
     }
 
@@ -227,13 +281,98 @@ class ProductDetail extends Component
         return $result;
     }
 
+    /**
+     * Slugs de valores cujas variantes compatíveis com a seleção atual de OUTROS
+     * atributos estão todas sem estoque. Mesmo approach contextual de availableValueSlugs.
+     *
+     * Exemplo: branco-M (sem estoque) + branco-P (com estoque).
+     * Com M selecionado → branco aparece aqui (única compatível, branco-M, tem stock=0).
+     * Sem M selecionado → branco NÃO aparece (branco-P tem estoque).
+     */
+    #[Computed]
+    public function outOfStockValueSlugs(): array
+    {
+        if ($this->product->isSimple()) {
+            return [];
+        }
+
+        $variants = $this->product->variants;
+        $result   = [];
+
+        foreach ($this->product->attributes as $attribute) {
+            $otherSelected = array_filter(
+                $this->selected,
+                fn ($v, $k) => $k !== $attribute->slug && $v,
+                ARRAY_FILTER_USE_BOTH
+            );
+
+            $result[$attribute->slug] = $attribute->values
+                ->filter(function ($value) use ($variants, $otherSelected) {
+                    $compatible = $variants->filter(function ($v) use ($value, $otherSelected) {
+                        $slugs = $v->attributeValues->pluck('slug')->toArray();
+                        if (! in_array($value->slug, $slugs)) {
+                            return false;
+                        }
+                        foreach ($otherSelected as $otherSlug) {
+                            if (! in_array($otherSlug, $slugs)) {
+                                return false;
+                            }
+                        }
+                        return true;
+                    });
+
+                    return $compatible->isNotEmpty()
+                        && $compatible->every(fn ($v) => ($v->stock ?? 0) === 0);
+                })
+                ->pluck('slug')
+                ->toArray();
+        }
+
+        return $result;
+    }
+
     // ── Ações ─────────────────────────────────────────────────────────────
 
     public function selectValue(string $attrSlug, string $valueSlug): void
     {
         $this->selected[$attrSlug] = $valueSlug;
-        $this->notified    = false;
-        $this->notifyEmail = '';
+        $this->notified      = false;
+        $this->notifyEmail   = '';
+        $this->shippingOptions = [];
+        $this->shippingError   = null;
+
+        // Verifica se a nova combinação tem uma variante válida.
+        // Se não tiver (ex: cor=vermelho com tamanho=P que não existe),
+        // faz cascade: mantém o valor clicado e ajusta os demais atributos
+        // para a variante mais próxima (com estoque, se possível).
+        $currentSlugs = array_values(array_filter($this->selected));
+        $variants     = $this->product->variants;
+
+        $isValid = $variants->some(function ($v) use ($currentSlugs) {
+            $slugs = $v->attributeValues->pluck('slug')->toArray();
+            foreach ($currentSlugs as $slug) {
+                if (! in_array($slug, $slugs)) {
+                    return false;
+                }
+            }
+            return true;
+        });
+
+        if (! $isValid) {
+            // Pega a melhor variante que contenha o valor recém-selecionado
+            $best = $variants
+                ->filter(fn ($v) => $v->attributeValues->pluck('slug')->contains($valueSlug))
+                ->sortByDesc('stock')
+                ->first();
+
+            if ($best) {
+                foreach ($best->attributeValues as $av) {
+                    $this->selected[$av->attribute->slug] = $av->slug;
+                }
+            }
+        }
+
+        $this->pushUrl();
     }
 
     public function incrementQty(): void
@@ -294,6 +433,58 @@ class ProductDetail extends Component
 
         $this->notified    = true;
         $this->notifyEmail = '';
+    }
+
+    public function calculateShipping(): void
+    {
+        $digits = preg_replace('/\D/', '', $this->shippingCep);
+
+        if (strlen($digits) !== 8) {
+            $this->shippingError   = 'Informe um CEP válido com 8 dígitos.';
+            $this->shippingOptions = [];
+            return;
+        }
+
+        // Para produtos variáveis exige variante selecionada (para ter peso/dimensões corretos)
+        if ($this->product->isVariable() && ! $this->currentVariant) {
+            $this->shippingError   = 'Selecione as opções do produto antes de calcular o frete.';
+            $this->shippingOptions = [];
+            return;
+        }
+
+        // Constrói item simulado com dados do produto/variante atual
+        $variant = $this->currentVariant;
+        $product = $this->product;
+
+        $fakeProduct = (object) [
+            'id'     => $product->id,
+            'weight' => $variant?->weight ?? $product->weight,
+            'width'  => $variant?->width  ?? $product->width,
+            'height' => $variant?->height ?? $product->height,
+            'length' => $variant?->length ?? $product->length,
+        ];
+
+        $fakeItem = (object) [
+            'id'         => $variant?->id ?? $product->id,
+            'product_id' => $product->id,
+            'quantity'   => 1,
+            'unit_price' => $this->currentPrice,
+            'product'    => $fakeProduct,
+        ];
+
+        $options = app(ShippingCalculator::class)->calculate(
+            $digits,
+            $this->currentPrice,
+            collect([$fakeItem]),
+        );
+
+        if (empty($options)) {
+            $this->shippingError   = 'Não foi possível calcular o frete para este CEP.';
+            $this->shippingOptions = [];
+        } else {
+            $this->shippingError   = null;
+            $this->shippingOptions = $options;
+        }
     }
 
     public function render(): View

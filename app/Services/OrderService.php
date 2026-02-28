@@ -2,12 +2,18 @@
 
 namespace App\Services;
 
+use App\Mail\OrderPlaced;
+use App\Mail\PaymentConfirmed;
 use App\Models\Cart;
 use App\Models\Coupon;
-use App\Services\PaymentCalculator;
-use App\Models\Order;
 use App\Models\Customer;
+use App\Models\Order;
+use App\Models\User;
+use App\Services\PaymentCalculator;
+use Filament\Notifications\Actions\Action as NotificationAction;
+use Filament\Notifications\Notification as FilamentNotification;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 
 class OrderService
 {
@@ -32,7 +38,9 @@ class OrderService
         ?string  $notes       = null,
         float    $pixDiscount  = 0.0,
     ): Order {
-        return DB::transaction(function () use ($cart, $address, $shipping, $paymentMethod, $customer, $guest, $notes, $pixDiscount) {
+        // O e-mail é enviado FORA da transaction para não quebrar o pedido
+        // caso a fila (Redis) esteja indisponível.
+        $order = DB::transaction(function () use ($cart, $address, $shipping, $paymentMethod, $customer, $guest, $notes, $pixDiscount) {
 
             $subtotal     = (float) $cart->subtotal;
             $shippingCost = (float) $shipping['price'];
@@ -108,6 +116,41 @@ class OrderService
 
             return $order;
         });
+
+        // E-mail ao cliente — falha aqui não desfaz o pedido
+        try {
+            if ($order->buyer_email && $order->buyer_email !== '—') {
+                Mail::to($order->buyer_email)->queue(new OrderPlaced($order));
+            }
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('OrderService: falha ao enfileirar OrderPlaced', [
+                'order' => $order->order_number,
+                'error' => $e->getMessage(),
+            ]);
+        }
+
+        // Notificação no painel admin
+        try {
+            FilamentNotification::make()
+                ->title('Novo pedido recebido')
+                ->body("Pedido #{$order->order_number} de {$order->buyer_name} — R$ " . number_format($order->total, 2, ',', '.'))
+                ->icon('heroicon-o-shopping-bag')
+                ->iconColor('success')
+                ->actions([
+                    NotificationAction::make('ver')
+                        ->label('Ver pedido')
+                        ->url(\App\Filament\Resources\OrderResource::getUrl('view', ['record' => $order->id]))
+                        ->button(),
+                ])
+                ->sendToDatabase(User::all());
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('OrderService: falha ao enviar notificação admin', [
+                'order' => $order->order_number,
+                'error' => $e->getMessage(),
+            ]);
+        }
+
+        return $order;
     }
 
     /**
@@ -122,6 +165,32 @@ class OrderService
             'payment_data'   => array_merge($order->payment_data ?? [], $paymentData),
             'paid_at'        => now(),
         ]);
+
+        // Envia e-mail de pagamento confirmado (via fila)
+        if ($order->buyer_email && $order->buyer_email !== '—') {
+            Mail::to($order->buyer_email)->queue(new PaymentConfirmed($order));
+        }
+
+        // Notificação no painel admin
+        try {
+            FilamentNotification::make()
+                ->title('Pagamento confirmado')
+                ->body("Pedido #{$order->order_number} de {$order->buyer_name} — R$ " . number_format($order->total, 2, ',', '.'))
+                ->icon('heroicon-o-check-circle')
+                ->iconColor('success')
+                ->actions([
+                    NotificationAction::make('ver')
+                        ->label('Ver pedido')
+                        ->url(\App\Filament\Resources\OrderResource::getUrl('view', ['record' => $order->id]))
+                        ->button(),
+                ])
+                ->sendToDatabase(User::all());
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('OrderService: falha ao enviar notificação admin (pagamento)', [
+                'order' => $order->order_number,
+                'error' => $e->getMessage(),
+            ]);
+        }
     }
 
     /**

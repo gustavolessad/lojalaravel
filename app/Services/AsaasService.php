@@ -184,18 +184,44 @@ class AsaasService
         return $response->successful() ? $response->json('status') : null;
     }
 
+    // ── Verificação de configuração ───────────────────────────────────────
+
+    public function isConfigured(): bool
+    {
+        return $this->apiKey !== '';
+    }
+
     // ── HTTP helpers ──────────────────────────────────────────────────────
 
     private function get(string $path, array $query = []): Response
     {
-        return Http::withHeaders($this->headers())
-            ->get("{$this->baseUrl}{$path}", $query);
+        try {
+            return Http::withHeaders($this->headers())
+                ->timeout(15)
+                ->get("{$this->baseUrl}{$path}", $query);
+        } catch (\Throwable $e) {
+            Log::error('Asaas: falha de conexão (GET)', [
+                'path'  => $path,
+                'error' => $e->getMessage(),
+            ]);
+            // Retorna resposta fake de erro para não deixar a exception subir
+            return Http::response(['error' => $e->getMessage()], 503);
+        }
     }
 
     private function post(string $path, array $data): Response
     {
-        return Http::withHeaders($this->headers())
-            ->post("{$this->baseUrl}{$path}", $data);
+        try {
+            return Http::withHeaders($this->headers())
+                ->timeout(15)
+                ->post("{$this->baseUrl}{$path}", $data);
+        } catch (\Throwable $e) {
+            Log::error('Asaas: falha de conexão (POST)', [
+                'path'  => $path,
+                'error' => $e->getMessage(),
+            ]);
+            return Http::response(['error' => $e->getMessage()], 503);
+        }
     }
 
     private function headers(): array

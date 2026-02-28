@@ -13,10 +13,12 @@ class Cart extends Model
         'session_id',
         'coupon_code',
         'coupon_discount',
+        'abandoned_cart_sent_at',
     ];
 
     protected $casts = [
-        'coupon_discount' => 'float',
+        'coupon_discount'        => 'float',
+        'abandoned_cart_sent_at' => 'datetime',
     ];
 
     public function customer(): BelongsTo

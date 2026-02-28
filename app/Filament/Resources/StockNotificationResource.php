@@ -3,11 +3,13 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\StockNotificationResource\Pages;
+use App\Mail\StockAvailable;
 use App\Models\StockNotification;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Mail;
 
 class StockNotificationResource extends Resource
 {
@@ -18,13 +20,17 @@ class StockNotificationResource extends Resource
     protected static ?string $navigationLabel = 'Avise-me';
     protected static ?string $modelLabel      = 'Aviso de Estoque';
     protected static ?string $pluralModelLabel = 'Avisos de Estoque';
-    protected static ?int    $navigationSort  = 2;
+    protected static ?int    $navigationSort  = 3;
 
-    /** Badge vermelho com a contagem de pendentes no menu lateral. */
+    /** Badge vermelho com novos avisos pendentes desde a última visita. */
     public static function getNavigationBadge(): ?string
     {
-        $count = static::getModel()::whereNull('notified_at')->count();
-
+        $since = cache('admin_stock_viewed_' . auth()->id());
+        $query = static::getModel()::whereNull('notified_at');
+        if ($since) {
+            $query->where('created_at', '>', $since);
+        }
+        $count = $query->count();
         return $count > 0 ? (string) $count : null;
     }
 
@@ -99,14 +105,17 @@ class StockNotificationResource extends Resource
             ])
             ->actions([
                 Tables\Actions\Action::make('mark_notified')
-                    ->label('Marcar como notificado')
-                    ->icon('heroicon-o-check')
+                    ->label('Enviar notificação')
+                    ->icon('heroicon-o-envelope')
                     ->color('success')
                     ->visible(fn (StockNotification $record): bool => $record->notified_at === null)
                     ->requiresConfirmation()
-                    ->modalHeading('Confirmar notificação')
-                    ->modalDescription('Isso marcará o aviso como enviado. O e-mail não é enviado automaticamente ainda (Fase 7).')
-                    ->action(fn (StockNotification $record) => $record->update(['notified_at' => now()])),
+                    ->modalHeading('Enviar e-mail de disponibilidade')
+                    ->modalDescription('Isso enviará o e-mail para o cliente e marcará o aviso como notificado.')
+                    ->action(function (StockNotification $record) {
+                        Mail::to($record->email)->queue(new StockAvailable($record));
+                        $record->update(['notified_at' => now()]);
+                    }),
 
                 Tables\Actions\DeleteAction::make(),
             ])

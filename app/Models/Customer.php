@@ -17,6 +17,7 @@ class Customer extends Authenticatable implements HasMedia
         'type',
         'name',
         'cpf',
+        'rg',
         'birth_date',
         'company_name',
         'cnpj',

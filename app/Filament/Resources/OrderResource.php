@@ -3,6 +3,7 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\OrderResource\Pages;
+use App\Mail\OrderShipped;
 use App\Models\Order;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -12,6 +13,7 @@ use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Mail;
 
 class OrderResource extends Resource
 {
@@ -24,13 +26,16 @@ class OrderResource extends Resource
     protected static ?string $pluralModelLabel = 'Pedidos';
     protected static ?int $navigationSort     = 1;
 
-    // Badge com pedidos pendentes de pagamento
+    // Badge com novos pedidos pendentes desde a última visita
     public static function getNavigationBadge(): ?string
     {
-        $count = Order::where('payment_status', 'pending')
-            ->where('status', '!=', 'cancelled')
-            ->count();
-
+        $since = cache('admin_orders_viewed_' . auth()->id());
+        $query = Order::where('payment_status', 'pending')
+            ->where('status', '!=', 'cancelled');
+        if ($since) {
+            $query->where('created_at', '>', $since);
+        }
+        $count = $query->count();
         return $count > 0 ? (string) $count : null;
     }
 
@@ -161,12 +166,31 @@ class OrderResource extends Resource
                     ->label('Marcar Enviado')
                     ->icon('heroicon-o-truck')
                     ->color('info')
-                    ->requiresConfirmation()
                     ->visible(fn (Order $record) => in_array($record->status, ['paid', 'processing']))
-                    ->action(fn (Order $record) => $record->update([
-                        'status'     => 'shipped',
-                        'shipped_at' => now(),
-                    ])),
+                    ->form([
+                        Forms\Components\TextInput::make('tracking_code')
+                            ->label('Código de rastreamento')
+                            ->placeholder('Ex: BR123456789BR')
+                            ->nullable(),
+                        Forms\Components\TextInput::make('tracking_url')
+                            ->label('Link de rastreamento (opcional)')
+                            ->url()
+                            ->placeholder('https://...')
+                            ->nullable(),
+                    ])
+                    ->action(function (Order $record, array $data) {
+                        $record->update([
+                            'status'        => 'shipped',
+                            'shipped_at'    => now(),
+                            'tracking_code' => $data['tracking_code'] ?: null,
+                            'tracking_url'  => $data['tracking_url'] ?: null,
+                        ]);
+
+                        // Envia e-mail de envio para o comprador (via fila)
+                        if ($record->buyer_email && $record->buyer_email !== '—') {
+                            Mail::to($record->buyer_email)->queue(new OrderShipped($record));
+                        }
+                    }),
 
                 Tables\Actions\Action::make('mark_delivered')
                     ->label('Marcar Entregue')
@@ -403,6 +427,17 @@ class OrderResource extends Resource
                         Infolists\Components\TextEntry::make('shipping_days')
                             ->label('Prazo (dias úteis)'),
 
+                        Infolists\Components\TextEntry::make('tracking_code')
+                            ->label('Código de rastreamento')
+                            ->copyable()
+                            ->placeholder('—'),
+
+                        Infolists\Components\TextEntry::make('tracking_url')
+                            ->label('Link de rastreamento')
+                            ->url(fn (Order $record): ?string => $record->tracking_url ?: null)
+                            ->openUrlInNewTab()
+                            ->placeholder('—'),
+
                         Infolists\Components\TextEntry::make('shipped_at')
                             ->label('Enviado em')
                             ->dateTime('d/m/Y H:i')
@@ -461,6 +496,16 @@ class OrderResource extends Resource
                         Forms\Components\DateTimePicker::make('paid_at')
                             ->label('Pago em')
                             ->displayFormat('d/m/Y H:i')
+                            ->nullable(),
+
+                        Forms\Components\TextInput::make('tracking_code')
+                            ->label('Código de rastreamento')
+                            ->placeholder('Ex: BR123456789BR')
+                            ->nullable(),
+
+                        Forms\Components\TextInput::make('tracking_url')
+                            ->label('Link de rastreamento')
+                            ->url()
                             ->nullable(),
 
                         Forms\Components\DateTimePicker::make('shipped_at')

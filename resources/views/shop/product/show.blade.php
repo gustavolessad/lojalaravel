@@ -106,8 +106,8 @@
             <div class="flex flex-col gap-2">
                 <a
                     href="{{ route('cart.index') }}"
-                    class="w-full py-3 px-4 bg-indigo-600 text-white text-sm font-semibold
-                           rounded-xl text-center hover:bg-indigo-700 transition-colors"
+                    class="w-full py-3 px-4 bg-green-600 text-white text-sm font-semibold
+                           rounded-xl text-center hover:bg-green-700 transition-colors"
                 >
                     Ver Carrinho / Finalizar Compra
                 </a>

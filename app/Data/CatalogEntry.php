@@ -16,6 +16,7 @@ class CatalogEntry
         public readonly ?string $imageUrl,
         public readonly bool $isNew,
         public readonly bool $isOnSale,
+        public readonly bool $inStock = true,
         public readonly ?AttributeValue $expandedBy = null,
     ) {}
 }

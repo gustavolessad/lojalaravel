@@ -2,12 +2,15 @@
 
 namespace App\Services;
 
+use App\Mail\OrderPlaced;
+use App\Mail\PaymentConfirmed;
 use App\Models\Cart;
 use App\Models\Coupon;
-use App\Services\PaymentCalculator;
-use App\Models\Order;
 use App\Models\Customer;
+use App\Models\Order;
+use App\Services\PaymentCalculator;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 
 class OrderService
 {
@@ -106,6 +109,11 @@ class OrderService
             // Limpa o carrinho
             app(CartService::class)->clear();
 
+            // Envia e-mail de confirmação do pedido (via fila)
+            if ($order->buyer_email && $order->buyer_email !== '—') {
+                Mail::to($order->buyer_email)->queue(new OrderPlaced($order));
+            }
+
             return $order;
         });
     }
@@ -122,6 +130,11 @@ class OrderService
             'payment_data'   => array_merge($order->payment_data ?? [], $paymentData),
             'paid_at'        => now(),
         ]);
+
+        // Envia e-mail de pagamento confirmado (via fila)
+        if ($order->buyer_email && $order->buyer_email !== '—') {
+            Mail::to($order->buyer_email)->queue(new PaymentConfirmed($order));
+        }
     }
 
     /**

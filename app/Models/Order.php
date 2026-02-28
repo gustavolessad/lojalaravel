@@ -31,6 +31,8 @@ class Order extends Model
         'shipping_state',
         'shipping_method',
         'shipping_days',
+        'tracking_code',
+        'tracking_url',
         'shipping_cost',
         'subtotal',
         'discount',

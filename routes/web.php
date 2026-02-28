@@ -8,12 +8,20 @@ use App\Http\Controllers\Shop\BrandController;
 use App\Http\Controllers\Shop\CategoryController;
 use App\Http\Controllers\Shop\CheckoutController;
 use App\Http\Controllers\Shop\ProductController;
+use App\Http\Controllers\Webhook\AsaasWebhookController;
 use App\Http\Middleware\AuthenticateCustomer;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     return view('welcome');
 });
+
+/*
+|--------------------------------------------------------------------------
+| Webhooks (sem CSRF — excluído em bootstrap/app.php)
+|--------------------------------------------------------------------------
+*/
+Route::post('/webhook/asaas', [AsaasWebhookController::class, 'handle'])->name('webhook.asaas');
 
 /*
 |--------------------------------------------------------------------------

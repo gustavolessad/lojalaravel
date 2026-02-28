@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Shop;
 
+use App\Mail\CustomerWelcome;
 use App\Models\Cart;
 use App\Models\Customer;
 use App\Models\CustomerAddress;
@@ -14,6 +15,8 @@ use App\Services\ShippingCalculator;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
 
@@ -270,6 +273,16 @@ class CheckoutPage extends Component
         $customer = Customer::create($data);
 
         Auth::guard('customer')->login($customer);
+
+        try {
+            Log::channel('email')->info('Checkout: disparando CustomerWelcome', ['email' => $customer->email]);
+            Mail::to($customer->email)->send(new CustomerWelcome($customer));
+        } catch (\Throwable $e) {
+            Log::channel('email')->error('Checkout: FALHA ao enviar CustomerWelcome', [
+                'email'     => $customer->email,
+                'exception' => $e->getMessage(),
+            ]);
+        }
 
         $this->afterAuth();
     }

@@ -12,6 +12,10 @@ class DashboardController extends Controller
     {
         $customer = Auth::guard('customer')->user();
 
-        return view('account.dashboard', compact('customer'));
+        $recentOrders  = $customer->orders()->latest()->limit(3)->get();
+        $totalOrders   = $customer->orders()->count();
+        $addressCount  = $customer->addresses()->count();
+
+        return view('account.dashboard', compact('customer', 'recentOrders', 'totalOrders', 'addressCount'));
     }
 }

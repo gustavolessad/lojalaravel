@@ -22,11 +22,15 @@ class StockNotificationResource extends Resource
     protected static ?string $pluralModelLabel = 'Avisos de Estoque';
     protected static ?int    $navigationSort  = 3;
 
-    /** Badge vermelho com a contagem de pendentes no menu lateral. */
+    /** Badge vermelho com novos avisos pendentes desde a última visita. */
     public static function getNavigationBadge(): ?string
     {
-        $count = static::getModel()::whereNull('notified_at')->count();
-
+        $since = cache('admin_stock_viewed_' . auth()->id());
+        $query = static::getModel()::whereNull('notified_at');
+        if ($since) {
+            $query->where('created_at', '>', $since);
+        }
+        $count = $query->count();
         return $count > 0 ? (string) $count : null;
     }
 

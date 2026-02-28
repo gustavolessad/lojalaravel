@@ -21,7 +21,12 @@ class NewsletterLeadResource extends Resource
 
     public static function getNavigationBadge(): ?string
     {
-        $count = static::getModel()::count();
+        $since = cache('admin_newsletter_viewed_' . auth()->id());
+        $query = static::getModel()::query();
+        if ($since) {
+            $query->where('created_at', '>', $since);
+        }
+        $count = $query->count();
         return $count > 0 ? (string) $count : null;
     }
 

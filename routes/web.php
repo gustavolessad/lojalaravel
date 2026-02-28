@@ -3,6 +3,8 @@
 use App\Http\Controllers\Account\AddressController;
 use App\Http\Controllers\Account\AuthController;
 use App\Http\Controllers\Account\DashboardController;
+use App\Http\Controllers\Account\OrderController;
+use App\Http\Controllers\Account\ProfileController;
 use App\Http\Controllers\Shop\CartController;
 use App\Http\Controllers\Shop\BrandController;
 use App\Http\Controllers\Shop\CategoryController;
@@ -53,6 +55,20 @@ Route::middleware('guest:customer')->group(function () {
 Route::prefix('minha-conta')->name('account.')->middleware(AuthenticateCustomer::class)->group(function () {
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
     Route::post('/sair', [AuthController::class, 'logout'])->name('logout');
+
+    // Pedidos
+    Route::prefix('pedidos')->name('orders.')->group(function () {
+        Route::get('/', [OrderController::class, 'index'])->name('index');
+        Route::get('/{orderNumber}', [OrderController::class, 'show'])->name('show');
+    });
+
+    // Perfil
+    Route::get('/meus-dados', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::put('/meus-dados', [ProfileController::class, 'update'])->name('profile.update');
+    Route::put('/meus-dados/senha', [ProfileController::class, 'updatePassword'])->name('profile.password');
+
+    // Trocas e Devoluções
+    Route::get('/trocas-devolucoes', fn () => view('account.returns.index'))->name('returns.index');
 
     // Endereços
     Route::prefix('enderecos')->name('addresses.')->group(function () {

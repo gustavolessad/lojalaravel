@@ -26,13 +26,16 @@ class OrderResource extends Resource
     protected static ?string $pluralModelLabel = 'Pedidos';
     protected static ?int $navigationSort     = 1;
 
-    // Badge com pedidos pendentes de pagamento
+    // Badge com novos pedidos pendentes desde a última visita
     public static function getNavigationBadge(): ?string
     {
-        $count = Order::where('payment_status', 'pending')
-            ->where('status', '!=', 'cancelled')
-            ->count();
-
+        $since = cache('admin_orders_viewed_' . auth()->id());
+        $query = Order::where('payment_status', 'pending')
+            ->where('status', '!=', 'cancelled');
+        if ($since) {
+            $query->where('created_at', '>', $since);
+        }
+        $count = $query->count();
         return $count > 0 ? (string) $count : null;
     }
 

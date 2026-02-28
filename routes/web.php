@@ -10,6 +10,7 @@ use App\Http\Controllers\Shop\BrandController;
 use App\Http\Controllers\Shop\CategoryController;
 use App\Http\Controllers\Shop\CheckoutController;
 use App\Http\Controllers\Shop\ProductController;
+use App\Http\Controllers\Shop\StorePageController;
 use App\Http\Controllers\Webhook\AsaasWebhookController;
 use App\Http\Middleware\AuthenticateCustomer;
 use Illuminate\Support\Facades\Route;
@@ -81,6 +82,15 @@ Route::prefix('minha-conta')->name('account.')->middleware(AuthenticateCustomer:
         Route::patch('/{address}/padrao', [AddressController::class, 'setDefault'])->name('set-default');
     });
 });
+
+/*
+|--------------------------------------------------------------------------
+| Loja — Páginas Institucionais
+|--------------------------------------------------------------------------
+*/
+Route::get('/pagina/{slug}', [StorePageController::class, 'show'])
+    ->where('slug', '[a-z0-9\-]+')
+    ->name('page.show');
 
 /*
 |--------------------------------------------------------------------------

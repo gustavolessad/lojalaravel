@@ -97,8 +97,10 @@ class StorePageResource extends Resource
 
                 Tables\Columns\TextColumn::make('slug')
                     ->label('URL')
-                    ->formatStateUsing(fn (string $state) => '/' . $state)
-                    ->color('gray'),
+                    ->formatStateUsing(fn (string $state) => '/pagina/' . $state)
+                    ->color('gray')
+                    ->url(fn (StorePage $record) => route('page.show', $record->slug))
+                    ->openUrlInNewTab(),
 
                 Tables\Columns\BadgeColumn::make('is_system')
                     ->label('Tipo')

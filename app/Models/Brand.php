@@ -50,13 +50,7 @@ class Brand extends Model implements HasMedia
 
     public function registerMediaCollections(): void
     {
-        $this->addMediaCollection('logo')
-            ->singleFile()
-            ->sanitizingFileName(function (string $fileName) {
-                $ext  = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
-                $slug = Str::slug($this->name ?: 'marca');
-                return $slug . '-logo.' . $ext;
-            });
+        $this->addMediaCollection('logo')->singleFile();
     }
 
     public function registerMediaConversions(Media $media = null): void

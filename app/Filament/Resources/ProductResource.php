@@ -15,6 +15,7 @@ use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Support\Str;
+use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 
 class ProductResource extends Resource
 {
@@ -286,6 +287,12 @@ class ProductResource extends Resource
                                         ->collection('variant-cover')
                                         ->image()
                                         ->imageEditor()
+                                        ->getUploadedFileNameForStorageUsing(function (TemporaryUploadedFile $file, $record): string {
+                                            $ext         = strtolower($file->getClientOriginalExtension() ?: 'jpg');
+                                            $productSlug = Str::slug($record?->product?->name ?? $record?->name ?? 'variante');
+                                            $sku         = Str::slug($record?->sku ?? substr(uniqid(), -5));
+                                            return "{$productSlug}-{$sku}.{$ext}";
+                                        })
                                         ->columnSpan(2),
 
                                     Forms\Components\SpatieMediaLibraryFileUpload::make('variant-gallery')
@@ -294,6 +301,11 @@ class ProductResource extends Resource
                                         ->multiple()
                                         ->image()
                                         ->reorderable()
+                                        ->getUploadedFileNameForStorageUsing(function (TemporaryUploadedFile $file, $record): string {
+                                            $ext         = strtolower($file->getClientOriginalExtension() ?: 'jpg');
+                                            $productSlug = Str::slug($record?->product?->name ?? $record?->name ?? 'variante');
+                                            return "{$productSlug}-" . substr(uniqid(), -5) . ".{$ext}";
+                                        })
                                         ->columnSpan(2),
                                 ];
                             })
@@ -433,14 +445,24 @@ class ProductResource extends Resource
                         ->collection('cover')
                         ->image()
                         ->imageResizeMode('cover')
-                        ->imageEditor(),
+                        ->imageEditor()
+                        ->getUploadedFileNameForStorageUsing(function (TemporaryUploadedFile $file, ?Product $record): string {
+                            $ext  = strtolower($file->getClientOriginalExtension() ?: 'jpg');
+                            $slug = Str::slug($record?->name ?? 'produto');
+                            return "{$slug}.{$ext}";
+                        }),
 
                     Forms\Components\SpatieMediaLibraryFileUpload::make('gallery')
                         ->label('Galeria')
                         ->collection('gallery')
                         ->multiple()
                         ->image()
-                        ->reorderable(),
+                        ->reorderable()
+                        ->getUploadedFileNameForStorageUsing(function (TemporaryUploadedFile $file, ?Product $record): string {
+                            $ext  = strtolower($file->getClientOriginalExtension() ?: 'jpg');
+                            $slug = Str::slug($record?->name ?? 'produto');
+                            return "{$slug}-" . substr(uniqid(), -5) . ".{$ext}";
+                        }),
                 ]),
 
             ])->columnSpan(['lg' => 1]),

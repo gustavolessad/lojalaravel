@@ -130,20 +130,8 @@ class Product extends Model implements HasMedia
 
     public function registerMediaCollections(): void
     {
-        $this->addMediaCollection('gallery')
-            ->sanitizingFileName(function (string $fileName) {
-                $ext  = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
-                $slug = \Illuminate\Support\Str::slug($this->name ?: 'produto');
-                return $slug . '-' . substr(uniqid(), -5) . '.' . $ext;
-            });
-
-        $this->addMediaCollection('cover')
-            ->singleFile()
-            ->sanitizingFileName(function (string $fileName) {
-                $ext  = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
-                $slug = \Illuminate\Support\Str::slug($this->name ?: 'produto');
-                return $slug . '.' . $ext;
-            });
+        $this->addMediaCollection('gallery');
+        $this->addMediaCollection('cover')->singleFile();
     }
 
     public function registerMediaConversions(Media $media = null): void

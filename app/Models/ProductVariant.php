@@ -98,21 +98,8 @@ class ProductVariant extends Model implements HasMedia
 
     public function registerMediaCollections(): void
     {
-        $this->addMediaCollection('variant-gallery')
-            ->sanitizingFileName(function (string $fileName) {
-                $ext         = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
-                $productSlug = \Illuminate\Support\Str::slug($this->product?->name ?: 'variante');
-                return $productSlug . '-' . substr(uniqid(), -5) . '.' . $ext;
-            });
-
-        $this->addMediaCollection('variant-cover')
-            ->singleFile()
-            ->sanitizingFileName(function (string $fileName) {
-                $ext         = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
-                $productSlug = \Illuminate\Support\Str::slug($this->product?->name ?: 'variante');
-                $variantSlug = \Illuminate\Support\Str::slug($this->sku ?: substr(uniqid(), -5));
-                return $productSlug . '-' . $variantSlug . '.' . $ext;
-            });
+        $this->addMediaCollection('variant-gallery');
+        $this->addMediaCollection('variant-cover')->singleFile();
     }
 
     public function registerMediaConversions(Media $media = null): void

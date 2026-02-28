@@ -10,6 +10,7 @@ use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Support\Str;
 
 class StorePageResource extends Resource
 {
@@ -26,14 +27,32 @@ class StorePageResource extends Resource
     {
         return $form
             ->schema([
-                Forms\Components\Section::make('Conteúdo')
+                Forms\Components\Section::make('Identificação')
                     ->schema([
                         Forms\Components\TextInput::make('title')
                             ->label('Título da página')
                             ->required()
                             ->maxLength(255)
-                            ->columnSpanFull(),
+                            ->live(onBlur: true)
+                            ->afterStateUpdated(function (string $operation, $state, Forms\Set $set) {
+                                if ($operation === 'create') {
+                                    $set('slug', Str::slug($state));
+                                }
+                            }),
 
+                        Forms\Components\TextInput::make('slug')
+                            ->label('Slug (URL)')
+                            ->required()
+                            ->maxLength(100)
+                            ->unique(StorePage::class, 'slug', ignoreRecord: true)
+                            ->helperText('Gerado automaticamente a partir do título. Não altere após publicar.')
+                            ->disabled(fn (string $operation) => $operation === 'edit')
+                            ->dehydrated(),
+                    ])
+                    ->columns(2),
+
+                Forms\Components\Section::make('Conteúdo')
+                    ->schema([
                         Forms\Components\RichEditor::make('content')
                             ->label('Conteúdo')
                             ->toolbarButtons([
@@ -81,6 +100,11 @@ class StorePageResource extends Resource
                     ->formatStateUsing(fn (string $state) => '/' . $state)
                     ->color('gray'),
 
+                Tables\Columns\BadgeColumn::make('is_system')
+                    ->label('Tipo')
+                    ->formatStateUsing(fn (bool $state) => $state ? 'Sistema' : 'Customizada')
+                    ->color(fn (bool $state) => $state ? 'gray' : 'info'),
+
                 Tables\Columns\IconColumn::make('content')
                     ->label('Conteúdo')
                     ->boolean()
@@ -98,6 +122,9 @@ class StorePageResource extends Resource
             ])
             ->actions([
                 Tables\Actions\EditAction::make()->label('Editar'),
+                Tables\Actions\DeleteAction::make()
+                    ->label('Excluir')
+                    ->visible(fn (StorePage $record) => ! $record->is_system),
             ])
             ->paginated(false)
             ->defaultSort('id');
@@ -106,8 +133,9 @@ class StorePageResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListStorePages::route('/'),
-            'edit'  => Pages\EditStorePage::route('/{record}/edit'),
+            'index'  => Pages\ListStorePages::route('/'),
+            'create' => Pages\CreateStorePage::route('/create'),
+            'edit'   => Pages\EditStorePage::route('/{record}/edit'),
         ];
     }
 }

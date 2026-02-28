@@ -11,7 +11,10 @@ class EditStorePage extends EditRecord
 
     protected function getHeaderActions(): array
     {
-        return []; // Sem deletar — páginas são fixas
+        return [
+            \Filament\Actions\DeleteAction::make()
+                ->visible(fn () => ! $this->record->is_system),
+        ];
     }
 
     protected function getRedirectUrl(): string

@@ -12,6 +12,11 @@ class StorePage extends Model
         'content',
         'meta_title',
         'meta_description',
+        'is_system',
+    ];
+
+    protected $casts = [
+        'is_system' => 'boolean',
     ];
 
     public static function findBySlug(string $slug): ?self

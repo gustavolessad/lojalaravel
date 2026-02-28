@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\StorePageResource\Pages;
 
 use App\Filament\Resources\StorePageResource;
+use Filament\Actions;
 use Filament\Resources\Pages\ListRecords;
 
 class ListStorePages extends ListRecords
@@ -11,6 +12,8 @@ class ListStorePages extends ListRecords
 
     protected function getHeaderActions(): array
     {
-        return []; // Páginas são fixas — sem criar nem excluir
+        return [
+            Actions\CreateAction::make()->label('Nova página'),
+        ];
     }
 }

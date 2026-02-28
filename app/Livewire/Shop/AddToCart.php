@@ -2,7 +2,6 @@
 
 namespace App\Livewire\Shop;
 
-use App\Services\AnalyticsService;
 use App\Services\CartService;
 use Livewire\Component;
 
@@ -18,11 +17,6 @@ class AddToCart extends Component
         $this->validate(['quantity' => 'required|integer|min:1|max:999']);
 
         app(CartService::class)->add($this->productId, $this->quantity, $this->variantId);
-
-        app(AnalyticsService::class)->track('add_to_cart', [
-            'product_id' => $this->productId,
-            'variant_id' => $this->variantId,
-        ]);
 
         $this->added = true;
         $this->dispatch('cart-updated');

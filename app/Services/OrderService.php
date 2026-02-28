@@ -9,7 +9,6 @@ use App\Models\Coupon;
 use App\Models\Customer;
 use App\Models\Order;
 use App\Models\User;
-use App\Services\AnalyticsService;
 use App\Services\PaymentCalculator;
 use Filament\Notifications\Actions\Action as NotificationAction;
 use Filament\Notifications\Notification as FilamentNotification;
@@ -118,11 +117,6 @@ class OrderService
             return $order;
         });
 
-        // Rastreia order_created
-        try {
-            app(AnalyticsService::class)->track('order_created', ['order_id' => $order->id]);
-        } catch (\Throwable $e) { }
-
         // E-mail ao cliente — falha aqui não desfaz o pedido
         try {
             if ($order->buyer_email && $order->buyer_email !== '—') {
@@ -171,11 +165,6 @@ class OrderService
             'payment_data'   => array_merge($order->payment_data ?? [], $paymentData),
             'paid_at'        => now(),
         ]);
-
-        // Rastreia order_paid
-        try {
-            app(AnalyticsService::class)->track('order_paid', ['order_id' => $order->id]);
-        } catch (\Throwable $e) { }
 
         // Envia e-mail de pagamento confirmado (via fila)
         if ($order->buyer_email && $order->buyer_email !== '—') {

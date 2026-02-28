@@ -16,6 +16,13 @@ class StatsOverviewWidget extends BaseWidget
 
     protected static ?int $sort = 1;
 
+    protected int | string | array $columnSpan = 'full';
+
+    protected function getColumns(): int
+    {
+        return 4;
+    }
+
     protected function getStats(): array
     {
         [$from, $to] = $this->getDateRange();
@@ -26,21 +33,12 @@ class StatsOverviewWidget extends BaseWidget
 
         $totalOrders = Order::whereBetween('created_at', [$from, $to])->count();
 
-        $paidOrders = Order::where('payment_status', 'paid')
-            ->whereBetween('paid_at', [$from, $to])
-            ->count();
-
-        $avgTicket = $paidOrders > 0
-            ? (float) Order::where('payment_status', 'paid')
-                ->whereBetween('paid_at', [$from, $to])
-                ->avg('total')
-            : 0;
-
         $newCustomers = Customer::whereBetween('created_at', [$from, $to])->count();
 
-        $conversion = $totalOrders > 0
-            ? round($paidOrders / $totalOrders * 100, 1)
-            : 0;
+        $paidOrders = Order::where('payment_status', 'paid')
+            ->whereBetween('paid_at', [$from, $to])->count();
+
+        $avgTicket = $paidOrders > 0 ? $revenue / $paidOrders : 0;
 
         return [
             Stat::make('Faturamento', 'R$ ' . number_format($revenue, 2, ',', '.'))
@@ -48,25 +46,20 @@ class StatsOverviewWidget extends BaseWidget
                 ->icon('heroicon-o-banknotes')
                 ->color('success'),
 
-            Stat::make('Pedidos', $totalOrders)
-                ->description("{$paidOrders} pagos")
+            Stat::make('Novos pedidos', number_format($totalOrders))
+                ->description('Pedidos criados no período')
                 ->icon('heroicon-o-shopping-bag')
                 ->color('primary'),
 
-            Stat::make('Clientes novos', $newCustomers)
+            Stat::make('Novos clientes', number_format($newCustomers))
                 ->description('Cadastros no período')
                 ->icon('heroicon-o-user-plus')
                 ->color('info'),
 
             Stat::make('Ticket médio', 'R$ ' . number_format($avgTicket, 2, ',', '.'))
-                ->description('Pedidos pagos')
+                ->description("Faturamento ÷ {$paidOrders} pedidos pagos")
                 ->icon('heroicon-o-receipt-percent')
                 ->color('warning'),
-
-            Stat::make('Conversão', $conversion . '%')
-                ->description('Pedidos pagos / criados')
-                ->icon('heroicon-o-arrow-trending-up')
-                ->color($conversion >= 50 ? 'success' : ($conversion >= 20 ? 'warning' : 'danger')),
         ];
     }
 }

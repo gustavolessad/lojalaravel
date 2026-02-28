@@ -8,6 +8,7 @@ use Filament\Forms\Form;
 use Filament\Forms\Get;
 use Filament\Pages\Dashboard as BaseDashboard;
 use Filament\Pages\Dashboard\Concerns\HasFiltersForm;
+use Filament\Support\Enums\MaxWidth;
 
 class Dashboard extends BaseDashboard
 {
@@ -15,6 +16,11 @@ class Dashboard extends BaseDashboard
 
     protected static ?string $navigationIcon = 'heroicon-o-home';
     protected static ?string $title          = 'Dashboard';
+
+    public function getMaxContentWidth(): MaxWidth | string | null
+    {
+        return MaxWidth::Full;
+    }
 
     public function filtersForm(Form $form): Form
     {

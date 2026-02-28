@@ -11,6 +11,3 @@ Artisan::command('inspire', function () {
 
 // Verifica carrinhos abandonados a cada hora
 Schedule::job(new SendAbandonedCartEmails)->hourly();
-
-// Remove eventos de analytics com mais de 13 meses (todo dia 1 às 3h)
-Schedule::command('analytics:prune')->monthlyOn(1, '03:00');

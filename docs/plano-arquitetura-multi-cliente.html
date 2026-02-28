@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<style>
+  body { font-family: Calibri, Arial, sans-serif; max-width: 900px; margin: 40px auto; color: #1a1a1a; line-height: 1.6; }
+  h1 { font-size: 24pt; color: #111827; border-bottom: 3px solid #111827; padding-bottom: 8px; }
+  h2 { font-size: 16pt; color: #1d4ed8; margin-top: 32px; border-bottom: 1px solid #93c5fd; padding-bottom: 4px; }
+  h3 { font-size: 13pt; color: #374151; margin-top: 20px; }
+  h4 { font-size: 11pt; color: #6b7280; font-weight: bold; }
+  pre, code { background: #f3f4f6; padding: 2px 6px; border-radius: 3px; font-family: Consolas, monospace; font-size: 9pt; }
+  pre { display: block; padding: 12px; border-left: 4px solid #3b82f6; margin: 12px 0; white-space: pre-wrap; }
+  table { border-collapse: collapse; width: 100%; margin: 12px 0; font-size: 10pt; }
+  th { background: #1e3a5f; color: white; padding: 8px 12px; text-align: left; }
+  td { border: 1px solid #d1d5db; padding: 7px 12px; }
+  tr:nth-child(even) td { background: #f9fafb; }
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 9pt; font-weight: bold; }
+  .badge-blue { background: #dbeafe; color: #1d4ed8; }
+  .badge-green { background: #dcfce7; color: #15803d; }
+  .badge-amber { background: #fef3c7; color: #b45309; }
+  .box { border: 1px solid #e5e7eb; border-radius: 6px; padding: 16px; margin: 16px 0; background: #f8fafc; }
+  .box-blue { border-color: #93c5fd; background: #eff6ff; }
+  .box-green { border-color: #86efac; background: #f0fdf4; }
+  ul { padding-left: 20px; }
+  li { margin-bottom: 4px; }
+  .muted { color: #6b7280; font-style: italic; }
+  .fase { display: inline-block; background: #111827; color: white; padding: 3px 10px; border-radius: 4px; font-size: 10pt; margin-right: 8px; }
+</style>
+</head>
+<body>
+
+<h1>Plano: Arquitetura Escalável Multi-Cliente</h1>
+<p class="muted">Loja Virtual Laravel — Planejamento estratégico para replicação em múltiplos clientes</p>
+<p><strong>Data:</strong> 28/02/2026 &nbsp;&nbsp; <strong>Status:</strong> <span class="badge badge-amber">Planejado — aguardando implementação</span></p>
+
+<hr>
+
+<h2>Contexto e Objetivos</h2>
+<p>O sistema de loja virtual está em desenvolvimento e será replicado para múltiplos clientes, cada um com site e banco de dados próprios. A arquitetura precisa atender a:</p>
+<ul>
+  <li>Atualizações do core chegando a todos os clientes com facilidade (um único comando)</li>
+  <li>Módulos opcionais (ex: integração Bling, WhatsApp) como pacotes Composer separados</li>
+  <li>2 templates visuais padrão + painel de aparência completo no admin</li>
+  <li>Override de views por cliente quando necessário (sem modificar o core)</li>
+</ul>
+
+<hr>
+
+<h2>Parte 1 — Arquitetura de Repositórios e Deploy</h2>
+
+<h3>Repositórios (GitHub Privado)</h3>
+<table>
+  <tr><th>Repositório</th><th>Descrição</th></tr>
+  <tr><td><code>empresa/loja-core</code></td><td>Este repositório — o projeto atual, evoluindo para pacote Composer privado</td></tr>
+  <tr><td><code>empresa/loja-cliente-template</code></td><td>Projeto mínimo para novos clientes (requer loja-core via Composer)</td></tr>
+  <tr><td><code>empresa/module-bling</code></td><td>Módulo Bling ERP (exemplo futuro)</td></tr>
+  <tr><td><code>empresa/module-whatsapp</code></td><td>Módulo WhatsApp Business (exemplo futuro)</td></tr>
+  <tr><td><code>empresa/satis</code></td><td>Servidor Composer privado (hospedado em GitHub Pages ou VPS)</td></tr>
+</table>
+
+<h3>Satis — Servidor Composer Privado</h3>
+<div class="box box-blue">
+  <p>O <strong>Satis</strong> é uma aplicação PHP gratuita que cria um repositório Composer privado. Cada cliente aponta para <code>https://packages.empresa.com.br</code> no <code>composer.json</code> e instala os pacotes privados normalmente como se fossem do Packagist.</p>
+  <p>Custo: apenas hospedagem (pode ser GitHub Pages = gratuito).</p>
+</div>
+
+<h3>Estrutura do loja-cliente-template</h3>
+<pre>
+empresa/loja-cliente-template/
+├── composer.json       → require: empresa/loja-core
+├── .env.example        → todas as variáveis necessárias documentadas
+├── bootstrap/
+├── public/
+├── storage/
+└── deploy.sh           → script de atualização automatizada
+</pre>
+
+<h3>Fluxo de novo cliente</h3>
+<pre>
+git clone empresa/loja-cliente-template meu-cliente
+cd meu-cliente && cp .env.example .env
+# Preencher DB, APP_URL, ASAAS_TOKEN, etc.
+composer install
+php artisan key:generate
+php artisan migrate --seed
+php artisan storage:link
+</pre>
+
+<h3>Fluxo de atualização (quando o core recebe melhorias)</h3>
+<pre>
+composer update empresa/loja-core
+php artisan migrate --force
+php artisan config:cache && php artisan view:clear
+</pre>
+<p>Esse script pode ser automatizado via CI/CD (GitHub Actions) para rodar em todos os clientes automaticamente.</p>
+
+<h3>Fluxo de adição de módulo</h3>
+<pre>
+composer require empresa/module-bling
+php artisan migrate --force
+# Configurar no Admin: Aplicativos > Bling > Configurações
+</pre>
+
+<hr>
+
+<h2>Parte 2 — Sistema de Templates (2 templates)</h2>
+
+<h3>Estrutura de Views</h3>
+<pre>
+resources/views/
+  themes/
+    default/                   ← Template 1: "Padrão" — moderno e clean
+      layouts/shop.blade.php
+      layouts/account.blade.php
+      layouts/auth.blade.php
+      shop/                    (category, product, checkout, brand...)
+      account/                 (auth, dashboard, addresses, orders, profile, returns)
+      livewire/shop/
+      livewire/account/
+      components/
+      theme.json               ← { "name": "Padrão", "description": "Layout moderno e clean" }
+    compact/                   ← Template 2: "Compacto" — layout mais denso
+      layouts/shop.blade.php   (apenas os arquivos que diferem do default)
+      theme.json               ← { "name": "Compacto", "description": "Layout compacto" }
+</pre>
+
+<div class="box">
+  <strong>Lógica de override (prioridade de resolução, maior → menor):</strong>
+  <ol>
+    <li><code>resources/views/</code> (raiz do projeto do cliente) — customização própria</li>
+    <li><code>resources/views/themes/{tema-ativo}/</code> — template escolhido no admin</li>
+    <li><code>resources/views/themes/default/</code> — fallback</li>
+    <li>Vendor views (pacotes Composer)</li>
+  </ol>
+  <p>Exemplo: cliente quer apenas mudar a homepage → cria <code>resources/views/welcome.blade.php</code> e só essa view é sobrescrita.</p>
+</div>
+
+<h3>Mecanismo de Resolução (AppServiceProvider)</h3>
+<pre>
+// Em AppServiceProvider::boot()
+$theme = Setting::get('appearance_theme', 'default');
+view()->addLocation(resource_path("views/themes/{$theme}"));
+view()->addLocation(resource_path("views/themes/default")); // fallback
+</pre>
+
+<h3>CSS Variables — Cores Dinâmicas</h3>
+<p>As cores são injetadas como variáveis CSS no <code>&lt;head&gt;</code> do layout. Não exige recompilar o Tailwind — muda instantaneamente ao salvar no admin.</p>
+<pre>
+@php
+    $primary   = Setting::get('appearance_primary_color', '#111827');
+    $secondary = Setting::get('appearance_secondary_color', '#f59e0b');
+    $font      = Setting::get('appearance_body_font', 'Inter');
+@endphp
+&lt;style&gt;
+    :root {
+        --color-primary: {{ $primary }};
+        --color-secondary: {{ $secondary }};
+        --font-body: '{{ $font }}', sans-serif;
+    }
+&lt;/style&gt;
+</pre>
+
+<p><strong>tailwind.config.js</strong> — adicionar colors dinâmicas:</p>
+<pre>
+colors: {
+    brand:  'var(--color-primary)',
+    accent: 'var(--color-secondary)',
+}
+// Usar bg-brand, text-brand, border-accent nos templates
+</pre>
+
+<hr>
+
+<h2>Parte 3 — Painel de Aparência (Admin Filament)</h2>
+
+<h3>Nova Filament Page: AppearanceSettings</h3>
+<table>
+  <tr><th>Propriedade</th><th>Valor</th></tr>
+  <tr><td>Arquivo</td><td><code>app/Filament/Pages/AppearanceSettings.php</code></td></tr>
+  <tr><td>Cluster</td><td>Configurações</td></tr>
+  <tr><td>Ícone</td><td>heroicon-o-paint-brush</td></tr>
+  <tr><td>Sort</td><td>1 (primeiro item em Configurações)</td></tr>
+</table>
+
+<h3>Seções e Setting Keys</h3>
+
+<h4>1. Identidade da Loja</h4>
+<table>
+  <tr><th>Setting Key</th><th>Campo</th><th>Tipo</th></tr>
+  <tr><td>appearance_store_name</td><td>Nome da Loja</td><td>TextInput</td></tr>
+  <tr><td>appearance_tagline</td><td>Slogan</td><td>TextInput</td></tr>
+  <tr><td>appearance_logo</td><td>Logo</td><td>FileUpload</td></tr>
+  <tr><td>appearance_favicon</td><td>Favicon</td><td>FileUpload</td></tr>
+</table>
+
+<h4>2. Template Ativo</h4>
+<table>
+  <tr><th>Setting Key</th><th>Campo</th><th>Tipo</th></tr>
+  <tr><td>appearance_theme</td><td>Template</td><td>Select — descobre automaticamente as pastas em <code>themes/</code> via <code>theme.json</code></td></tr>
+</table>
+
+<h4>3. Cores</h4>
+<table>
+  <tr><th>Setting Key</th><th>Campo</th><th>Tipo</th></tr>
+  <tr><td>appearance_primary_color</td><td>Cor Principal</td><td>ColorPicker</td></tr>
+  <tr><td>appearance_secondary_color</td><td>Cor Secundária</td><td>ColorPicker</td></tr>
+</table>
+
+<h4>4. Tipografia</h4>
+<table>
+  <tr><th>Setting Key</th><th>Campo</th><th>Opções</th></tr>
+  <tr><td>appearance_heading_font</td><td>Fonte dos Títulos</td><td>Inter, Poppins, Montserrat, Playfair Display, Raleway</td></tr>
+  <tr><td>appearance_body_font</td><td>Fonte do Corpo</td><td>Inter, Roboto, Open Sans, Lato</td></tr>
+</table>
+
+<h4>5. Banner Principal (Hero)</h4>
+<table>
+  <tr><th>Setting Key</th><th>Campo</th></tr>
+  <tr><td>appearance_hero_title</td><td>Título</td></tr>
+  <tr><td>appearance_hero_subtitle</td><td>Subtítulo</td></tr>
+  <tr><td>appearance_hero_image</td><td>Imagem de Fundo</td></tr>
+  <tr><td>appearance_hero_cta_text</td><td>Texto do Botão CTA</td></tr>
+  <tr><td>appearance_hero_cta_url</td><td>URL do Botão CTA</td></tr>
+</table>
+
+<h4>6. Rodapé</h4>
+<table>
+  <tr><th>Setting Key</th><th>Campo</th></tr>
+  <tr><td>appearance_footer_about</td><td>Texto institucional</td></tr>
+  <tr><td>appearance_social_instagram</td><td>URL Instagram</td></tr>
+  <tr><td>appearance_social_facebook</td><td>URL Facebook</td></tr>
+  <tr><td>appearance_social_whatsapp</td><td>Número WhatsApp</td></tr>
+  <tr><td>appearance_contact_email</td><td>E-mail de contato</td></tr>
+  <tr><td>appearance_contact_phone</td><td>Telefone</td></tr>
+  <tr><td>appearance_contact_address</td><td>Endereço (texto livre)</td></tr>
+</table>
+
+<hr>
+
+<h2>Parte 4 — Sistema de Módulos</h2>
+
+<h3>Dois tipos de módulo</h3>
+<table>
+  <tr><th>Tipo</th><th>Exemplos</th><th>Como instalar</th></tr>
+  <tr><td><strong>Internos</strong> — sempre presentes no core, habilitáveis por cliente</td><td>Newsletter, Avisos de Estoque, Devoluções</td><td>Toggle no Admin &gt; Aplicativos</td></tr>
+  <tr><td><strong>Externos</strong> — pacotes Composer opcionais</td><td>Bling, WhatsApp Business, Correios, etc.</td><td><code>composer require empresa/module-bling</code></td></tr>
+</table>
+
+<h3>config/modules.php (novo arquivo)</h3>
+<pre>
+return [
+    // Módulos internos (sempre instalados no core)
+    'internal' => [
+        'newsletter'         => env('MODULE_NEWSLETTER', true),
+        'stock_notification' => env('MODULE_STOCK_NOTIFICATION', true),
+        'returns'            => env('MODULE_RETURNS', true),
+    ],
+    // Módulos externos (preenchido pelos ServiceProviders instalados)
+    'external' => [],
+];
+</pre>
+
+<h3>app/Support/ModuleRegistry.php (novo)</h3>
+<p>Singleton que os módulos externos usam no <code>ServiceProvider::boot()</code> para se registrar:</p>
+<pre>
+class ModuleRegistry {
+    protected array $modules = [];
+    public function register(array $meta): void { ... }
+    public function all(): array { ... }
+    public function isInstalled(string $id): bool { ... }
+}
+</pre>
+
+<h3>Estrutura de um módulo externo (Bling como exemplo)</h3>
+<pre>
+empresa/module-bling/
+  src/
+    BlingServiceProvider.php
+    Services/BlingService.php
+    Filament/Pages/BlingSettings.php
+    Database/Migrations/
+    Config/bling.php
+  resources/views/
+  composer.json  → extra.laravel.providers (auto-discovery Laravel)
+</pre>
+
+<p>No <code>BlingServiceProvider::boot()</code>:</p>
+<pre>
+app(ModuleRegistry::class)->register([
+    'id'          => 'bling',
+    'name'        => 'Bling ERP',
+    'description' => 'Sincronização de produtos e pedidos com o Bling',
+    'version'     => '1.0.0',
+    'settings_url' => BlingSettings::getUrl(),
+    'icon'        => 'heroicon-o-building-office',
+]);
+</pre>
+
+<h3>Filament Page: Aplicativos</h3>
+<div class="box box-green">
+  <strong>Local:</strong> Admin &gt; Configurações &gt; Aplicativos<br>
+  <strong>Exibe:</strong>
+  <ul>
+    <li>Módulos internos com toggle ativo/inativo (grava em Setting)</li>
+    <li>Módulos externos instalados: cards com nome, versão, link para configurações</li>
+    <li>Módulos externos disponíveis (lista curada): instrução <code>composer require</code></li>
+  </ul>
+</div>
+
+<hr>
+
+<h2>Parte 5 — Ordem de Implementação</h2>
+
+<table>
+  <tr><th>Fase</th><th>O que fazer</th><th>Quando</th></tr>
+  <tr>
+    <td><span class="fase">A</span> Aparência</td>
+    <td>
+      Reorganizar views para <code>themes/default/</code>,
+      criar <code>theme.json</code> em cada tema,
+      atualizar AppServiceProvider (resolução por setting),
+      atualizar <code>tailwind.config.js</code>,
+      injetar CSS variables nos layouts,
+      criar <code>AppearanceSettings</code> Filament page,
+      criar Template 2 (compact)
+    </td>
+    <td>Quando retomar</td>
+  </tr>
+  <tr>
+    <td><span class="fase">B</span> Módulos</td>
+    <td>
+      Criar <code>config/modules.php</code>,
+      criar <code>ModuleRegistry</code>,
+      criar <code>AplicativosPage</code> Filament,
+      encapsular Newsletter como módulo interno de referência
+    </td>
+    <td>Após Fase A</td>
+  </tr>
+  <tr>
+    <td><span class="fase">C</span> Composer</td>
+    <td>
+      Criar <code>LojaServiceProvider</code> principal do pacote,
+      criar <code>empresa/loja-cliente-template</code>,
+      configurar Satis,
+      testar fluxo completo install → configure → deploy
+    </td>
+    <td>Antes do 1º cliente</td>
+  </tr>
+</table>
+
+<h2>Arquivos a Criar</h2>
+<table>
+  <tr><th>Arquivo</th><th>Propósito</th></tr>
+  <tr><td>app/Filament/Pages/AppearanceSettings.php</td><td>Painel de aparência</td></tr>
+  <tr><td>resources/views/filament/pages/appearance-settings.blade.php</td><td>View da página</td></tr>
+  <tr><td>app/Support/ModuleRegistry.php</td><td>Registry de módulos</td></tr>
+  <tr><td>app/Filament/Pages/AplicativosPage.php</td><td>Listagem de módulos</td></tr>
+  <tr><td>config/modules.php</td><td>Config de módulos internos</td></tr>
+  <tr><td>resources/views/themes/default/</td><td>Views migradas para o tema padrão</td></tr>
+  <tr><td>resources/views/themes/compact/</td><td>Segundo template alternativo</td></tr>
+</table>
+
+<h2>Arquivos a Modificar</h2>
+<table>
+  <tr><th>Arquivo</th><th>O que muda</th></tr>
+  <tr><td>app/Providers/AppServiceProvider.php</td><td>Resolução de tema por setting</td></tr>
+  <tr><td>tailwind.config.js</td><td>Adicionar colors brand/accent via CSS var</td></tr>
+  <tr><td>app/Providers/Filament/AdminPanelProvider.php</td><td>Registrar AppearanceSettings + AplicativosPage</td></tr>
+</table>
+
+<hr>
+
+<h2>Verificação (após implementação)</h2>
+<ol>
+  <li>Admin &gt; Aparência — trocar cor principal → loja reflete instantaneamente (sem recompilar)</li>
+  <li>Admin &gt; Aparência — trocar para template <code>compact</code> → layout diferente na loja</li>
+  <li>Admin &gt; Aplicativos — ver módulos internos com toggle on/off</li>
+  <li>Instalar módulo externo de teste → aparece automaticamente em Aplicativos</li>
+  <li>Override de view: criar <code>resources/views/welcome.blade.php</code> num cliente → usa versão customizada</li>
+  <li><code>composer update empresa/loja-core</code> → views customizadas do cliente intactas, core atualizado</li>
+</ol>
+
+<hr>
+<p class="muted">Documento gerado em 28/02/2026 — Loja Virtual Laravel — Arquitetura Multi-Cliente v1.0</p>
+
+</body>
+</html>

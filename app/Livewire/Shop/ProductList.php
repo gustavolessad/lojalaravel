@@ -338,7 +338,7 @@ class ProductList extends Component
                     url:           $url,
                     price:         $product->getCurrentPrice(),
                     originalPrice: $product->isOnSale() ? (float) $product->price : null,
-                    imageUrl:      $product->getFirstMediaUrl('cover') ?: null,
+                    imageUrl:      $product->getFirstMediaUrl('cover', 'thumb') ?: null,
                     isNew:         (bool) $product->is_new,
                     isOnSale:      $product->isOnSale(),
                     inStock:       $inStock,
@@ -386,9 +386,9 @@ class ProductList extends Component
 
                 $inStock = $matchingVariants->where('stock', '>', 0)->isNotEmpty();
 
-                $imageUrl = $variant->getFirstMediaUrl('variant-cover') ?: null;
+                $imageUrl = $variant->getFirstMediaUrl('variant-cover', 'thumb') ?: null;
                 if (! $imageUrl) {
-                    $imageUrl = $product->getFirstMediaUrl('cover') ?: null;
+                    $imageUrl = $product->getFirstMediaUrl('cover', 'thumb') ?: null;
                 }
 
                 if ($variant->price !== null) {

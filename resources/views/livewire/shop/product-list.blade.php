@@ -40,8 +40,8 @@
                                 'bg-white border-gray-200 text-gray-700 hover:border-gray-400 hover:bg-gray-50' => ! $isActive,
                             ])
                         >
-                            @if ($brand->getFirstMediaUrl('logo'))
-                                <img src="{{ $brand->getFirstMediaUrl('logo') }}"
+                            @if ($brand->getFirstMediaUrl('logo', 'thumb'))
+                                <img src="{{ $brand->getFirstMediaUrl('logo', 'thumb') }}"
                                      alt=""
                                      class="h-3 w-auto object-contain {{ $isActive ? 'brightness-0 invert' : '' }}">
                             @endif

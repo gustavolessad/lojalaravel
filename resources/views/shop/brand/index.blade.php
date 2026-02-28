@@ -22,8 +22,8 @@
                    class="group flex flex-col items-center justify-center gap-3 p-5 bg-white border border-gray-100 rounded-2xl shadow-sm hover:shadow-md hover:border-indigo-200 transition-all">
 
                     {{-- Logo ou inicial --}}
-                    @if ($brand->getFirstMediaUrl('logo'))
-                        <img src="{{ $brand->getFirstMediaUrl('logo') }}"
+                    @if ($brand->getFirstMediaUrl('logo', 'thumb'))
+                        <img src="{{ $brand->getFirstMediaUrl('logo', 'thumb') }}"
                              alt="{{ $brand->name }}"
                              class="h-12 w-auto object-contain grayscale group-hover:grayscale-0 transition-all duration-300">
                     @else

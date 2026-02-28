@@ -79,9 +79,9 @@ class CartItem extends Model
     public function getImageUrlAttribute(): string
     {
         if ($this->variant) {
-            $url = $this->variant->getFirstMediaUrl('variant-cover');
+            $url = $this->variant->getFirstMediaUrl('variant-cover', 'thumb');
             if ($url) return $url;
         }
-        return $this->product->getFirstMediaUrl('cover') ?: '';
+        return $this->product->getFirstMediaUrl('cover', 'thumb') ?: '';
     }
 }

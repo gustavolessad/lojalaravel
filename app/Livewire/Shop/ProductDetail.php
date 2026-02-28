@@ -214,25 +214,25 @@ class ProductDetail extends Component
     public function currentImages(): Collection
     {
         if ($this->currentVariant) {
-            $cover = $this->currentVariant->getFirstMediaUrl('variant-cover');
+            $cover = $this->currentVariant->getFirstMediaUrl('variant-cover', 'webp');
             if ($cover !== '') {
                 $images = collect([$cover]);
                 foreach ($this->currentVariant->getMedia('variant-gallery') as $media) {
-                    $images->push($media->getUrl());
+                    $images->push($media->getUrl('webp') ?: $media->getUrl());
                 }
                 return $images;
             }
         }
 
         $images = collect();
-        $cover  = $this->product->getFirstMediaUrl('cover');
+        $cover  = $this->product->getFirstMediaUrl('cover', 'webp');
 
         if ($cover !== '') {
             $images->push($cover);
         }
 
         foreach ($this->product->getMedia('gallery') as $media) {
-            $url = $media->getUrl();
+            $url = $media->getUrl('webp') ?: $media->getUrl();
             if ($url !== $cover) {
                 $images->push($url);
             }
@@ -416,7 +416,7 @@ class ProductDetail extends Component
         // Dispara evento de browser — Alpine.js abre o modal de confirmação
         $this->dispatch('product-added-to-cart',
             name:    $this->product->name,
-            image:   $this->product->getFirstMediaUrl('cover') ?: '',
+            image:   $this->product->getFirstMediaUrl('cover', 'thumb') ?: '',
             variant: $this->currentVariant?->label ?: '',
         );
     }

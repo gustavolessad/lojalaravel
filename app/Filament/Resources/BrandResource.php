@@ -10,6 +10,7 @@ use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Support\Str;
+use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 
 class BrandResource extends Resource
 {
@@ -62,6 +63,11 @@ class BrandResource extends Resource
                     ->collection('logo')
                     ->image()
                     ->imageEditor()
+                    ->getUploadedFileNameForStorageUsing(function (TemporaryUploadedFile $file, ?Brand $record): string {
+                        $ext  = strtolower($file->getClientOriginalExtension() ?: 'jpg');
+                        $slug = Str::slug($record?->name ?? 'marca');
+                        return "{$slug}-logo.{$ext}";
+                    })
                     ->columnSpanFull(),
             ])->columns(2),
         ]);

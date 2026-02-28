@@ -69,8 +69,8 @@
                     @if ($this->product->brand)
                         <a href="{{ $this->product->brand->url }}"
                            class="flex items-center gap-1.5 text-gray-500 hover:text-gray-800 transition-colors">
-                            @if ($this->product->brand->getFirstMediaUrl('logo'))
-                                <img src="{{ $this->product->brand->getFirstMediaUrl('logo') }}"
+                            @if ($this->product->brand->getFirstMediaUrl('logo', 'thumb'))
+                                <img src="{{ $this->product->brand->getFirstMediaUrl('logo', 'thumb') }}"
                                      alt="{{ $this->product->brand->name }}"
                                      class="h-4 w-auto object-contain">
                             @else

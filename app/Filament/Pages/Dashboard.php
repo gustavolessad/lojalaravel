@@ -22,6 +22,11 @@ class Dashboard extends BaseDashboard
         return MaxWidth::Full;
     }
 
+    public function getColumns(): int | array
+    {
+        return 2;
+    }
+
     public function filtersForm(Form $form): Form
     {
         return $form->schema([

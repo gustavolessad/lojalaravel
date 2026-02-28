@@ -5,8 +5,10 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Spatie\Image\Enums\Fit;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
+use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 class ProductVariant extends Model implements HasMedia
 {
@@ -96,7 +98,37 @@ class ProductVariant extends Model implements HasMedia
 
     public function registerMediaCollections(): void
     {
-        $this->addMediaCollection('variant-gallery');
-        $this->addMediaCollection('variant-cover')->singleFile();
+        $this->addMediaCollection('variant-gallery')
+            ->sanitizingFileName(function (string $fileName) {
+                $ext         = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
+                $productSlug = \Illuminate\Support\Str::slug($this->product?->name ?: 'variante');
+                return $productSlug . '-' . substr(uniqid(), -5) . '.' . $ext;
+            });
+
+        $this->addMediaCollection('variant-cover')
+            ->singleFile()
+            ->sanitizingFileName(function (string $fileName) {
+                $ext         = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
+                $productSlug = \Illuminate\Support\Str::slug($this->product?->name ?: 'variante');
+                $variantSlug = \Illuminate\Support\Str::slug($this->sku ?: substr(uniqid(), -5));
+                return $productSlug . '-' . $variantSlug . '.' . $ext;
+            });
+    }
+
+    public function registerMediaConversions(Media $media = null): void
+    {
+        $this->addMediaConversion('webp')
+            ->format('webp')
+            ->quality(85)
+            ->width(1200)
+            ->performOnCollections('variant-cover', 'variant-gallery')
+            ->nonQueued();
+
+        $this->addMediaConversion('thumb')
+            ->format('webp')
+            ->quality(80)
+            ->fit(Fit::Contain, 400, 400)
+            ->performOnCollections('variant-cover', 'variant-gallery')
+            ->nonQueued();
     }
 }

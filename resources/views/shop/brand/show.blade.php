@@ -13,8 +13,8 @@
 
     {{-- Cabeçalho da marca --}}
     <div class="flex items-center gap-4 mb-8">
-        @if ($brand->getFirstMediaUrl('logo'))
-            <img src="{{ $brand->getFirstMediaUrl('logo') }}"
+        @if ($brand->getFirstMediaUrl('logo', 'webp'))
+            <img src="{{ $brand->getFirstMediaUrl('logo', 'webp') }}"
                  alt="{{ $brand->name }}"
                  class="h-14 w-auto object-contain">
         @endif

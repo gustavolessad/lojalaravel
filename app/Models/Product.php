@@ -8,8 +8,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
+use Spatie\Image\Enums\Fit;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
+use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 class Product extends Model implements HasMedia
 {
@@ -128,7 +130,38 @@ class Product extends Model implements HasMedia
 
     public function registerMediaCollections(): void
     {
-        $this->addMediaCollection('gallery');
-        $this->addMediaCollection('cover')->singleFile();
+        $this->addMediaCollection('gallery')
+            ->sanitizingFileName(function (string $fileName) {
+                $ext  = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
+                $slug = \Illuminate\Support\Str::slug($this->name ?: 'produto');
+                return $slug . '-' . substr(uniqid(), -5) . '.' . $ext;
+            });
+
+        $this->addMediaCollection('cover')
+            ->singleFile()
+            ->sanitizingFileName(function (string $fileName) {
+                $ext  = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
+                $slug = \Illuminate\Support\Str::slug($this->name ?: 'produto');
+                return $slug . '.' . $ext;
+            });
+    }
+
+    public function registerMediaConversions(Media $media = null): void
+    {
+        // Versão otimizada WebP — máximo 1200px, qualidade 85%
+        $this->addMediaConversion('webp')
+            ->format('webp')
+            ->quality(85)
+            ->width(1200)
+            ->performOnCollections('cover', 'gallery')
+            ->nonQueued();
+
+        // Thumbnail WebP — máximo 400×400px, qualidade 80%
+        $this->addMediaConversion('thumb')
+            ->format('webp')
+            ->quality(80)
+            ->fit(Fit::Contain, 400, 400)
+            ->performOnCollections('cover', 'gallery')
+            ->nonQueued();
     }
 }

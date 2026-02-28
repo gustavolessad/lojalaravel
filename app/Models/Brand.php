@@ -5,8 +5,10 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
+use Spatie\Image\Enums\Fit;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
+use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 class Brand extends Model implements HasMedia
 {
@@ -48,6 +50,31 @@ class Brand extends Model implements HasMedia
 
     public function registerMediaCollections(): void
     {
-        $this->addMediaCollection('logo')->singleFile();
+        $this->addMediaCollection('logo')
+            ->singleFile()
+            ->sanitizingFileName(function (string $fileName) {
+                $ext  = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
+                $slug = Str::slug($this->name ?: 'marca');
+                return $slug . '-logo.' . $ext;
+            });
+    }
+
+    public function registerMediaConversions(Media $media = null): void
+    {
+        // Versão WebP otimizada para exibição normal
+        $this->addMediaConversion('webp')
+            ->format('webp')
+            ->quality(85)
+            ->width(400)
+            ->performOnCollections('logo')
+            ->nonQueued();
+
+        // Thumbnail menor para listagens e cards
+        $this->addMediaConversion('thumb')
+            ->format('webp')
+            ->quality(80)
+            ->fit(Fit::Contain, 200, 80)
+            ->performOnCollections('logo')
+            ->nonQueued();
     }
 }

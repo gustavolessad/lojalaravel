@@ -3,13 +3,12 @@
 namespace App\Http\Controllers\Webhook;
 
 use App\Http\Controllers\Controller;
-use App\Mail\PaymentConfirmed;
 use App\Models\Order;
+use App\Models\Setting;
 use App\Services\OrderService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Mail;
 
 class AsaasWebhookController extends Controller
 {
@@ -20,6 +19,21 @@ class AsaasWebhookController extends Controller
      */
     public function handle(Request $request, OrderService $orderService): Response
     {
+        // ── Validação do token ─────────────────────────────────────────────
+        $configuredToken = (string) Setting::get('payment_asaas_webhook_token', '');
+
+        if ($configuredToken !== '') {
+            $receivedToken = $request->header('asaas-access-token', '');
+
+            if (! hash_equals($configuredToken, $receivedToken)) {
+                Log::warning('Asaas webhook: token inválido', [
+                    'ip' => $request->ip(),
+                ]);
+                return response('unauthorized', 401);
+            }
+        }
+
+        // ── Processamento do evento ────────────────────────────────────────
         $event   = $request->input('event');
         $payment = $request->input('payment', []);
 
@@ -43,11 +57,16 @@ class AsaasWebhookController extends Controller
             return response('order not found', 404);
         }
 
-        // Só processa se ainda não foi marcado como pago
+        // Idempotente: processa apenas se ainda não foi marcado como pago
         if ($order->payment_status !== 'paid') {
             $orderService->markAsPaid($order, $paymentId, [
-                'asaas_event' => $event,
+                'asaas_event'  => $event,
                 'asaas_status' => $payment['status'] ?? null,
+            ]);
+
+            Log::info('Asaas webhook: pedido marcado como pago', [
+                'order_number' => $order->order_number,
+                'event'        => $event,
             ]);
         }
 

@@ -35,6 +35,7 @@ Route::get('/carrinho', [CartController::class, 'index'])->name('cart.index');
 
 Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index');
 Route::get('/pedido/{orderNumber}/obrigado', [CheckoutController::class, 'confirmation'])->name('order.confirmation');
+Route::get('/pedido/{orderNumber}/pagamento/status', [CheckoutController::class, 'paymentStatus'])->name('order.payment-status');
 
 /*
 |--------------------------------------------------------------------------

@@ -16,64 +16,110 @@
         <p class="text-gray-500 mt-1">Número do pedido: <span class="font-semibold text-gray-700">#{{ $order->order_number }}</span></p>
     </div>
 
-    {{-- PIX: QR Code --}}
-    @if ($order->payment_method === 'pix' && $order->payment_status === 'pending')
+    {{-- PIX: QR Code com polling em tempo real --}}
+    @if ($order->payment_method === 'pix')
         @php $pixData = $order->payment_data ?? []; @endphp
-        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-5 text-center">
-            <h2 class="text-base font-semibold text-gray-900 mb-1">Pague com PIX</h2>
-            <p class="text-sm text-gray-500 mb-4">O pedido será confirmado assim que o pagamento for identificado.</p>
 
-            @if (! empty($pixData['pix_qrcode']))
-                <div class="flex justify-center mb-4">
-                    <img src="data:image/png;base64,{{ $pixData['pix_qrcode'] }}"
-                         alt="QR Code PIX" class="w-48 h-48 rounded-xl border border-gray-200">
+        <div
+            x-data="pixPolling({
+                statusUrl: '{{ route('order.payment-status', $order->order_number) }}',
+                initialStatus: '{{ $order->payment_status }}'
+            })"
+            x-init="init()"
+            class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-5 text-center"
+        >
+            {{-- Estado: aguardando pagamento --}}
+            <div x-show="!paid" x-transition>
+                <h2 class="text-base font-semibold text-gray-900 mb-1">Pague com PIX</h2>
+
+                {{-- Indicador de monitoramento ativo --}}
+                <div class="flex items-center justify-center gap-2 mb-4">
+                    <span class="relative flex h-2.5 w-2.5">
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-amber-500"></span>
+                    </span>
+                    <p class="text-sm text-gray-500">Aguardando confirmação do pagamento...</p>
                 </div>
-            @endif
 
-            @if (! empty($pixData['pix_copy_paste']))
-                <div class="mt-2">
-                    <p class="text-xs text-gray-500 mb-2">Ou copie o código PIX:</p>
-                    <div class="flex gap-2 items-center bg-gray-50 rounded-xl px-4 py-3">
-                        <input id="pixCode" type="text" readonly value="{{ $pixData['pix_copy_paste'] }}"
-                               class="flex-1 text-xs text-gray-700 bg-transparent outline-none truncate">
-                        <button
-                            onclick="navigator.clipboard.writeText(document.getElementById('pixCode').value).then(()=>{ this.textContent='Copiado!'; setTimeout(()=>{ this.textContent='Copiar' }, 2000) })"
-                            class="text-xs text-indigo-600 font-semibold flex-shrink-0 hover:text-indigo-800"
-                        >Copiar</button>
+                @if (! empty($pixData['pix_qrcode']))
+                    <div class="flex justify-center mb-4">
+                        <img src="data:image/png;base64,{{ $pixData['pix_qrcode'] }}"
+                             alt="QR Code PIX" class="w-48 h-48 rounded-xl border border-gray-200">
                     </div>
-                </div>
-            @endif
+                @endif
 
-            <p class="text-xs text-gray-400 mt-4">
-                Expira em: {{ isset($pixData['expires_at']) ? \Carbon\Carbon::parse($pixData['expires_at'])->format('d/m/Y') : '24h' }}
-            </p>
-        </div>
-    @elseif ($order->payment_method === 'credit_card')
-        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-5">
-            <div class="flex items-center gap-3">
-                @if ($order->payment_status === 'paid')
-                    <div class="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center flex-shrink-0">
-                        <svg class="w-5 h-5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                @if (! empty($pixData['pix_copy_paste']))
+                    <div class="mt-2">
+                        <p class="text-xs text-gray-500 mb-2">Ou copie o código PIX:</p>
+                        <div class="flex gap-2 items-center bg-gray-50 rounded-xl px-4 py-3">
+                            <input id="pixCode" type="text" readonly value="{{ $pixData['pix_copy_paste'] }}"
+                                   class="flex-1 text-xs text-gray-700 bg-transparent outline-none truncate">
+                            <button
+                                onclick="navigator.clipboard.writeText(document.getElementById('pixCode').value).then(()=>{ this.textContent='Copiado!'; setTimeout(()=>{ this.textContent='Copiar' }, 2000) })"
+                                class="text-xs text-indigo-600 font-semibold flex-shrink-0 hover:text-indigo-800"
+                            >Copiar</button>
+                        </div>
+                    </div>
+                @endif
+
+                <p class="text-xs text-gray-400 mt-4">
+                    Expira em: {{ isset($pixData['expires_at']) ? \Carbon\Carbon::parse($pixData['expires_at'])->format('d/m/Y') : '24h' }}
+                </p>
+            </div>
+
+            {{-- Estado: pagamento confirmado --}}
+            <div x-show="paid" x-transition.duration.500ms style="display:none">
+                <div class="flex flex-col items-center gap-3 py-2">
+                    <div class="w-14 h-14 bg-emerald-100 rounded-full flex items-center justify-center">
+                        <svg class="w-7 h-7 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
                         </svg>
                     </div>
-                    <div>
-                        <p class="text-sm font-semibold text-gray-900">Pagamento aprovado</p>
-                        <p class="text-xs text-gray-500">Seu cartão foi cobrado com sucesso.</p>
-                    </div>
-                @else
-                    <div class="w-10 h-10 bg-amber-100 rounded-full flex items-center justify-center flex-shrink-0">
-                        <svg class="w-5 h-5 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                        </svg>
-                    </div>
-                    <div>
-                        <p class="text-sm font-semibold text-gray-900">Pagamento em processamento</p>
-                        <p class="text-xs text-gray-500">Você receberá um e-mail quando confirmado.</p>
-                    </div>
-                @endif
+                    <p class="text-base font-semibold text-emerald-700">Pagamento PIX confirmado!</p>
+                    <p class="text-sm text-gray-500">Seu pedido está sendo preparado.</p>
+                </div>
             </div>
         </div>
+
+    {{-- Cartão de crédito --}}
+    @elseif ($order->payment_method === 'credit_card')
+
+        <div
+            x-data="pixPolling({
+                statusUrl: '{{ route('order.payment-status', $order->order_number) }}',
+                initialStatus: '{{ $order->payment_status }}'
+            })"
+            x-init="init()"
+            class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-5"
+        >
+            {{-- Aguardando confirmação --}}
+            <div x-show="!paid" class="flex items-center gap-3" x-transition>
+                <div class="w-10 h-10 bg-amber-100 rounded-full flex items-center justify-center flex-shrink-0">
+                    <span class="relative flex h-4 w-4">
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-4 w-4 bg-amber-500"></span>
+                    </span>
+                </div>
+                <div>
+                    <p class="text-sm font-semibold text-gray-900">Pagamento em processamento</p>
+                    <p class="text-xs text-gray-500">Aguardando confirmação da operadora...</p>
+                </div>
+            </div>
+
+            {{-- Cartão aprovado --}}
+            <div x-show="paid" class="flex items-center gap-3" x-transition.duration.500ms style="display:none">
+                <div class="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center flex-shrink-0">
+                    <svg class="w-5 h-5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
+                    </svg>
+                </div>
+                <div>
+                    <p class="text-sm font-semibold text-gray-900">Pagamento aprovado!</p>
+                    <p class="text-xs text-gray-500">Seu cartão foi cobrado com sucesso.</p>
+                </div>
+            </div>
+        </div>
+
     @endif
 
     {{-- Detalhes do pedido --}}
@@ -170,4 +216,39 @@
     </div>
 
 </div>
+
+@push('scripts')
+<script>
+function pixPolling({ statusUrl, initialStatus }) {
+    return {
+        paid: initialStatus === 'paid',
+        timer: null,
+
+        init() {
+            if (this.paid) return;
+            // Verifica a cada 5 segundos
+            this.timer = setInterval(() => this.checkStatus(), 5000);
+        },
+
+        async checkStatus() {
+            try {
+                const res  = await fetch(statusUrl, { headers: { 'Accept': 'application/json' } });
+                const data = await res.json();
+                if (data.paid) {
+                    this.paid = true;
+                    clearInterval(this.timer);
+                }
+            } catch (_) {
+                // ignora falhas pontuais de rede, continua tentando
+            }
+        },
+
+        destroy() {
+            clearInterval(this.timer);
+        }
+    }
+}
+</script>
+@endpush
+
 @endsection

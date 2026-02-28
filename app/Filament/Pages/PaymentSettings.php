@@ -129,7 +129,7 @@ class PaymentSettings extends Page implements HasForms
                             ->label('Token de Webhook')
                             ->password()
                             ->revealable()
-                            ->helperText('Token configurado no webhook do Asaas para validar notificações (uso futuro).')
+                            ->helperText('Gere um token no Asaas (Configurações → Webhooks) e cole aqui. A URL do webhook é: ' . url('/webhook/asaas'))
                             ->columnSpanFull(),
                     ]),
             ])

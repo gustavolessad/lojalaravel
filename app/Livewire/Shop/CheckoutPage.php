@@ -7,6 +7,7 @@ use App\Models\Cart;
 use App\Models\Customer;
 use App\Models\CustomerAddress;
 use App\Models\Order;
+use App\Services\AnalyticsService;
 use App\Services\AsaasService;
 use App\Services\PaymentCalculator;
 use App\Services\CartService;
@@ -93,6 +94,9 @@ class CheckoutPage extends Component
             $this->redirect(route('cart.index'), navigate: true);
             return;
         }
+
+        // Rastreia checkout_started (apenas uma vez por sessão+carrinho)
+        app(AnalyticsService::class)->track('checkout_started');
 
         $customer = Auth::guard('customer')->user();
 

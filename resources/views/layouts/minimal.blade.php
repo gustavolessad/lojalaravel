@@ -58,6 +58,9 @@
         </div>
     </header>
 
+    {{-- Slot full-width antes do container (ex: mobile nav do painel) --}}
+    @yield('before-main')
+
     {{-- Conteúdo da página --}}
     <main class="@yield('main-class', 'flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8')">
         @yield('content')

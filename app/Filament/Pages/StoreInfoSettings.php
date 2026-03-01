@@ -29,6 +29,8 @@ class StoreInfoSettings extends Page implements HasForms
         $this->form->fill([
             'store_name'         => Setting::get('store_name', ''),
             'store_slogan'       => Setting::get('store_slogan', ''),
+            'store_logo'         => Setting::get('store_logo') ? [Setting::get('store_logo')] : [],
+            'store_logo_footer'  => Setting::get('store_logo_footer') ? [Setting::get('store_logo_footer')] : [],
             'store_address'      => Setting::get('store_address', ''),
             'store_hours'        => Setting::get('store_hours', ''),
             'store_cpf_cnpj'     => Setting::get('store_cpf_cnpj', ''),
@@ -55,6 +57,26 @@ class StoreInfoSettings extends Page implements HasForms
                             ->label('Slogan')
                             ->maxLength(200)
                             ->helperText('Frase curta exibida abaixo do nome da loja.')
+                            ->columnSpanFull(),
+
+                        Forms\Components\FileUpload::make('store_logo')
+                            ->label('Logo principal')
+                            ->image()
+                            ->disk('public')
+                            ->directory('store')
+                            ->visibility('public')
+                            ->imagePreviewHeight('64')
+                            ->helperText('Exibido no cabeçalho da loja. Formatos: PNG, SVG, WEBP.')
+                            ->columnSpanFull(),
+
+                        Forms\Components\FileUpload::make('store_logo_footer')
+                            ->label('Logo do rodapé')
+                            ->image()
+                            ->disk('public')
+                            ->directory('store')
+                            ->visibility('public')
+                            ->imagePreviewHeight('64')
+                            ->helperText('Versão alternativa para o rodapé (ex: versão clara sobre fundo escuro).')
                             ->columnSpanFull(),
                     ]),
 
@@ -116,6 +138,8 @@ class StoreInfoSettings extends Page implements HasForms
         Setting::setMany([
             'store_name'         => trim($state['store_name'] ?? ''),
             'store_slogan'       => trim($state['store_slogan'] ?? ''),
+            'store_logo'         => is_array($state['store_logo']) ? ($state['store_logo'][0] ?? '') : ($state['store_logo'] ?? ''),
+            'store_logo_footer'  => is_array($state['store_logo_footer']) ? ($state['store_logo_footer'][0] ?? '') : ($state['store_logo_footer'] ?? ''),
             'store_address'      => trim($state['store_address'] ?? ''),
             'store_hours'        => trim($state['store_hours'] ?? ''),
             'store_cpf_cnpj'     => trim($state['store_cpf_cnpj'] ?? ''),

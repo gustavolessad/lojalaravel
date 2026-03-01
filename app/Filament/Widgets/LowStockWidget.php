@@ -31,16 +31,17 @@ class LowStockWidget extends Widget
                 'url'     => \App\Filament\Resources\ProductResource::getUrl('edit', ['record' => $p->id]),
             ]);
 
-        // Variantes com estoque baixo ou zerado
+        // Variantes de produtos variáveis com estoque baixo ou zerado
         $variants = ProductVariant::where('active', true)
             ->where('stock', '<=', 5)
-            ->with('product:id,name')
+            ->with(['product:id,name,type', 'attributeValues'])
             ->orderBy('stock')
             ->limit(100)
             ->get(['id', 'product_id', 'sku', 'stock'])
+            ->filter(fn ($v) => $v->product && $v->product->type === 'variable')
             ->map(fn ($v) => [
-                'name'    => $v->product->name ?? '—',
-                'variant' => $v->sku,
+                'name'    => $v->product->name,
+                'variant' => trim(($v->label ? $v->label . ' ' : '') . ($v->sku ? "({$v->sku})" : '')),
                 'stock'   => (int) $v->stock,
                 'url'     => \App\Filament\Resources\ProductResource::getUrl('edit', ['record' => $v->product_id]),
             ]);

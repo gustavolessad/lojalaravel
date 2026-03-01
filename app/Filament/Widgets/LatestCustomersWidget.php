@@ -31,8 +31,8 @@ class LatestCustomersWidget extends BaseWidget
                 Tables\Columns\TextColumn::make('type')
                     ->label('Tipo')
                     ->badge()
-                    ->formatStateUsing(fn (string $s) => $s === 'pj' ? 'PJ' : 'PF')
-                    ->color(fn (string $s) => $s === 'pj' ? 'info' : 'gray'),
+                    ->formatStateUsing(fn (string $state) => $state === 'pj' ? 'PJ' : 'PF')
+                    ->color(fn (string $state) => $state === 'pj' ? 'info' : 'gray'),
 
                 Tables\Columns\TextColumn::make('email')
                     ->label('E-mail')

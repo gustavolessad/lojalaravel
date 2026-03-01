@@ -161,97 +161,145 @@
                 </div>
             </div>
 
-            {{-- ── Calcular frete ────────────────────────────────────────── --}}
-            <div class="bg-white rounded-2xl border border-gray-200 p-5">
-                <h3 class="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                    <svg class="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 18.75a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 0 1-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 0 0-3.213-9.193 2.056 2.056 0 0 0-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 0 0-10.026 0 1.106 1.106 0 0 0-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12" />
-                    </svg>
-                    Calcular frete
-                </h3>
-                <form wire:submit.prevent="simulateShipping" class="flex gap-2">
-                    <input type="text"
-                        wire:model="cep"
-                        wire:keydown.enter.prevent="simulateShipping"
-                        placeholder="00000-000"
-                        maxlength="9"
-                        class="flex-1 px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent transition">
-                    <button type="submit"
-                        wire:loading.attr="disabled"
-                        class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium rounded-xl transition-colors disabled:opacity-50">
-                        <span wire:loading.remove wire:target="simulateShipping">Simular</span>
-                        <span wire:loading wire:target="simulateShipping">
-                            <svg class="w-4 h-4 animate-spin text-gray-500" fill="none" viewBox="0 0 24 24">
-                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
-                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+            {{-- ── Frete + Cupom (accordion compacto) ───────────────────── --}}
+            <div x-data="{ panel: @js($shipping ? 'frete' : ($cart->coupon_code ? 'cupom' : null)) }">
+
+                {{-- Botões lado a lado --}}
+                <div class="grid grid-cols-2 gap-3 mb-3">
+
+                    {{-- Frete --}}
+                    <button type="button"
+                        @click="panel = panel === 'frete' ? null : 'frete'"
+                        :class="panel === 'frete' ? 'border-gray-900 bg-gray-50' : 'border-gray-200 bg-white hover:border-gray-300'"
+                        class="flex items-center gap-2.5 px-4 py-3 rounded-2xl border text-sm font-medium text-gray-700 transition-all w-full">
+                        <svg class="w-4 h-4 shrink-0" :class="panel === 'frete' ? 'text-gray-900' : 'text-gray-400'" fill="none" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 18.75a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 0 1-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 0 0-3.213-9.193 2.056 2.056 0 0 0-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 0 0-10.026 0 1.106 1.106 0 0 0-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12" />
+                        </svg>
+                        <span class="truncate">Calcular frete</span>
+                        @if ($shipping)
+                            <span class="ml-auto w-1.5 h-1.5 rounded-full bg-green-500 shrink-0"></span>
+                        @else
+                            <svg class="w-3.5 h-3.5 ml-auto text-gray-300 shrink-0 transition-transform" :class="panel === 'frete' ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
                             </svg>
-                        </span>
+                        @endif
                     </button>
-                </form>
 
-                @if ($shippingError)
-                    <p class="mt-2 text-xs text-red-500">{{ $shippingError }}</p>
-                @endif
-
-                @if ($shipping)
-                    <ul class="mt-3 space-y-2">
-                        @foreach ($shipping as $option)
-                        <li class="flex items-center justify-between text-sm py-2 border-t border-gray-50 first:border-0 first:pt-0">
-                            <span class="text-gray-700">
-                                {{ trim(($option['company'] ?? '') . ' ' . $option['name']) }}
-                                <span class="text-xs text-gray-400 ml-1">({{ $option['days'] }} dias)</span>
-                            </span>
-                            <span class="font-semibold {{ $option['price'] == 0 ? 'text-green-600' : 'text-gray-900' }}">
-                                {{ $option['price'] == 0 ? 'Grátis' : 'R$ ' . number_format($option['price'], 2, ',', '.') }}
-                            </span>
-                        </li>
-                        @endforeach
-                    </ul>
-                @endif
-            </div>
-
-            {{-- ── Cupom de desconto ─────────────────────────────────────── --}}
-            <div class="bg-white rounded-2xl border border-gray-200 p-5">
-                <h3 class="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                    <svg class="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 14.25l6-6m4.5-3.493V21.75l-3.75-1.5-3.75 1.5-3.75-1.5-3.75 1.5V4.757c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0 1 11.186 0c1.1.128 1.907 1.077 1.907 2.185ZM9.75 9h.008v.008H9.75V9Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm4.125 4.5h.008v.008h-.008V13.5Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
-                    </svg>
-                    Cupom de desconto
-                </h3>
-
-                @if ($cart->coupon_code)
-                    <div class="flex items-center justify-between bg-green-50 border border-green-200 rounded-xl px-4 py-2.5">
-                        <div class="flex items-center gap-2">
-                            <svg class="w-4 h-4 text-green-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                    {{-- Cupom --}}
+                    <button type="button"
+                        @click="panel = panel === 'cupom' ? null : 'cupom'"
+                        :class="panel === 'cupom' ? 'border-gray-900 bg-gray-50' : 'border-gray-200 bg-white hover:border-gray-300'"
+                        class="flex items-center gap-2.5 px-4 py-3 rounded-2xl border text-sm font-medium transition-all w-full">
+                        @if ($cart->coupon_code)
+                            <svg class="w-4 h-4 shrink-0 text-green-500" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
                             </svg>
-                            <span class="font-mono font-semibold text-green-700 text-sm">{{ $cart->coupon_code }}</span>
-                            <span class="text-xs text-green-600">− R$ {{ number_format($cart->coupon_discount, 2, ',', '.') }}</span>
-                        </div>
-                        <button wire:click="removeCoupon"
-                            class="text-xs text-gray-400 hover:text-red-500 transition-colors ml-2">
-                            Remover
-                        </button>
-                    </div>
-                @else
-                    <form wire:submit.prevent="applyCoupon" class="flex gap-2">
-                        <input wire:model="couponCode"
-                            type="text"
-                            placeholder="Código do cupom"
-                            class="flex-1 text-sm border border-gray-200 rounded-xl px-3 py-2 uppercase tracking-wider focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent transition">
+                            <span class="truncate text-green-700 font-semibold">{{ $cart->coupon_code }}</span>
+                        @else
+                            <svg class="w-4 h-4 shrink-0" :class="panel === 'cupom' ? 'text-gray-900' : 'text-gray-400'" fill="none" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 14.25l6-6m4.5-3.493V21.75l-3.75-1.5-3.75 1.5-3.75-1.5-3.75 1.5V4.757c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0 1 11.186 0c1.1.128 1.907 1.077 1.907 2.185Z" />
+                            </svg>
+                            <span class="truncate text-gray-700">Cupom</span>
+                            <svg class="w-3.5 h-3.5 ml-auto text-gray-300 shrink-0 transition-transform" :class="panel === 'cupom' ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+                            </svg>
+                        @endif
+                    </button>
+
+                </div>
+
+                {{-- Painel: Frete --}}
+                <div x-show="panel === 'frete'"
+                    x-transition:enter="transition ease-out duration-150"
+                    x-transition:enter-start="opacity-0 -translate-y-1"
+                    x-transition:enter-end="opacity-100 translate-y-0"
+                    x-transition:leave="transition ease-in duration-100"
+                    x-transition:leave-start="opacity-100 translate-y-0"
+                    x-transition:leave-end="opacity-0 -translate-y-1"
+                    class="bg-white rounded-2xl border border-gray-200 p-5 mb-3">
+                    <form wire:submit.prevent="simulateShipping" class="flex gap-2">
+                        <input type="text"
+                            wire:model="cep"
+                            wire:keydown.enter.prevent="simulateShipping"
+                            placeholder="00000-000"
+                            maxlength="9"
+                            class="flex-1 px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent transition">
                         <button type="submit"
                             wire:loading.attr="disabled"
                             class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium rounded-xl transition-colors disabled:opacity-50">
-                            Aplicar
+                            <span wire:loading.remove wire:target="simulateShipping">Simular</span>
+                            <span wire:loading wire:target="simulateShipping">
+                                <svg class="w-4 h-4 animate-spin text-gray-500" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+                                </svg>
+                            </span>
                         </button>
                     </form>
-                    @if ($couponError)
-                        <p class="mt-2 text-xs text-red-500">{{ $couponError }}</p>
+                    @if ($shippingError)
+                        <p class="mt-2 text-xs text-red-500">{{ $shippingError }}</p>
                     @endif
-                    @if ($couponSuccess)
-                        <p class="mt-2 text-xs text-green-600">{{ $couponSuccess }}</p>
+                    @if ($shipping)
+                        <ul class="mt-3 space-y-2">
+                            @foreach ($shipping as $option)
+                            <li class="flex items-center justify-between text-sm py-2 border-t border-gray-50 first:border-0 first:pt-0">
+                                <span class="text-gray-700">
+                                    {{ trim(($option['company'] ?? '') . ' ' . $option['name']) }}
+                                    <span class="text-xs text-gray-400 ml-1">({{ $option['days'] }} dias)</span>
+                                </span>
+                                <span class="font-semibold {{ $option['price'] == 0 ? 'text-green-600' : 'text-gray-900' }}">
+                                    {{ $option['price'] == 0 ? 'Grátis' : 'R$ ' . number_format($option['price'], 2, ',', '.') }}
+                                </span>
+                            </li>
+                            @endforeach
+                        </ul>
                     @endif
-                @endif
+                </div>
+
+                {{-- Painel: Cupom --}}
+                <div x-show="panel === 'cupom'"
+                    x-transition:enter="transition ease-out duration-150"
+                    x-transition:enter-start="opacity-0 -translate-y-1"
+                    x-transition:enter-end="opacity-100 translate-y-0"
+                    x-transition:leave="transition ease-in duration-100"
+                    x-transition:leave-start="opacity-100 translate-y-0"
+                    x-transition:leave-end="opacity-0 -translate-y-1"
+                    class="bg-white rounded-2xl border border-gray-200 p-5 mb-3">
+                    @if ($cart->coupon_code)
+                        <div class="flex items-center justify-between bg-green-50 border border-green-200 rounded-xl px-4 py-2.5">
+                            <div class="flex items-center gap-2">
+                                <svg class="w-4 h-4 text-green-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                                </svg>
+                                <span class="font-mono font-semibold text-green-700 text-sm">{{ $cart->coupon_code }}</span>
+                                <span class="text-xs text-green-600">− R$ {{ number_format($cart->coupon_discount, 2, ',', '.') }}</span>
+                            </div>
+                            <button wire:click="removeCoupon"
+                                class="text-xs text-gray-400 hover:text-red-500 transition-colors ml-2">
+                                Remover
+                            </button>
+                        </div>
+                    @else
+                        <form wire:submit.prevent="applyCoupon" class="flex gap-2">
+                            <input wire:model="couponCode"
+                                type="text"
+                                placeholder="Código do cupom"
+                                class="flex-1 text-sm border border-gray-200 rounded-xl px-3 py-2 uppercase tracking-wider focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent transition">
+                            <button type="submit"
+                                wire:loading.attr="disabled"
+                                class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium rounded-xl transition-colors disabled:opacity-50">
+                                Aplicar
+                            </button>
+                        </form>
+                        @if ($couponError)
+                            <p class="mt-2 text-xs text-red-500">{{ $couponError }}</p>
+                        @endif
+                        @if ($couponSuccess)
+                            <p class="mt-2 text-xs text-green-600">{{ $couponSuccess }}</p>
+                        @endif
+                    @endif
+                </div>
+
             </div>
 
         </div>
@@ -306,7 +354,7 @@
                 @endif
 
                 <a href="{{ route('checkout.index') }}"
-                    class="mt-5 w-full flex items-center justify-center gap-2 px-5 py-3 bg-gray-900 text-white text-sm font-semibold rounded-xl hover:bg-gray-800 transition-colors">
+                    class="mt-5 w-full flex items-center justify-center gap-2 px-5 py-3 bg-green-700 text-white text-sm font-semibold rounded-xl hover:bg-green-800 transition-colors">
                     Finalizar compra
                     <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />

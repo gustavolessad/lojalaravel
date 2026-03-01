@@ -211,6 +211,12 @@ class CartPage extends Component
                 continue;
             }
 
+            // Capeia a quantidade ao estoque disponível (defesa contra add() concorrente ou dados legados)
+            if ($item->quantity > $stock) {
+                $item->update(['quantity' => $stock]);
+                $priceChanged = true; // força reload da collection
+            }
+
             // Sincroniza unit_price com o preço efetivo atual do produto/variante
             $currentPrice = $item->variant
                 ? $item->variant->getEffectivePrice()

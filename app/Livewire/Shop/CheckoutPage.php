@@ -433,6 +433,7 @@ class CheckoutPage extends Component
         $this->selectedShippingIndex = null;
         $this->loadingShipping       = true;
         $this->step                  = 2;
+        $this->dispatch('checkout-step-changed', step: 2);
     }
 
     // ── Etapa 2: Frete ────────────────────────────────────────────────────
@@ -445,6 +446,7 @@ class CheckoutPage extends Component
         }
 
         $this->step = 3;
+        $this->dispatch('checkout-step-changed', step: 3);
     }
 
     // ── Etapa 3: Pagamento ────────────────────────────────────────────────
@@ -470,6 +472,7 @@ class CheckoutPage extends Component
         }
 
         $this->step = 4;
+        $this->dispatch('checkout-step-changed', step: 4);
     }
 
     // ── Etapa 4: Confirmar pedido ─────────────────────────────────────────
@@ -615,6 +618,7 @@ class CheckoutPage extends Component
     public function backTo(int $step): void
     {
         $this->step = max(1, $step);
+        $this->dispatch('checkout-step-changed', step: $this->step);
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────

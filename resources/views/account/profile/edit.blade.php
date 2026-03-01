@@ -5,7 +5,7 @@
 @section('page-content')
 
 <div class="mb-5">
-    <h1 class="text-xl font-semibold text-gray-900">Meus Dados</h1>
+    <h1 class="font-medium text-gray-900">Meus Dados</h1>
     <p class="text-sm text-gray-500 mt-0.5">Gerencie suas informações pessoais e de acesso</p>
 </div>
 

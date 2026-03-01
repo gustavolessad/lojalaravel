@@ -37,7 +37,7 @@
         </div>
         <h2 class="text-base font-semibold text-gray-900 mb-1">Seu carrinho está vazio</h2>
         <p class="text-sm text-gray-500 mb-6">Explore nossos produtos e adicione ao carrinho.</p>
-        <a href="/produtos"
+        <a href="/"
             class="inline-flex items-center gap-2 px-5 py-2.5 bg-gray-900 text-white text-sm font-medium rounded-xl hover:bg-gray-800 transition-colors">
             Ver produtos
         </a>
@@ -59,7 +59,7 @@
                 {{-- Header da lista --}}
                 <div class="flex items-center justify-between px-5 py-4 border-b border-gray-100">
                     <p class="text-sm font-semibold text-gray-900">
-                        {{ $cart->item_count }} {{ $cart->item_count === 1 ? 'item' : 'itens' }}
+                        Carrinho - {{ $cart->item_count }} {{ $cart->item_count === 1 ? 'item' : 'itens' }}
                     </p>
                     <button wire:click="clearCart"
                         wire:confirm="Tem certeza que deseja limpar o carrinho?"

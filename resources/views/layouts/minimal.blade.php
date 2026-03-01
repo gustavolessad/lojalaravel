@@ -33,7 +33,7 @@ $contactPhone = $storeWhatsapp ?: $storePhone;
     {{-- Header --}}
     <header class="bg-white border-b border-gray-200">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex items-center justify-between h-16">
+            <div class="flex items-center h-16">
 
                 {{-- Logo --}}
                 <a href="/" class="shrink-0">
@@ -44,16 +44,17 @@ $contactPhone = $storeWhatsapp ?: $storePhone;
                     @endif
                 </a>
 
+                {{-- Steps (injetado pelo checkout via @push, vazio nas demais páginas) --}}
+                <div class="flex-1 flex justify-center px-4">
+                    @stack('header-steps')
+                </div>
+
                 {{-- Telefone de atendimento --}}
                 @if ($contactPhone)
                 <a href="tel:{{ preg_replace('/\D/', '', $contactPhone) }}"
-                    class="hidden sm:block text-sm text-gray-600 hover:text-gray-900 transition-colors">
-                    <p class="text-xs text-gray-400 mb-1">Cetral de Atendimento</p>
-                    <p>
-                        
-                        {{ $contactPhone }}
-                    </p>
-
+                    class="hidden sm:block text-sm text-gray-600 hover:text-gray-900 transition-colors shrink-0">
+                    <p class="text-xs text-gray-400 mb-0.5">Central de Atendimento</p>
+                    <p>{{ $contactPhone }}</p>
                 </a>
                 @endif
 

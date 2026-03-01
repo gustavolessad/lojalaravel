@@ -4,8 +4,8 @@
 
 @section('page-content')
     <div class="max-w-2xl">
-        <div class="mb-6">
-            <h1 class="text-2xl font-semibold text-gray-900">
+        <div class="mb-4">
+            <h1 class="font-medium text-gray-900">
                 {{ $address->exists ? 'Editar endereço' : 'Novo endereço' }}
             </h1>
         </div>
@@ -33,7 +33,7 @@
                         name="label"
                         value="{{ old('label', $address->label) }}"
                         placeholder="Ex: Casa, Trabalho, Apt..."
-                        class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
+                        class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm  focus:outline-none focus:ring-2 focus:ring-gray-900"
                     >
                 </div>
 
@@ -52,7 +52,7 @@
                             value="{{ old('cep', $address->cep) }}"
                             maxlength="9"
                             placeholder="00000-000"
-                            class="w-40 rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-900 @error('cep') border-red-400 @enderror"
+                            class="w-40 rounded-lg border border-gray-300 px-3 py-2 text-sm  focus:outline-none focus:ring-2 focus:ring-gray-900 @error('cep') border-red-400 @enderror"
                         >
                         <button
                             type="button"
@@ -81,7 +81,7 @@
                             x-model="street"
                             value="{{ old('street', $address->street) }}"
                             placeholder="Rua, Av, Alameda..."
-                            class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-900 @error('street') border-red-400 @enderror"
+                            class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm  focus:outline-none focus:ring-2 focus:ring-gray-900 @error('street') border-red-400 @enderror"
                         >
                         @error('street')
                             <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
@@ -95,7 +95,7 @@
                             name="number"
                             value="{{ old('number', $address->number) }}"
                             placeholder="123"
-                            class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-900 @error('number') border-red-400 @enderror"
+                            class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm  focus:outline-none focus:ring-2 focus:ring-gray-900 @error('number') border-red-400 @enderror"
                         >
                         @error('number')
                             <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
@@ -114,7 +114,7 @@
                         name="complement"
                         value="{{ old('complement', $address->complement) }}"
                         placeholder="Apto, Bloco, Casa..."
-                        class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
+                        class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm  focus:outline-none focus:ring-2 focus:ring-gray-900"
                     >
                 </div>
 
@@ -128,7 +128,7 @@
                             name="district"
                             x-model="district"
                             value="{{ old('district', $address->district) }}"
-                            class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-900 @error('district') border-red-400 @enderror"
+                            class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm  focus:outline-none focus:ring-2 focus:ring-gray-900 @error('district') border-red-400 @enderror"
                         >
                         @error('district')
                             <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
@@ -142,7 +142,7 @@
                             name="city"
                             x-model="city"
                             value="{{ old('city', $address->city) }}"
-                            class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-900 @error('city') border-red-400 @enderror"
+                            class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm  focus:outline-none focus:ring-2 focus:ring-gray-900 @error('city') border-red-400 @enderror"
                         >
                         @error('city')
                             <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
@@ -154,7 +154,7 @@
                             id="state"
                             name="state"
                             x-model="state"
-                            class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-900 @error('state') border-red-400 @enderror"
+                            class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm  focus:outline-none focus:ring-2 focus:ring-gray-900 @error('state') border-red-400 @enderror"
                         >
                             <option value="">UF</option>
                             @foreach (['AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS','MG','PA','PB','PR','PE','PI','RJ','RN','RS','RO','RR','SC','SP','SE','TO'] as $uf)

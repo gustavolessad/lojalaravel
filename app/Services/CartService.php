@@ -27,7 +27,7 @@ class CartService
 
     /**
      * Adiciona um produto ao carrinho.
-     * Se já existe, incrementa a quantidade.
+     * Se já existe, incrementa a quantidade — sempre respeitando o estoque disponível.
      */
     public function add(int $productId, int $quantity = 1, ?int $variantId = null): CartItem
     {
@@ -40,21 +40,27 @@ class CartService
             ? $variant->getEffectivePrice()
             : $product->getCurrentPrice();
 
+        $stock = $variant
+            ? (int) ($variant->stock ?? 0)
+            : (int) ($product->stock ?? 0);
+
         $item = $cart->items()
             ->where('product_id', $productId)
             ->where('variant_id', $variantId)
             ->first();
 
         if ($item) {
+            $newQty = min($item->quantity + $quantity, max(1, $stock));
             $item->update([
-                'quantity'   => $item->quantity + $quantity,
+                'quantity'   => $newQty,
                 'unit_price' => $unitPrice, // garante preço sempre atualizado
             ]);
         } else {
+            $safeQty = min($quantity, max(1, $stock));
             $item = $cart->items()->create([
                 'product_id' => $productId,
                 'variant_id' => $variantId,
-                'quantity'   => $quantity,
+                'quantity'   => $safeQty,
                 'unit_price' => $unitPrice,
             ]);
         }
@@ -119,19 +125,25 @@ class CartService
 
         $customerCart = $this->cartForCustomer($customerId);
 
-        foreach ($sessionCart->items as $item) {
+        foreach ($sessionCart->items()->with(['product', 'variant'])->get() as $item) {
+            $stock = $item->variant
+                ? (int) ($item->variant->stock ?? 0)
+                : (int) ($item->product->stock ?? 0);
+
             $existing = $customerCart->items()
                 ->where('product_id', $item->product_id)
                 ->where('variant_id', $item->variant_id)
                 ->first();
 
             if ($existing) {
-                $existing->increment('quantity', $item->quantity);
+                $merged = min($existing->quantity + $item->quantity, max(1, $stock));
+                $existing->update(['quantity' => $merged]);
             } else {
+                $safeQty = min($item->quantity, max(1, $stock));
                 $customerCart->items()->create([
                     'product_id' => $item->product_id,
                     'variant_id' => $item->variant_id,
-                    'quantity'   => $item->quantity,
+                    'quantity'   => $safeQty,
                     'unit_price' => $item->unit_price,
                 ]);
             }

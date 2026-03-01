@@ -62,19 +62,7 @@
         @php $customer = auth('customer')->user(); @endphp
         <aside class="hidden lg:flex flex-col w-64 shrink-0 gap-2">
 
-            {{-- Welcome Card --}}
-            <div class="bg-white rounded-2xl border border-gray-200 p-5">
-                <div class="flex items-center gap-3 mb-3">
-                    <div class="w-12 h-12 rounded-full bg-gray-900 text-white flex items-center justify-center text-lg font-bold shrink-0 select-none">
-                        {{ mb_strtoupper(mb_substr($customer->display_name, 0, 1)) }}
-                    </div>
-                    <div class="min-w-0">
-                        <p class="text-xs text-gray-500 font-medium uppercase tracking-wide">Olá,</p>
-                        <p class="font-semibold text-gray-900 truncate leading-tight">{{ $customer->display_name }}</p>
-                    </div>
-                </div>
-                <p class="text-xs text-gray-500 leading-relaxed">Bem-vindo(a) de volta ao seu painel.</p>
-            </div>
+            
 
             {{-- Navigation --}}
             <nav class="bg-white rounded-2xl border border-gray-200 overflow-hidden">

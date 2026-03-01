@@ -1,35 +1,82 @@
-<div>
+@push('header-steps')
+{{-- Steps inline no header — Alpine reage a eventos Livewire 'checkout-step-changed' --}}
+<div
+    x-data="{ step: {{ $step }} }"
+    x-on:checkout-step-changed.window="step = $event.detail.step"
+    x-show="step > 0"
+    class="select-none">
 
-    {{-- ── Indicador de etapas ─────────────────────────────────────────── --}}
-    @if ($step > 0)
-        <div class="flex items-center gap-2 mb-8 select-none">
-            @foreach ([1 => 'Endereço', 2 => 'Frete', 3 => 'Pagamento', 4 => 'Revisão'] as $n => $label)
-                <div class="flex items-center gap-2 {{ $loop->last ? '' : 'flex-1' }}">
-                    <div class="flex items-center gap-2">
-                        <div @class([
-                            'w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0',
-                            'bg-indigo-600 text-white' => $step >= $n,
-                            'bg-gray-200 text-gray-400' => $step < $n,
-                        ])>
-                            @if ($step > $n)
-                                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
-                                </svg>
-                            @else
-                                {{ $n }}
-                            @endif
-                        </div>
-                        <span @class(['text-sm font-medium', 'text-indigo-700' => $step >= $n, 'text-gray-400' => $step < $n])>
-                            {{ $label }}
-                        </span>
-                    </div>
-                    @if (! $loop->last)
-                        <div class="flex-1 h-px {{ $step > $n ? 'bg-indigo-400' : 'bg-gray-200' }} mx-1"></div>
-                    @endif
-                </div>
-            @endforeach
+    {{-- Desktop: círculos + labels + conectores curtos --}}
+    <div class="hidden sm:flex items-center">
+
+        <div class="flex items-center gap-1.5">
+            <div class="w-5 h-5 rounded-full flex items-center justify-center font-bold flex-shrink-0 transition-colors"
+                 :class="step >= 1 ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-400'">
+                <svg x-show="step > 1" class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+                </svg>
+                <span x-show="step <= 1" class="text-[10px]">1</span>
+            </div>
+            <span class="text-xs font-medium transition-colors"
+                  :class="step >= 1 ? 'text-green-700' : 'text-gray-400'">Endereço</span>
         </div>
-    @endif
+
+        <div class="w-5 h-px mx-2 transition-colors" :class="step > 1 ? 'bg-green-400' : 'bg-gray-300'"></div>
+
+        <div class="flex items-center gap-1.5">
+            <div class="w-5 h-5 rounded-full flex items-center justify-center font-bold flex-shrink-0 transition-colors"
+                 :class="step >= 2 ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-400'">
+                <svg x-show="step > 2" class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+                </svg>
+                <span x-show="step <= 2" class="text-[10px]">2</span>
+            </div>
+            <span class="text-xs font-medium transition-colors"
+                  :class="step >= 2 ? 'text-green-700' : 'text-gray-400'">Frete</span>
+        </div>
+
+        <div class="w-5 h-px mx-2 transition-colors" :class="step > 2 ? 'bg-green-400' : 'bg-gray-300'"></div>
+
+        <div class="flex items-center gap-1.5">
+            <div class="w-5 h-5 rounded-full flex items-center justify-center font-bold flex-shrink-0 transition-colors"
+                 :class="step >= 3 ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-400'">
+                <svg x-show="step > 3" class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+                </svg>
+                <span x-show="step <= 3" class="text-[10px]">3</span>
+            </div>
+            <span class="text-xs font-medium transition-colors"
+                  :class="step >= 3 ? 'text-green-700' : 'text-gray-400'">Pagamento</span>
+        </div>
+
+        <div class="w-5 h-px mx-2 transition-colors" :class="step > 3 ? 'bg-green-400' : 'bg-gray-300'"></div>
+
+        <div class="flex items-center gap-1.5">
+            <div class="w-5 h-5 rounded-full flex items-center justify-center font-bold flex-shrink-0 transition-colors"
+                 :class="step >= 4 ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-400'">
+                <span class="text-[10px]">4</span>
+            </div>
+            <span class="text-xs font-medium transition-colors"
+                  :class="step >= 4 ? 'text-green-700' : 'text-gray-400'">Revisão</span>
+        </div>
+
+    </div>
+
+    {{-- Mobile: 4 dots com conector --}}
+    <div class="flex sm:hidden items-center gap-1">
+        <div class="w-2 h-2 rounded-full transition-colors" :class="step >= 1 ? 'bg-green-600' : 'bg-gray-300'"></div>
+        <div class="w-3 h-px transition-colors" :class="step > 1 ? 'bg-green-400' : 'bg-gray-300'"></div>
+        <div class="w-2 h-2 rounded-full transition-colors" :class="step >= 2 ? 'bg-green-600' : 'bg-gray-300'"></div>
+        <div class="w-3 h-px transition-colors" :class="step > 2 ? 'bg-green-400' : 'bg-gray-300'"></div>
+        <div class="w-2 h-2 rounded-full transition-colors" :class="step >= 3 ? 'bg-green-600' : 'bg-gray-300'"></div>
+        <div class="w-3 h-px transition-colors" :class="step > 3 ? 'bg-green-400' : 'bg-gray-300'"></div>
+        <div class="w-2 h-2 rounded-full transition-colors" :class="step >= 4 ? 'bg-green-600' : 'bg-gray-300'"></div>
+    </div>
+
+</div>
+@endpush
+
+<div>
 
     {{-- ── Layout principal ────────────────────────────────────────────── --}}
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
@@ -50,26 +97,18 @@
                  ETAPA 0 — Identificação (Login / Cadastro)
             ══════════════════════════════════════════════════════ --}}
             @if ($step === 0)
-                <div class="bg-white rounded-2xl border border-gray-200 p-6 space-y-5">
+                <div class="bg-white rounded-2xl border border-gray-200 p-5 space-y-4">
 
-                    <div class="text-center">
-                        <div class="inline-flex items-center justify-center w-12 h-12 bg-indigo-100 rounded-full mb-3">
-                            <svg class="w-6 h-6 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-                            </svg>
-                        </div>
-                        <h2 class="text-lg font-semibold text-gray-900">Identificação</h2>
-                        <p class="text-sm text-gray-500 mt-1">Entre na sua conta ou crie uma para continuar</p>
-                    </div>
+                    <h2 class="text-base font-semibold text-gray-900">Identificação</h2>
 
                     {{-- Abas Login / Cadastro --}}
                     <div class="flex border border-gray-200 rounded-xl overflow-hidden">
                         <button
                             type="button"
                             wire:click="switchAuthMode('login')"
-                            class="flex-1 py-2.5 text-sm font-medium transition-colors
+                            class="flex-1 py-2 text-sm font-medium transition-colors
                                 {{ $authMode === 'login'
-                                    ? 'bg-indigo-600 text-white'
+                                    ? 'bg-gray-900 text-white'
                                     : 'bg-white text-gray-600 hover:bg-gray-50' }}"
                         >
                             Entrar na conta
@@ -77,9 +116,9 @@
                         <button
                             type="button"
                             wire:click="switchAuthMode('register')"
-                            class="flex-1 py-2.5 text-sm font-medium transition-colors
+                            class="flex-1 py-2 text-sm font-medium transition-colors
                                 {{ $authMode === 'register'
-                                    ? 'bg-indigo-600 text-white'
+                                    ? 'bg-gray-900 text-white'
                                     : 'bg-white text-gray-600 hover:bg-gray-50' }}"
                         >
                             Criar conta
@@ -88,17 +127,17 @@
 
                     {{-- ── LOGIN ── --}}
                     @if ($authMode === 'login')
-                        <form wire:submit.prevent="attemptLogin" class="space-y-4">
+                        <form wire:submit.prevent="attemptLogin" class="space-y-3">
                             <div>
                                 <label class="block text-xs font-medium text-gray-700 mb-1">E-mail *</label>
                                 <input wire:model="loginEmail" type="email" placeholder="seu@email.com" autocomplete="email"
-                                       class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:outline-none @error('loginEmail') border-red-400 @enderror">
+                                       class="w-full px-3.5 py-2 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-gray-900 focus:border-gray-900 focus:outline-none @error('loginEmail') border-red-400 @enderror">
                                 @error('loginEmail') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
                             </div>
                             <div>
                                 <label class="block text-xs font-medium text-gray-700 mb-1">Senha *</label>
                                 <input wire:model="loginPassword" type="password" placeholder="••••••••" autocomplete="current-password"
-                                       class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:outline-none @error('loginPassword') border-red-400 @enderror">
+                                       class="w-full px-3.5 py-2 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-gray-900 focus:border-gray-900 focus:outline-none @error('loginPassword') border-red-400 @enderror">
                                 @error('loginPassword') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
                             </div>
                             <button type="submit" wire:loading.attr="disabled"
@@ -109,72 +148,79 @@
                                 </span>
                                 <span wire:loading wire:target="attemptLogin">Verificando...</span>
                             </button>
+                            <p class="text-center text-xs text-gray-500">
+                                Ainda não tem uma conta?
+                                <button type="button" wire:click="switchAuthMode('register')" class="text-gray-900 font-medium hover:underline">Crie a sua</button>
+                            </p>
                         </form>
 
                     {{-- ── CADASTRO ── --}}
                     @else
-                        <form wire:submit.prevent="attemptRegister" class="space-y-4">
+                        <form wire:submit.prevent="attemptRegister" class="space-y-3">
 
                             {{-- Tipo de cadastro — controlado pelo Livewire (sem Alpine) --}}
-                            <div>
-                                <label class="block text-xs font-medium text-gray-700 mb-2">Tipo de cadastro</label>
-                                <div class="grid grid-cols-2 gap-3">
-                                    <label class="flex items-center justify-center py-2.5 px-4 rounded-lg border-2 cursor-pointer transition-colors
-                                        {{ $registerType === 'pf' ? 'border-indigo-600 bg-indigo-50 text-indigo-700' : 'border-gray-200 text-gray-600 hover:border-gray-400' }}">
-                                        <input type="radio" wire:model.live="registerType" value="pf" class="sr-only">
-                                        <span class="text-sm font-medium">Pessoa Física</span>
-                                    </label>
-                                    <label class="flex items-center justify-center py-2.5 px-4 rounded-lg border-2 cursor-pointer transition-colors
-                                        {{ $registerType === 'pj' ? 'border-indigo-600 bg-indigo-50 text-indigo-700' : 'border-gray-200 text-gray-600 hover:border-gray-400' }}">
-                                        <input type="radio" wire:model.live="registerType" value="pj" class="sr-only">
-                                        <span class="text-sm font-medium">Pessoa Jurídica</span>
-                                    </label>
-                                </div>
+                            <div class="grid grid-cols-2 gap-3">
+                                <label class="flex items-center justify-center gap-2 py-2 px-4 rounded-xl border cursor-pointer transition-colors
+                                    {{ $registerType === 'pf' ? 'border-gray-900 bg-gray-50 text-gray-900' : 'border-gray-200 text-gray-500 hover:border-gray-300' }}">
+                                    <input type="radio" wire:model.live="registerType" value="pf" class="sr-only">
+                                    <svg class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"/>
+                                    </svg>
+                                    <span class="text-sm font-medium">Pessoa Física</span>
+                                </label>
+                                <label class="flex items-center justify-center gap-2 py-2 px-4 rounded-xl border cursor-pointer transition-colors
+                                    {{ $registerType === 'pj' ? 'border-gray-900 bg-gray-50 text-gray-900' : 'border-gray-200 text-gray-500 hover:border-gray-300' }}">
+                                    <input type="radio" wire:model.live="registerType" value="pj" class="sr-only">
+                                    <svg class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 21h16.5M4.5 3h15M5.25 3v18m13.5-18v18M9 6.75h1.5m-1.5 3h1.5m-1.5 3h1.5m3-6h1.5m-1.5 3h1.5m-1.5 3h1.5M9 21v-3.375c0-.621.504-1.125 1.125-1.125h3.75c.621 0 1.125.504 1.125 1.125V21"/>
+                                    </svg>
+                                    <span class="text-sm font-medium">Pessoa Jurídica</span>
+                                </label>
                             </div>
 
                             {{-- Campos Pessoa Física --}}
                             @if ($registerType === 'pf')
-                                <div class="space-y-4">
+                                <div class="space-y-3">
                                     <div>
                                         <label class="block text-xs font-medium text-gray-700 mb-1">Nome completo *</label>
                                         <input wire:model="registerName" type="text" placeholder="Seu nome completo" autocomplete="name"
-                                               class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:outline-none @error('registerName') border-red-400 @enderror">
+                                               class="w-full px-3.5 py-2 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-gray-900 focus:border-gray-900 focus:outline-none @error('registerName') border-red-400 @enderror">
                                         @error('registerName') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
                                     </div>
-                                    <div class="grid grid-cols-2 gap-4">
+                                    <div class="grid grid-cols-2 gap-3">
                                         <div>
                                             <label class="block text-xs font-medium text-gray-700 mb-1">CPF</label>
                                             <input wire:model="registerCpf" type="text" placeholder="000.000.000-00"
-                                                   class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:outline-none @error('registerCpf') border-red-400 @enderror">
+                                                   class="w-full px-3.5 py-2 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-gray-900 focus:border-gray-900 focus:outline-none @error('registerCpf') border-red-400 @enderror">
                                             @error('registerCpf') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
                                         </div>
                                         <div>
                                             <label class="block text-xs font-medium text-gray-700 mb-1">Data de nascimento</label>
                                             <input wire:model="registerBirthDate" type="date"
-                                                   class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:outline-none">
+                                                   class="w-full px-3.5 py-2 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-gray-900 focus:border-gray-900 focus:outline-none">
                                         </div>
                                     </div>
                                 </div>
                             @else
                             {{-- Campos Pessoa Jurídica --}}
-                                <div class="space-y-4">
+                                <div class="space-y-3">
                                     <div>
                                         <label class="block text-xs font-medium text-gray-700 mb-1">Razão Social *</label>
                                         <input wire:model="registerCompanyName" type="text" placeholder="Nome da empresa"
-                                               class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:outline-none @error('registerCompanyName') border-red-400 @enderror">
+                                               class="w-full px-3.5 py-2 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-gray-900 focus:border-gray-900 focus:outline-none @error('registerCompanyName') border-red-400 @enderror">
                                         @error('registerCompanyName') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
                                     </div>
-                                    <div class="grid grid-cols-2 gap-4">
+                                    <div class="grid grid-cols-2 gap-3">
                                         <div>
                                             <label class="block text-xs font-medium text-gray-700 mb-1">CNPJ</label>
                                             <input wire:model="registerCnpj" type="text" placeholder="00.000.000/0000-00"
-                                                   class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:outline-none @error('registerCnpj') border-red-400 @enderror">
+                                                   class="w-full px-3.5 py-2 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-gray-900 focus:border-gray-900 focus:outline-none @error('registerCnpj') border-red-400 @enderror">
                                             @error('registerCnpj') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
                                         </div>
                                         <div>
                                             <label class="block text-xs font-medium text-gray-700 mb-1">Nome do responsável *</label>
                                             <input wire:model="registerResponsibleName" type="text" placeholder="Nome completo"
-                                                   class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:outline-none @error('registerResponsibleName') border-red-400 @enderror">
+                                                   class="w-full px-3.5 py-2 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-gray-900 focus:border-gray-900 focus:outline-none @error('registerResponsibleName') border-red-400 @enderror">
                                             @error('registerResponsibleName') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
                                         </div>
                                     </div>
@@ -182,28 +228,32 @@
                             @endif
 
                             {{-- Campos comuns --}}
-                            <div>
-                                <label class="block text-xs font-medium text-gray-700 mb-1">E-mail *</label>
-                                <input wire:model="registerEmail" type="email" placeholder="seu@email.com" autocomplete="email"
-                                       class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:outline-none @error('registerEmail') border-red-400 @enderror">
-                                @error('registerEmail') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-700 mb-1">E-mail *</label>
+                                    <input wire:model="registerEmail" type="email" placeholder="seu@email.com" autocomplete="email"
+                                           class="w-full px-3.5 py-2 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-gray-900 focus:border-gray-900 focus:outline-none @error('registerEmail') border-red-400 @enderror">
+                                    @error('registerEmail') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-700 mb-1">Celular</label>
+                                    <input wire:model="registerMobile" type="tel" placeholder="(11) 99999-9999" autocomplete="tel"
+                                           class="w-full px-3.5 py-2 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-gray-900 focus:border-gray-900 focus:outline-none">
+                                </div>
                             </div>
-                            <div>
-                                <label class="block text-xs font-medium text-gray-700 mb-1">Celular</label>
-                                <input wire:model="registerMobile" type="tel" placeholder="(11) 99999-9999" autocomplete="tel"
-                                       class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:outline-none">
-                            </div>
-                            <div>
-                                <label class="block text-xs font-medium text-gray-700 mb-1">Senha *</label>
-                                <input wire:model="registerPassword" type="password" placeholder="Mínimo 8 caracteres" autocomplete="new-password"
-                                       class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:outline-none @error('registerPassword') border-red-400 @enderror">
-                                @error('registerPassword') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
-                            </div>
-                            <div>
-                                <label class="block text-xs font-medium text-gray-700 mb-1">Confirmar senha *</label>
-                                <input wire:model="registerPasswordConfirmation" type="password" placeholder="Repita a senha" autocomplete="new-password"
-                                       class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:outline-none @error('registerPasswordConfirmation') border-red-400 @enderror">
-                                @error('registerPasswordConfirmation') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-700 mb-1">Senha *</label>
+                                    <input wire:model="registerPassword" type="password" placeholder="Mín. 8 caracteres" autocomplete="new-password"
+                                           class="w-full px-3.5 py-2 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-gray-900 focus:border-gray-900 focus:outline-none @error('registerPassword') border-red-400 @enderror">
+                                    @error('registerPassword') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-700 mb-1">Confirmar senha *</label>
+                                    <input wire:model="registerPasswordConfirmation" type="password" placeholder="Repita a senha" autocomplete="new-password"
+                                           class="w-full px-3.5 py-2 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-gray-900 focus:border-gray-900 focus:outline-none @error('registerPasswordConfirmation') border-red-400 @enderror">
+                                    @error('registerPasswordConfirmation') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
+                                </div>
                             </div>
                             <button type="submit" wire:loading.attr="disabled"
                                     class="w-full py-3 px-6 bg-green-700 text-white text-sm font-semibold rounded-xl hover:bg-green-800 transition-colors disabled:opacity-60">

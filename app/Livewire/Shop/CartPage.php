@@ -19,6 +19,7 @@ class CartPage extends Component
     public string $cep = '';
     public ?array $shipping = null;
     public ?string $shippingError = null;
+    public ?string $shippingCity = null;
 
     // Cupom
     public string $couponCode = '';
@@ -88,6 +89,19 @@ class CartPage extends Component
         }
 
         $this->shipping = $options;
+
+        // Busca nome da cidade via ViaCEP para exibir no título do accordion
+        try {
+            $viaCep = \Illuminate\Support\Facades\Http::timeout(3)
+                ->get("https://viacep.com.br/ws/{$cep}/json/");
+
+            if ($viaCep->successful() && ! $viaCep->json('erro')) {
+                $data = $viaCep->json();
+                $this->shippingCity = trim(($data['localidade'] ?? '') . ' — ' . ($data['uf'] ?? ''));
+            }
+        } catch (\Throwable) {
+            // ViaCEP indisponível — não bloqueia o cálculo de frete
+        }
     }
 
     // ── Cupom ─────────────────────────────────────────────────────────────

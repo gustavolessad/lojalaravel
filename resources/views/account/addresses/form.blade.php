@@ -2,7 +2,7 @@
 
 @section('title', $address->exists ? 'Editar endereço' : 'Novo endereço')
 
-@section('content')
+@section('page-content')
     <div class="max-w-2xl">
         <div class="mb-6">
             <h1 class="text-2xl font-semibold text-gray-900">

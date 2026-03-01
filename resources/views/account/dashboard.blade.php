@@ -2,7 +2,7 @@
 
 @section('title', 'Minha Conta')
 
-@section('content')
+@section('page-content')
 
 {{-- Boas-vindas --}}
 <div class="bg-white rounded-2xl border border-gray-200 p-6 mb-4">

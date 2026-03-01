@@ -2,6 +2,6 @@
 
 @section('title', 'Trocas e Devoluções')
 
-@section('content')
+@section('page-content')
 @livewire('account.return-request-manager')
 @endsection

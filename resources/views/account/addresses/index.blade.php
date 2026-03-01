@@ -2,7 +2,7 @@
 
 @section('title', 'Meus Endereços')
 
-@section('content')
+@section('page-content')
     <div class="flex items-center justify-between mb-6">
         <div>
             <h1 class="text-2xl font-semibold text-gray-900">Meus endereços</h1>

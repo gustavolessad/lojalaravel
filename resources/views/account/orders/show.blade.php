@@ -2,7 +2,7 @@
 
 @section('title', 'Pedido #' . $order->order_number)
 
-@section('content')
+@section('page-content')
 
 @php
     $statusConfig = match($order->status) {

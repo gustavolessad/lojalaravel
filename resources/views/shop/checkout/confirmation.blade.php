@@ -1,9 +1,9 @@
-@extends('layouts.shop')
+@extends('layouts.minimal')
 
 @section('title', 'Pedido Confirmado — #' . $order->order_number)
 
 @section('content')
-<div class="max-w-2xl mx-auto">
+<div class="max-w-2xl mx-auto px-4 sm:px-6 py-8">
 
     {{-- Cabeçalho --}}
     <div class="text-center mb-8">

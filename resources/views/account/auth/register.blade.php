@@ -3,7 +3,7 @@
 @section('title', 'Criar conta')
 @section('heading', 'Crie sua conta')
 
-@section('content')
+@section('form')
     <form method="POST" action="{{ route('account.register') }}" class="space-y-5" x-data="{ type: '{{ old('type', 'pf') }}' }">
         @csrf
 

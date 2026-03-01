@@ -2,6 +2,8 @@
 
 @section('body-class', 'bg-gray-100')
 
+@section('main-class', 'flex-1')
+
 @section('content')
 
     {{-- Mobile Nav (horizontal scroll) --}}

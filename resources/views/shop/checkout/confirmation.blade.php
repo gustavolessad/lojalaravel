@@ -3,7 +3,7 @@
 @section('title', 'Pedido Confirmado — #' . $order->order_number)
 
 @section('content')
-<div class="max-w-2xl mx-auto px-4 sm:px-6 py-8">
+<div class="max-w-2xl mx-auto">
 
     {{-- Cabeçalho --}}
     <div class="text-center mb-8">

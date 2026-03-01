@@ -305,7 +305,7 @@
                     <div class="grid grid-cols-2 gap-3">
                         <label class="relative flex cursor-pointer rounded-xl border p-4 transition-all
                                       {{ $type === 'return' ? 'border-gray-900 bg-gray-50' : 'border-gray-200 hover:border-gray-300' }}">
-                            <input type="radio" wire:model="type" value="return" class="sr-only">
+                            <input type="radio" wire:model.live="type" value="return" class="sr-only">
                             <div class="flex items-center gap-3">
                                 <div class="w-8 h-8 rounded-lg flex items-center justify-center
                                             {{ $type === 'return' ? 'bg-gray-900' : 'bg-gray-100' }}">
@@ -322,7 +322,7 @@
 
                         <label class="relative flex cursor-pointer rounded-xl border p-4 transition-all
                                       {{ $type === 'exchange' ? 'border-gray-900 bg-gray-50' : 'border-gray-200 hover:border-gray-300' }}">
-                            <input type="radio" wire:model="type" value="exchange" class="sr-only">
+                            <input type="radio" wire:model.live="type" value="exchange" class="sr-only">
                             <div class="flex items-center gap-3">
                                 <div class="w-8 h-8 rounded-lg flex items-center justify-center
                                             {{ $type === 'exchange' ? 'bg-gray-900' : 'bg-gray-100' }}">

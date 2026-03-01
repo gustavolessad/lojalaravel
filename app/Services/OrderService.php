@@ -139,8 +139,12 @@ class OrderService
                 ->actions([
                     NotificationAction::make('ver')
                         ->label('Ver pedido')
+                        ->button()
                         ->url(\App\Filament\Resources\OrderResource::getUrl('view', ['record' => $order->id]))
-                        ->button(),
+                        ->extraAttributes(function () use ($order) {
+                            $url = \App\Filament\Resources\OrderResource::getUrl('view', ['record' => $order->id]);
+                            return ['x-on:click.prevent' => "markAsRead(); setTimeout(() => { window.location.href = '{$url}'; }, 300)"];
+                        }),
                 ])
                 ->sendToDatabase(User::all());
         } catch (\Throwable $e) {
@@ -181,8 +185,12 @@ class OrderService
                 ->actions([
                     NotificationAction::make('ver')
                         ->label('Ver pedido')
+                        ->button()
                         ->url(\App\Filament\Resources\OrderResource::getUrl('view', ['record' => $order->id]))
-                        ->button(),
+                        ->extraAttributes(function () use ($order) {
+                            $url = \App\Filament\Resources\OrderResource::getUrl('view', ['record' => $order->id]);
+                            return ['x-on:click.prevent' => "markAsRead(); setTimeout(() => { window.location.href = '{$url}'; }, 300)"];
+                        }),
                 ])
                 ->sendToDatabase(User::all());
         } catch (\Throwable $e) {

@@ -82,7 +82,7 @@ class StatsOverviewWidget extends BaseWidget
                 ->color('primary'),
 
             Stat::make('Novos clientes', number_format($newCustomers))
-                ->description("{$converted} converteram (fizeram pedido)")
+                ->description("{$converted} fizeram pedido")
                 ->icon('heroicon-o-user-plus')
                 ->color('info'),
         ];

@@ -605,6 +605,8 @@ class CheckoutPage extends Component
             // 3. Redireciona para a confirmação
             $this->redirect(route('order.confirmation', $order->order_number), navigate: false);
 
+        } catch (\App\Exceptions\CheckoutException $e) {
+            $this->errorMessage = $e->getMessage();
         } catch (\Throwable $e) {
             Log::error('Checkout error', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
             $this->errorMessage = 'Ocorreu um erro inesperado ao processar seu pedido. Por favor, tente novamente.';

@@ -141,7 +141,7 @@
                                 @error('loginPassword') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
                             </div>
                             <button type="submit" wire:loading.attr="disabled"
-                                    class="w-full py-3 px-6 bg-green-700 text-white text-sm font-semibold rounded-xl hover:bg-green-800 transition-colors disabled:opacity-60">
+                                    class="w-full py-3 px-6 bg-green-700 text-white font-semibold rounded-xl hover:bg-green-800 transition-colors disabled:opacity-60">
                                 <span wire:loading.remove wire:target="attemptLogin" class="flex items-center justify-center gap-2">
                                     Entrar e continuar
                                     <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"/></svg>
@@ -256,7 +256,7 @@
                                 </div>
                             </div>
                             <button type="submit" wire:loading.attr="disabled"
-                                    class="w-full py-3 px-6 bg-green-700 text-white text-sm font-semibold rounded-xl hover:bg-green-800 transition-colors disabled:opacity-60">
+                                    class="w-full py-3 px-6 bg-green-700 text-white font-semibold rounded-xl hover:bg-green-800 transition-colors disabled:opacity-60">
                                 <span wire:loading.remove wire:target="attemptRegister" class="flex items-center justify-center gap-2">
                                     Criar conta e continuar
                                     <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"/></svg>
@@ -433,7 +433,7 @@
 
                     <div class="pt-2">
                         <button wire:click="goToShipping" wire:loading.attr="disabled"
-                                class="w-full py-3 px-6 bg-green-700 text-white text-sm font-semibold rounded-xl hover:bg-green-800 transition-colors disabled:opacity-60">
+                                class="w-full py-3 px-6 bg-green-700 text-white font-semibold rounded-xl hover:bg-green-800 transition-colors disabled:opacity-60">
                             <span wire:loading.remove wire:target="goToShipping" class="flex items-center justify-center gap-2">
                                 Continuar para o Frete
                                 <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"/></svg>
@@ -514,7 +514,7 @@
 
                     <button wire:click="goToPayment"
                             @disabled($loadingShipping || empty($shippingOptions))
-                            class="w-full flex items-center justify-center gap-2 py-3 px-6 bg-green-700 text-white text-sm font-semibold rounded-xl hover:bg-green-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                            class="w-full flex items-center justify-center gap-2 py-3 px-6 bg-green-700 text-white font-semibold rounded-xl hover:bg-green-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
                         Continuar para o Pagamento
                         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"/></svg>
                     </button>
@@ -623,7 +623,7 @@
                     @endif
 
                     <button wire:click="goToReview"
-                            class="w-full flex items-center justify-center gap-2 py-3 px-6 bg-green-700 text-white text-sm font-semibold rounded-xl hover:bg-green-800 transition-colors">
+                            class="w-full flex items-center justify-center gap-2 py-3 px-6 bg-green-700 text-white font-semibold rounded-xl hover:bg-green-800 transition-colors">
                         Revisar pedido
                         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"/></svg>
                     </button>
@@ -732,7 +732,7 @@
                         class="w-full py-4 px-6 bg-green-700 text-white text-base font-bold rounded-2xl hover:bg-green-800 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
                     >
                         <span wire:loading.remove wire:target="placeOrder">
-                            Confirmar Pedido — R$ {{ number_format($this->total, 2, ',', '.') }}
+                            Confirmar Pedido — R$ {{ number_format($this->total, 2, ',', '.') }} no {{ $paymentMethod === 'pix' ? 'PIX' : 'Cartão de crédito' }}
                         </span>
                         <span wire:loading wire:target="placeOrder" class="flex items-center justify-center gap-2">
                             <svg class="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">

@@ -13,7 +13,7 @@ $storeRazaoSocial = Setting::get('store_razao_social', '');
 $storeHours = Setting::get('store_hours', '');
 
 $logoUrl = $storeLogo ? Storage::disk('public')->url($storeLogo) : null;
-$contactPhone = $storeWhatsapp ?: $storePhone;
+$contactPhone = $storePhone;
 @endphp
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -52,9 +52,16 @@ $contactPhone = $storeWhatsapp ?: $storePhone;
                 {{-- Telefone de atendimento --}}
                 @if ($contactPhone)
                 <a href="tel:{{ preg_replace('/\D/', '', $contactPhone) }}"
-                    class="hidden sm:block text-sm text-gray-600 hover:text-gray-900 transition-colors shrink-0">
-                    <p class="text-xs text-gray-400 mb-0.5">Central de Atendimento</p>
-                    <p>{{ $contactPhone }}</p>
+                    class="hidden sm:flex items-center gap-2.5 shrink-0 group">
+                    <div class="w-8 h-8 rounded-full bg-gray-100 group-hover:bg-gray-200 transition-colors flex items-center justify-center">
+                        <svg class="w-4 h-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 0 0 2.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 0 1-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 0 0-1.091-.852H4.5A2.25 2.25 0 0 0 2.25 6v.75Z" />
+                        </svg>
+                    </div>
+                    <div>
+                        <p class="text-xs text-gray-400 leading-none mb-1">Central de Atendimento</p>
+                        <p class="text-sm font-semibold text-gray-900 leading-none group-hover:text-gray-600 transition-colors">{{ $contactPhone }}</p>
+                    </div>
                 </a>
                 @endif
 

@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Exceptions\CheckoutException;
 use App\Mail\OrderPlaced;
 use App\Mail\PaymentConfirmed;
 use App\Models\Cart;
@@ -42,11 +43,58 @@ class OrderService
         // caso a fila (Redis) esteja indisponível.
         $order = DB::transaction(function () use ($cart, $address, $shipping, $paymentMethod, $customer, $guest, $notes, $pixDiscount) {
 
+            // ── 1. Lock pessimista + verificação de estoque ───────────────────────
+            // Previne overselling quando dois pedidos concorrentes chegam ao mesmo tempo.
+            foreach ($cart->items as $item) {
+                if ($item->variant_id) {
+                    $lockedVariant = $item->variant()->lockForUpdate()->first();
+                    $available     = (int) ($lockedVariant?->stock ?? 0);
+                    if ($available < $item->quantity) {
+                        $label = $item->product->name
+                            . ($item->variant?->label ? ' — ' . $item->variant->label : '');
+                        throw new CheckoutException(
+                            "Estoque insuficiente para \"{$label}\". "
+                            . "Disponível: {$available}, solicitado: {$item->quantity}."
+                        );
+                    }
+                } elseif ($item->product->stock !== null) {
+                    $lockedProduct = $item->product()->lockForUpdate()->first();
+                    $available     = (int) ($lockedProduct?->stock ?? 0);
+                    if ($available < $item->quantity) {
+                        throw new CheckoutException(
+                            "Estoque insuficiente para \"{$item->product->name}\". "
+                            . "Disponível: {$available}, solicitado: {$item->quantity}."
+                        );
+                    }
+                }
+            }
+
+            // ── 2. Re-validação do cupom ──────────────────────────────────────────
+            // Garante que o cupom ainda é válido no momento exato da finalização.
             $subtotal     = (float) $cart->subtotal;
             $shippingCost = (float) $shipping['price'];
-            $discount     = (float) ($cart->coupon_discount ?? 0);
-            $baseTotal    = max(0, $subtotal - $discount) + $shippingCost;
-            $total        = max(0, $baseTotal - $pixDiscount);
+
+            if ($cart->coupon_code) {
+                $couponResult = app(CouponService::class)->validate(
+                    $cart->coupon_code,
+                    $subtotal,
+                    $customer,
+                    $cart->items
+                );
+                if (is_string($couponResult)) {
+                    throw new CheckoutException(
+                        'O cupom "' . $cart->coupon_code . '" não é mais válido: '
+                        . $couponResult . ' Volte ao carrinho para removê-lo.'
+                    );
+                }
+                $discount = $couponResult['discount'];
+            } else {
+                $discount = 0.0;
+            }
+
+            // ── 3. Totais ─────────────────────────────────────────────────────────
+            $baseTotal = max(0, $subtotal - $discount) + $shippingCost;
+            $total     = max(0, $baseTotal - $pixDiscount);
 
             // Cria o pedido
             $order = Order::create([

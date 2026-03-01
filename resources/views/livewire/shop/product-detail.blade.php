@@ -368,6 +368,7 @@
                             wire:keydown.enter.prevent="calculateShipping"
                             placeholder="00000-000"
                             maxlength="9"
+                            x-mask="99999-999"
                             class="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
                         <button type="submit"
                             wire:loading.attr="disabled"

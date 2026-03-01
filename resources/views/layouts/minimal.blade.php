@@ -25,6 +25,7 @@ $contactPhone = $storePhone;
     <title>@yield('title', $storeName) — {{ $storeName }}</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @livewireStyles
+    @livewireScriptConfig
     @yield('head')
 </head>
 

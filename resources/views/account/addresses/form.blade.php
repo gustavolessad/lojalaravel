@@ -49,6 +49,7 @@
                             name="cep"
                             x-model="cep"
                             x-on:blur="buscarCep()"
+                            x-mask="99999-999"
                             value="{{ old('cep', $address->cep) }}"
                             maxlength="9"
                             placeholder="00000-000"

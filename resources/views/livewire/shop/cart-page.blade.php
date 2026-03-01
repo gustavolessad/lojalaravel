@@ -197,6 +197,7 @@
                                 wire:keydown.enter.prevent="simulateShipping"
                                 placeholder="00000-000"
                                 maxlength="9"
+                                x-mask="99999-999"
                                 class="flex-1 min-w-0 px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent transition">
                             <button type="submit"
                                 wire:loading.attr="disabled"

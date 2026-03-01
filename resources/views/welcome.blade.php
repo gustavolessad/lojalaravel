@@ -7,6 +7,7 @@
     <title>@yield('title', config('app.name'))</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @livewireStyles
+    @livewireScriptConfig
 </head>
 <body class="bg-gray-50 text-gray-900 antialiased">
 

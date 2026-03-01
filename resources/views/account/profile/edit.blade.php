@@ -40,7 +40,7 @@
 
                     <div>
                         <label class="block text-xs font-medium text-gray-700 mb-1.5">CPF</label>
-                        <input type="text" value="{{ $customer->cpf }}" readonly
+                        <input type="text" value="{{ $customer->cpf }}" readonly x-mask="999.999.999-99"
                                class="w-full rounded-xl border border-gray-200 bg-gray-50 px-3.5 py-2.5 text-sm text-gray-500 cursor-not-allowed">
                         <p class="mt-1 text-xs text-gray-400">CPF não pode ser alterado</p>
                     </div>
@@ -48,7 +48,7 @@
                     <div>
                         <label class="block text-xs font-medium text-gray-700 mb-1.5">RG <span class="text-gray-400 font-normal">(opcional)</span></label>
                         <input type="text" name="rg" value="{{ old('rg', $customer->rg) }}"
-                               placeholder="00.000.000-0"
+                               placeholder="00.000.000-0" x-mask="99.999.999-*"
                                class="w-full rounded-xl border border-gray-300 px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent @error('rg') border-red-400 @enderror">
                         @error('rg') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
                     </div>
@@ -70,7 +70,7 @@
                     <div>
                         <label class="block text-xs font-medium text-gray-700 mb-1.5">Celular</label>
                         <input type="tel" name="mobile" value="{{ old('mobile', $customer->mobile) }}"
-                               placeholder="(00) 00000-0000"
+                               placeholder="(00) 00000-0000" x-mask="(99) 99999-9999"
                                class="w-full rounded-xl border border-gray-300 px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent @error('mobile') border-red-400 @enderror">
                         @error('mobile') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
                     </div>
@@ -78,7 +78,7 @@
                     <div>
                         <label class="block text-xs font-medium text-gray-700 mb-1.5">Telefone fixo <span class="text-gray-400 font-normal">(opcional)</span></label>
                         <input type="tel" name="phone" value="{{ old('phone', $customer->phone) }}"
-                               placeholder="(00) 0000-0000"
+                               placeholder="(00) 0000-0000" x-mask="(99) 9999-9999"
                                class="w-full rounded-xl border border-gray-300 px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent @error('phone') border-red-400 @enderror">
                         @error('phone') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
                     </div>
@@ -96,7 +96,7 @@
 
                     <div>
                         <label class="block text-xs font-medium text-gray-700 mb-1.5">CNPJ</label>
-                        <input type="text" value="{{ $customer->cnpj }}" readonly
+                        <input type="text" value="{{ $customer->cnpj }}" readonly x-mask="99.999.999/9999-99"
                                class="w-full rounded-xl border border-gray-200 bg-gray-50 px-3.5 py-2.5 text-sm text-gray-500 cursor-not-allowed">
                         <p class="mt-1 text-xs text-gray-400">CNPJ não pode ser alterado</p>
                     </div>
@@ -125,7 +125,7 @@
                     <div>
                         <label class="block text-xs font-medium text-gray-700 mb-1.5">Celular</label>
                         <input type="tel" name="mobile" value="{{ old('mobile', $customer->mobile) }}"
-                               placeholder="(00) 00000-0000"
+                               placeholder="(00) 00000-0000" x-mask="(99) 99999-9999"
                                class="w-full rounded-xl border border-gray-300 px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent @error('mobile') border-red-400 @enderror">
                         @error('mobile') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
                     </div>
@@ -133,7 +133,7 @@
                     <div>
                         <label class="block text-xs font-medium text-gray-700 mb-1.5">Telefone fixo <span class="text-gray-400 font-normal">(opcional)</span></label>
                         <input type="tel" name="phone" value="{{ old('phone', $customer->phone) }}"
-                               placeholder="(00) 0000-0000"
+                               placeholder="(00) 0000-0000" x-mask="(99) 9999-9999"
                                class="w-full rounded-xl border border-gray-300 px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent @error('phone') border-red-400 @enderror">
                         @error('phone') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
                     </div>

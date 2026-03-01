@@ -191,6 +191,7 @@
                                         <div>
                                             <label class="block text-xs font-medium text-gray-700 mb-1">CPF</label>
                                             <input wire:model="registerCpf" type="text" placeholder="000.000.000-00"
+                                                   x-mask="999.999.999-99"
                                                    class="w-full px-3.5 py-2 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-gray-900 focus:border-gray-900 focus:outline-none @error('registerCpf') border-red-400 @enderror">
                                             @error('registerCpf') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
                                         </div>
@@ -214,6 +215,7 @@
                                         <div>
                                             <label class="block text-xs font-medium text-gray-700 mb-1">CNPJ</label>
                                             <input wire:model="registerCnpj" type="text" placeholder="00.000.000/0000-00"
+                                                   x-mask="99.999.999/9999-99"
                                                    class="w-full px-3.5 py-2 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-gray-900 focus:border-gray-900 focus:outline-none @error('registerCnpj') border-red-400 @enderror">
                                             @error('registerCnpj') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
                                         </div>
@@ -238,6 +240,7 @@
                                 <div>
                                     <label class="block text-xs font-medium text-gray-700 mb-1">Celular</label>
                                     <input wire:model="registerMobile" type="tel" placeholder="(11) 99999-9999" autocomplete="tel"
+                                           x-mask="(99) 99999-9999"
                                            class="w-full px-3.5 py-2 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-gray-900 focus:border-gray-900 focus:outline-none">
                                 </div>
                             </div>
@@ -367,7 +370,7 @@
                             <div>
                                 <label class="block text-xs font-medium text-gray-700 mb-1">CEP *</label>
                                 <input wire:model.blur="addrZip" type="text" placeholder="00000-000" maxlength="9"
-                                       wire:change="lookupZip"
+                                       wire:change="lookupZip" x-mask="99999-999"
                                        class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:outline-none @error('addrZip') border-red-400 @enderror">
                                 @error('addrZip') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
                             </div>
@@ -376,6 +379,7 @@
                             <div>
                                 <label class="block text-xs font-medium text-gray-700 mb-1">Telefone</label>
                                 <input wire:model="addrPhone" type="tel" placeholder="(11) 99999-9999"
+                                       x-mask="(99) 99999-9999"
                                        class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:outline-none">
                             </div>
 
@@ -567,20 +571,23 @@
                             </div>
                             <div>
                                 <label class="block text-xs font-medium text-gray-700 mb-1">Número do cartão *</label>
-                                <input wire:model="cardNumber" type="text" placeholder="0000 0000 0000 0000" maxlength="19" autocomplete="cc-number"
+                                <input wire:model.blur="cardNumber" type="text" placeholder="0000 0000 0000 0000" maxlength="19" autocomplete="cc-number"
+                                       x-mask="9999 9999 9999 9999"
                                        class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:outline-none @error('cardNumber') border-red-400 @enderror">
                                 @error('cardNumber') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
                             </div>
                             <div class="grid grid-cols-2 gap-4">
                                 <div>
                                     <label class="block text-xs font-medium text-gray-700 mb-1">Validade *</label>
-                                    <input wire:model="cardExpiry" type="text" placeholder="MM/AA" maxlength="5" autocomplete="cc-exp"
+                                    <input wire:model.blur="cardExpiry" type="text" placeholder="MM/AA" maxlength="5" autocomplete="cc-exp"
+                                           x-mask="99/99"
                                            class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:outline-none @error('cardExpiry') border-red-400 @enderror">
                                     @error('cardExpiry') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
                                 </div>
                                 <div>
                                     <label class="block text-xs font-medium text-gray-700 mb-1">CVV *</label>
-                                    <input wire:model="cardCvv" type="text" placeholder="000" maxlength="4" autocomplete="cc-csc"
+                                    <input wire:model.blur="cardCvv" type="text" placeholder="000" maxlength="4" autocomplete="cc-csc"
+                                           x-mask="9999"
                                            class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:outline-none @error('cardCvv') border-red-400 @enderror">
                                     @error('cardCvv') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
                                 </div>

@@ -41,6 +41,7 @@
                 <input
                     type="tel"
                     wire:model="phone"
+                    x-mask="(99) 99999-9999"
                     placeholder="Seu telefone (opcional)"
                     class="w-full px-4 py-3 rounded-xl text-sm text-gray-900 bg-white border-0
                            focus:ring-2 focus:ring-white focus:outline-none placeholder-gray-400

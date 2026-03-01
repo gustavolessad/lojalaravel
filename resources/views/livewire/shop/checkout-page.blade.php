@@ -50,7 +50,7 @@
                  ETAPA 0 — Identificação (Login / Cadastro)
             ══════════════════════════════════════════════════════ --}}
             @if ($step === 0)
-                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 space-y-5">
+                <div class="bg-white rounded-2xl border border-gray-200 p-6 space-y-5">
 
                     <div class="text-center">
                         <div class="inline-flex items-center justify-center w-12 h-12 bg-indigo-100 rounded-full mb-3">
@@ -102,8 +102,11 @@
                                 @error('loginPassword') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
                             </div>
                             <button type="submit" wire:loading.attr="disabled"
-                                    class="w-full py-3 px-6 bg-indigo-600 text-white text-sm font-semibold rounded-xl hover:bg-indigo-700 transition-colors disabled:opacity-60">
-                                <span wire:loading.remove wire:target="attemptLogin">Entrar e continuar →</span>
+                                    class="w-full py-3 px-6 bg-green-700 text-white text-sm font-semibold rounded-xl hover:bg-green-800 transition-colors disabled:opacity-60">
+                                <span wire:loading.remove wire:target="attemptLogin" class="flex items-center justify-center gap-2">
+                                    Entrar e continuar
+                                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"/></svg>
+                                </span>
                                 <span wire:loading wire:target="attemptLogin">Verificando...</span>
                             </button>
                         </form>
@@ -203,8 +206,11 @@
                                 @error('registerPasswordConfirmation') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
                             </div>
                             <button type="submit" wire:loading.attr="disabled"
-                                    class="w-full py-3 px-6 bg-indigo-600 text-white text-sm font-semibold rounded-xl hover:bg-indigo-700 transition-colors disabled:opacity-60">
-                                <span wire:loading.remove wire:target="attemptRegister">Criar conta e continuar →</span>
+                                    class="w-full py-3 px-6 bg-green-700 text-white text-sm font-semibold rounded-xl hover:bg-green-800 transition-colors disabled:opacity-60">
+                                <span wire:loading.remove wire:target="attemptRegister" class="flex items-center justify-center gap-2">
+                                    Criar conta e continuar
+                                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"/></svg>
+                                </span>
                                 <span wire:loading wire:target="attemptRegister">Criando conta...</span>
                             </button>
                         </form>
@@ -216,7 +222,7 @@
                  ETAPA 1 — Endereço
             ══════════════════════════════════════════════════════ --}}
             @elseif ($step === 1)
-                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 space-y-5">
+                <div class="bg-white rounded-2xl border border-gray-200 p-6 space-y-5">
 
                     {{-- Info do cliente logado --}}
                     @if ($this->customer)
@@ -377,8 +383,11 @@
 
                     <div class="pt-2">
                         <button wire:click="goToShipping" wire:loading.attr="disabled"
-                                class="w-full py-3 px-6 bg-indigo-600 text-white text-sm font-semibold rounded-xl hover:bg-indigo-700 transition-colors disabled:opacity-60">
-                            <span wire:loading.remove wire:target="goToShipping">Continuar para o Frete →</span>
+                                class="w-full py-3 px-6 bg-green-700 text-white text-sm font-semibold rounded-xl hover:bg-green-800 transition-colors disabled:opacity-60">
+                            <span wire:loading.remove wire:target="goToShipping" class="flex items-center justify-center gap-2">
+                                Continuar para o Frete
+                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"/></svg>
+                            </span>
                             <span wire:loading wire:target="goToShipping">Calculando...</span>
                         </button>
                     </div>
@@ -388,7 +397,7 @@
                  ETAPA 2 — Frete
             ══════════════════════════════════════════════════════ --}}
             @elseif ($step === 2)
-                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 space-y-4"
+                <div class="bg-white rounded-2xl border border-gray-200 p-6 space-y-4"
                      wire:init="loadShipping">
                     <div class="flex items-center gap-3">
                         <h2 class="text-base font-semibold text-gray-900 flex-1">Opções de entrega</h2>
@@ -455,8 +464,9 @@
 
                     <button wire:click="goToPayment"
                             @disabled($loadingShipping || empty($shippingOptions))
-                            class="w-full py-3 px-6 bg-indigo-600 text-white text-sm font-semibold rounded-xl hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
-                        Continuar para o Pagamento →
+                            class="w-full flex items-center justify-center gap-2 py-3 px-6 bg-green-700 text-white text-sm font-semibold rounded-xl hover:bg-green-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                        Continuar para o Pagamento
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"/></svg>
                     </button>
                 </div>
 
@@ -464,7 +474,7 @@
                  ETAPA 3 — Pagamento
             ══════════════════════════════════════════════════════ --}}
             @elseif ($step === 3)
-                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 space-y-5">
+                <div class="bg-white rounded-2xl border border-gray-200 p-6 space-y-5">
                     <div class="flex items-center gap-3">
                         <h2 class="text-base font-semibold text-gray-900 flex-1">Forma de pagamento</h2>
                         <button type="button" wire:click="backTo(2)" class="text-sm text-indigo-600 hover:text-indigo-800">← Frete</button>
@@ -563,8 +573,9 @@
                     @endif
 
                     <button wire:click="goToReview"
-                            class="w-full py-3 px-6 bg-indigo-600 text-white text-sm font-semibold rounded-xl hover:bg-indigo-700 transition-colors">
-                        Revisar pedido →
+                            class="w-full flex items-center justify-center gap-2 py-3 px-6 bg-green-700 text-white text-sm font-semibold rounded-xl hover:bg-green-800 transition-colors">
+                        Revisar pedido
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"/></svg>
                     </button>
                 </div>
 
@@ -575,7 +586,7 @@
                 <div class="space-y-4">
 
                     {{-- Resumo do endereço --}}
-                    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
+                    <div class="bg-white rounded-2xl border border-gray-200 p-5">
                         <div class="flex items-center justify-between mb-3">
                             <h3 class="text-sm font-semibold text-gray-900">Entrega</h3>
                             <button type="button" wire:click="backTo(1)" class="text-xs text-indigo-600 hover:text-indigo-800">Alterar</button>
@@ -588,45 +599,79 @@
                         <p class="text-sm text-gray-500">{{ $addrDistrict }}, {{ $addrCity }}/{{ strtoupper($addrState) }} — {{ $addrZip }}</p>
                     </div>
 
-                    {{-- Resumo do frete --}}
-                    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
-                        <div class="flex items-center justify-between mb-2">
-                            <h3 class="text-sm font-semibold text-gray-900">Frete</h3>
-                            <button type="button" wire:click="backTo(2)" class="text-xs text-indigo-600 hover:text-indigo-800">Alterar</button>
-                        </div>
-                        @if ($this->selectedShipping)
-                            <p class="text-sm text-gray-700">
-                                {{ trim(($this->selectedShipping['company'] ?? '') . ' ' . $this->selectedShipping['name']) }} —
-                                <span class="{{ $this->selectedShipping['price'] == 0 ? 'text-emerald-600 font-semibold' : 'text-gray-700' }}">
-                                    {{ $this->selectedShipping['price'] == 0 ? 'Grátis' : 'R$ ' . number_format($this->selectedShipping['price'], 2, ',', '.') }}
-                                </span>
-                            </p>
-                            <p class="text-xs text-gray-500 mt-0.5">Prazo: {{ $this->selectedShipping['days'] }} dias úteis</p>
-                        @endif
-                    </div>
+                    {{-- Frete + Pagamento lado a lado --}}
+                    <div class="grid grid-cols-2 gap-4">
 
-                    {{-- Resumo do pagamento --}}
-                    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
-                        <div class="flex items-center justify-between mb-2">
-                            <h3 class="text-sm font-semibold text-gray-900">Pagamento</h3>
-                            <button type="button" wire:click="backTo(3)" class="text-xs text-indigo-600 hover:text-indigo-800">Alterar</button>
-                        </div>
-                        <p class="text-sm text-gray-700">
-                            {{ $paymentMethod === 'pix' ? 'PIX' : 'Cartão de crédito' }}
-                            @if ($paymentMethod === 'credit_card' && $cardNumber)
-                                — **** {{ substr(preg_replace('/\D/', '', $cardNumber), -4) }}
-                                @if ($installments > 1)
-                                    em {{ $installments }}x sem juros
-                                @endif
+                        {{-- Resumo do frete --}}
+                        <div class="bg-white rounded-2xl border border-gray-200 p-5">
+                            <div class="flex items-center justify-between mb-2">
+                                <h3 class="text-sm font-semibold text-gray-900">Frete</h3>
+                                <button type="button" wire:click="backTo(2)" class="text-xs text-indigo-600 hover:text-indigo-800">Alterar</button>
+                            </div>
+                            @if ($this->selectedShipping)
+                                <p class="text-sm text-gray-700">
+                                    {{ trim(($this->selectedShipping['company'] ?? '') . ' ' . $this->selectedShipping['name']) }}
+                                </p>
+                                <p class="text-sm mt-0.5">
+                                    <span class="{{ $this->selectedShipping['price'] == 0 ? 'text-emerald-600 font-semibold' : 'text-gray-700' }}">
+                                        {{ $this->selectedShipping['price'] == 0 ? 'Grátis' : 'R$ ' . number_format($this->selectedShipping['price'], 2, ',', '.') }}
+                                    </span>
+                                </p>
+                                <p class="text-xs text-gray-400 mt-0.5">{{ $this->selectedShipping['days'] }} dias úteis</p>
                             @endif
-                        </p>
+                        </div>
+
+                        {{-- Resumo do pagamento --}}
+                        <div class="bg-white rounded-2xl border border-gray-200 p-5">
+                            <div class="flex items-center justify-between mb-2">
+                                <h3 class="text-sm font-semibold text-gray-900">Pagamento</h3>
+                                <button type="button" wire:click="backTo(3)" class="text-xs text-indigo-600 hover:text-indigo-800">Alterar</button>
+                            </div>
+                            <p class="text-sm text-gray-700">
+                                {{ $paymentMethod === 'pix' ? 'PIX' : 'Cartão de crédito' }}
+                            </p>
+                            @if ($paymentMethod === 'credit_card' && $cardNumber)
+                                <p class="text-xs text-gray-500 mt-0.5">
+                                    **** {{ substr(preg_replace('/\D/', '', $cardNumber), -4) }}
+                                    @if ($installments > 1)
+                                        · {{ $installments }}x sem juros
+                                    @endif
+                                </p>
+                            @elseif ($paymentMethod === 'pix')
+                                <p class="text-xs text-gray-400 mt-0.5">Aprovação imediata</p>
+                            @endif
+                        </div>
+
                     </div>
 
-                    {{-- Observações --}}
-                    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
-                        <label class="block text-sm font-semibold text-gray-900 mb-2">Observações (opcional)</label>
-                        <textarea wire:model="notes" rows="2" placeholder="Instruções de entrega, etc."
-                                  class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:outline-none resize-none"></textarea>
+                    {{-- Observações (accordion) --}}
+                    <div x-data="{ open: @js((bool) $notes) }"
+                        class="bg-white rounded-2xl border transition-colors"
+                        :class="open ? 'border-gray-300' : 'border-gray-200'">
+                        <button type="button" @click="open = !open"
+                            class="w-full flex items-center gap-2.5 px-5 py-3 text-sm font-medium text-gray-700 text-left">
+                            <svg class="w-4 h-4 shrink-0 transition-colors" :class="open ? 'text-gray-900' : 'text-gray-400'" fill="none" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 0 1 .865-.501 48.172 48.172 0 0 0 3.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0 0 12 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018Z" />
+                            </svg>
+                            <span class="flex-1 truncate">Observações</span>
+                            @if ($notes)
+                                <span class="w-1.5 h-1.5 rounded-full bg-gray-400 shrink-0"></span>
+                            @endif
+                            <svg class="w-3.5 h-3.5 text-gray-300 shrink-0 transition-transform" :class="open ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+                            </svg>
+                        </button>
+                        <div x-show="open"
+                            x-transition:enter="transition ease-out duration-150"
+                            x-transition:enter-start="opacity-0"
+                            x-transition:enter-end="opacity-100"
+                            x-transition:leave="transition ease-in duration-100"
+                            x-transition:leave-start="opacity-100"
+                            x-transition:leave-end="opacity-0"
+                            class="px-5 pb-4 border-t border-gray-100 pt-3">
+                            <textarea wire:model="notes" rows="2" placeholder="Instruções de entrega, referências, etc."
+                                      class="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-gray-900 focus:border-transparent focus:outline-none resize-none transition"></textarea>
+                        </div>
                     </div>
 
                     {{-- Botão confirmar --}}
@@ -634,7 +679,7 @@
                         wire:click="placeOrder"
                         wire:loading.attr="disabled"
                         wire:target="placeOrder"
-                        class="w-full py-4 px-6 bg-indigo-600 text-white text-base font-bold rounded-2xl hover:bg-indigo-700 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                        class="w-full py-4 px-6 bg-green-700 text-white text-base font-bold rounded-2xl hover:bg-green-800 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
                     >
                         <span wire:loading.remove wire:target="placeOrder">
                             Confirmar Pedido — R$ {{ number_format($this->total, 2, ',', '.') }}
@@ -656,7 +701,7 @@
              COLUNA DIREITA: resumo do pedido (sticky)
         ════════════════════════════════════════════════════════════════ --}}
         <div class="lg:sticky lg:top-24 space-y-4">
-            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
+            <div class="bg-white rounded-2xl border border-gray-200 p-5">
                 <h3 class="text-sm font-semibold text-gray-900 mb-4">
                     Resumo do pedido
                     <span class="text-gray-400 font-normal">({{ $this->cart->item_count }} {{ $this->cart->item_count === 1 ? 'item' : 'itens' }})</span>

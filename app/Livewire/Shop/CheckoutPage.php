@@ -603,6 +603,12 @@ class CheckoutPage extends Component
                 if (! $paymentData) {
                     $this->pendingOrderId = $order->id;
                     Log::error('Checkout: Asaas não retornou payment_data (PIX)', ['order' => $order->order_number]);
+                    app(OrderService::class)->recordFailedPayment(
+                        order:        $order,
+                        method:       'pix',
+                        amount:       (float) $order->total,
+                        errorMessage: 'Falha ao gerar QR Code via Asaas',
+                    );
                     $this->errorMessage = 'Falha ao gerar o QR Code PIX. Tente novamente.';
                     return;
                 }
@@ -633,7 +639,13 @@ class CheckoutPage extends Component
                 if (! $paymentData) {
                     $errorDesc = $asaas->lastError['errors'][0]['description'] ?? null;
                     $this->pendingOrderId = $order->id;
-                    $this->errorMessage   = $errorDesc ?? 'Verifique os dados do cartão e tente novamente.';
+                    app(OrderService::class)->recordFailedPayment(
+                        order:        $order,
+                        method:       'credit_card',
+                        amount:       (float) $order->total,
+                        errorMessage: $errorDesc,
+                    );
+                    $this->errorMessage = $errorDesc ?? 'Verifique os dados do cartão e tente novamente.';
                     $this->step = 3;
                     $this->dispatch('checkout-step-changed', step: 3);
                     return;

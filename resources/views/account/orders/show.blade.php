@@ -304,6 +304,47 @@
             </div>
         </div>
 
+        {{-- Histórico de pagamentos --}}
+        @if ($order->payments->isNotEmpty())
+        <div class="bg-white rounded-2xl border border-gray-200 overflow-hidden">
+            <div class="px-5 py-4 border-b border-gray-100">
+                <h2 class="text-sm font-semibold text-gray-900">Tentativas de Pagamento</h2>
+            </div>
+            <div class="divide-y divide-gray-100">
+                @foreach ($order->payments as $payment)
+                @php
+                    $pDot = match($payment->status) {
+                        'confirmed' => 'bg-emerald-500',
+                        'failed'    => 'bg-red-400',
+                        default     => 'bg-amber-400',
+                    };
+                    $pText = match($payment->status) {
+                        'confirmed' => 'text-emerald-700',
+                        'failed'    => 'text-red-600',
+                        default     => 'text-amber-700',
+                    };
+                @endphp
+                <div class="px-5 py-3.5 flex items-start gap-3">
+                    <span class="mt-1.5 w-2 h-2 rounded-full flex-shrink-0 {{ $pDot }}"></span>
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-center justify-between gap-2 flex-wrap">
+                            <span class="text-xs font-medium {{ $pText }}">
+                                {{ $payment->status_label }}
+                            </span>
+                            <span class="text-xs text-gray-400">{{ $payment->created_at->format('d/m/Y H:i') }}</span>
+                        </div>
+                        @if ($payment->error_message)
+                            <p class="text-xs text-gray-500 mt-0.5">{{ $payment->error_message }}</p>
+                        @elseif ($payment->isConfirmed() && $payment->confirmed_at)
+                            <p class="text-xs text-gray-500 mt-0.5">Confirmado em {{ $payment->confirmed_at->format('d/m/Y \à\s H:i') }}</p>
+                        @endif
+                    </div>
+                </div>
+                @endforeach
+            </div>
+        </div>
+        @endif
+
     </div>
 </div>
 

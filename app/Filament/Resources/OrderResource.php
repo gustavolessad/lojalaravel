@@ -3,6 +3,7 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\OrderResource\Pages;
+use App\Filament\Resources\OrderResource\RelationManagers;
 use App\Mail\OrderShipped;
 use App\Models\Order;
 use Filament\Forms;
@@ -544,6 +545,13 @@ class OrderResource extends Resource
                         Forms\Components\TextInput::make('total')->label('Total')->prefix('R$')->disabled(),
                     ]),
             ]);
+    }
+
+    public static function getRelations(): array
+    {
+        return [
+            RelationManagers\PaymentsRelationManager::class,
+        ];
     }
 
     public static function getPages(): array

@@ -9,6 +9,7 @@ use App\Models\Cart;
 use App\Models\Coupon;
 use App\Models\Customer;
 use App\Models\Order;
+use App\Models\Payment;
 use App\Models\User;
 use App\Services\PaymentCalculator;
 use Filament\Notifications\Actions\Action as NotificationAction;
@@ -218,6 +219,14 @@ class OrderService
             'paid_at'        => now(),
         ]);
 
+        // Confirma o registro de pagamento correspondente
+        $order->payments()
+            ->where('gateway_payment_id', $paymentId)
+            ->update([
+                'status'       => 'confirmed',
+                'confirmed_at' => now(),
+            ]);
+
         // Envia e-mail de pagamento confirmado (via fila)
         if ($order->buyer_email && $order->buyer_email !== '—') {
             Mail::to($order->buyer_email)->queue(new PaymentConfirmed($order));
@@ -250,13 +259,41 @@ class OrderService
     }
 
     /**
-     * Salva os dados de pagamento no pedido (ex: QR code PIX).
+     * Salva os dados de pagamento no pedido e cria o registro na tabela payments.
      */
     public function attachPaymentData(Order $order, string $paymentId, array $data): void
     {
         $order->update([
             'payment_id'   => $paymentId,
             'payment_data' => $data,
+        ]);
+
+        // Cria registro de tentativa de pagamento
+        $order->payments()->create([
+            'gateway'            => 'asaas',
+            'gateway_payment_id' => $paymentId,
+            'method'             => $order->payment_method,
+            'status'             => 'pending',
+            'amount'             => (float) $order->total,
+            'installments'       => $data['installments'] ?? 1,
+            'installment_value'  => $data['installment_value'] ?? null,
+            'data'               => array_filter($data, fn ($k) => in_array($k, [
+                'pix_qrcode', 'pix_copy_paste', 'expires_at', 'invoice_url',
+            ], true), ARRAY_FILTER_USE_KEY),
+        ]);
+    }
+
+    /**
+     * Registra uma tentativa de pagamento que falhou antes de chegar ao gateway.
+     */
+    public function recordFailedPayment(Order $order, string $method, float $amount, ?string $errorMessage = null): void
+    {
+        $order->payments()->create([
+            'gateway'      => 'asaas',
+            'method'       => $method,
+            'status'       => 'failed',
+            'amount'       => $amount,
+            'error_message' => $errorMessage,
         ]);
     }
 }

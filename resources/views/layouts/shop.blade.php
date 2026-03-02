@@ -50,6 +50,11 @@
         </div>
     </header>
 
+    {{-- Slot full-width (banners, hero) — fora do container --}}
+    @hasSection('hero')
+        @yield('hero')
+    @endif
+
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         @if (session('success'))
             <div class="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg text-green-800 text-sm">

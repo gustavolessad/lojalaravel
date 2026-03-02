@@ -32,24 +32,13 @@ class AttributeResource extends Resource
                     ->label('Nome')
                     ->required()
                     ->maxLength(255),
-
-                Forms\Components\Select::make('type')
-                    ->label('Tipo')
-                    ->options([
-                        'select' => 'Seleção',
-                        'color'  => 'Cor',
-                        'text'   => 'Texto',
-                    ])
-                    ->required()
-                    ->default('select')
-                    ->live(),
-            ])->columns(2),
+            ]),
 
             Forms\Components\Section::make('Valores')->schema([
                 Forms\Components\Repeater::make('values')
                     ->label('')
                     ->relationship()
-                    ->schema(fn (Forms\Get $get) => [
+                    ->schema([
                         Forms\Components\TextInput::make('value')
                             ->label('Valor')
                             ->required()
@@ -59,12 +48,8 @@ class AttributeResource extends Resource
                             ->label('Exibição')
                             ->maxLength(100)
                             ->placeholder('Igual ao valor'),
-
-                        Forms\Components\ColorPicker::make('color_hex')
-                            ->label('Cor')
-                            ->visible(fn () => $get('../../type') === 'color'),
                     ])
-                    ->columns(3)
+                    ->columns(2)
                     ->addActionLabel('Adicionar valor')
                     ->reorderable('order')
                     ->cloneable()
@@ -81,22 +66,6 @@ class AttributeResource extends Resource
                     ->label('Nome')
                     ->searchable()
                     ->sortable(),
-
-                Tables\Columns\TextColumn::make('type')
-                    ->label('Tipo')
-                    ->badge()
-                    ->formatStateUsing(fn ($state) => match ($state) {
-                        'select' => 'Seleção',
-                        'color'  => 'Cor',
-                        'text'   => 'Texto',
-                        default  => $state,
-                    })
-                    ->color(fn ($state) => match ($state) {
-                        'select' => 'primary',
-                        'color'  => 'success',
-                        'text'   => 'warning',
-                        default  => 'gray',
-                    }),
 
                 Tables\Columns\TextColumn::make('values_count')
                     ->label('Valores')

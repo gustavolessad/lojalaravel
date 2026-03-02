@@ -2,6 +2,9 @@
 
 namespace App\Models;
 
+use Datlechin\FilamentMenuBuilder\Concerns\HasMenuPanel;
+use Datlechin\FilamentMenuBuilder\Contracts\MenuPanelable;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -9,8 +12,9 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
 use Illuminate\Support\Collection;
 
-class Category extends Model
+class Category extends Model implements MenuPanelable
 {
+    use HasMenuPanel;
     protected $fillable = [
         'parent_id',
         'name',
@@ -109,6 +113,42 @@ class Category extends Model
         }
 
         return $ids;
+    }
+
+    // MenuPanelable interface
+
+    public function getMenuPanelName(): string
+    {
+        return 'Categorias';
+    }
+
+    public function getMenuPanelTitleColumn(): string
+    {
+        return 'menu_label';
+    }
+
+    public function getMenuLabelAttribute(): string
+    {
+        $depth = $this->breadcrumb->count() - 1;
+
+        if ($depth === 0) {
+            return $this->name;
+        }
+
+        return str_repeat('— ', $depth) . $this->name;
+    }
+
+    public function getMenuPanelUrlUsing(): callable
+    {
+        return fn (self $model) => $model->url;
+    }
+
+    public function getMenuPanelModifyQueryUsing(): callable
+    {
+        return fn (Builder $query) => $query
+            ->where('active', true)
+            ->with('parent.parent.parent')
+            ->orderByRaw('COALESCE(parent_id, id), parent_id IS NOT NULL, name');
     }
 
     /**

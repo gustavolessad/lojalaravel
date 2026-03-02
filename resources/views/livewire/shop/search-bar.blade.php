@@ -13,7 +13,7 @@
                 type="search"
                 placeholder="Buscar produtos..."
                 autocomplete="off"
-                class="w-full pl-4 pr-10 py-2 text-sm border border-gray-300 rounded-full bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                class="w-full pl-4 pr-10 py-2 text-sm border border-gray-300 rounded-full bg-gray-50 focus:outline-none focus:ring-1 focus:ring-black focus:border-transparent transition-all"
             >
             <button
                 type="submit"

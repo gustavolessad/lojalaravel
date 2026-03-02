@@ -115,7 +115,7 @@ class ProductDetail extends Component
             'variants' => fn ($q) => $q->where('active', true)
                 ->with(['attributeValues.attribute', 'media'])
                 ->orderBy('order'),
-            'attributes' => fn ($q) => $q->with([
+            'attributes' => fn ($q) => $q->withPivot('expand_in_catalog')->with([
                 'values' => fn ($vq) => $vq
                     ->whereHas('variants', fn ($varq) => $varq
                         ->where('product_id', $this->productId)
@@ -331,6 +331,43 @@ class ProductDetail extends Component
         }
 
         return $result;
+    }
+
+    /**
+     * Mapa de imagens de variante por atributo de expansão.
+     * Retorna [attribute_slug => [value_slug => image_url]] apenas para
+     * atributos que têm expand_in_catalog = true no produto atual.
+     * Usado nos seletores da página de produto para mostrar foto em vez de texto.
+     */
+    #[Computed]
+    public function variantImageMap(): array
+    {
+        $map = [];
+
+        foreach ($this->product->attributes as $attribute) {
+            if (empty($attribute->pivot->expand_in_catalog)) {
+                continue;
+            }
+
+            $map[$attribute->slug] = [];
+
+            foreach ($attribute->values as $value) {
+                // Variante representativa: prefere com estoque; dentro delas, a primeira na ordem
+                $variant = $this->product->variants
+                    ->filter(fn ($v) => $v->attributeValues->contains('id', $value->id))
+                    ->sortByDesc(fn ($v) => ($v->stock ?? 0) > 0 ? 1 : 0)
+                    ->first();
+
+                if ($variant) {
+                    $url = $variant->getFirstMediaUrl('variant-cover', 'thumb');
+                    if ($url) {
+                        $map[$attribute->slug][$value->slug] = $url;
+                    }
+                }
+            }
+        }
+
+        return $map;
     }
 
     // ── Produtos Recomendados (selecionados manualmente no admin) ─────────

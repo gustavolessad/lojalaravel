@@ -14,7 +14,6 @@ class AttributeValue extends Model
         'value',
         'slug',
         'display_value',
-        'color_hex',
         'order',
     ];
 

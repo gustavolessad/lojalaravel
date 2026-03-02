@@ -5,134 +5,229 @@
     {{-- ═══════════════════════════════════════════════════════════════════
          SIDEBAR DE FILTROS
     ════════════════════════════════════════════════════════════════════ --}}
-    <aside class="hidden lg:block w-60 flex-shrink-0 space-y-6">
+    <aside class="hidden lg:block w-60 flex-shrink-0">
 
         {{-- Subcategorias --}}
         @if ($this->subcategories->isNotEmpty())
-            <div>
-                <p class="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-3">Subcategorias</p>
+        <div x-data="{ open: true }" class="border border-gray-200 rounded-xl mb-3">
+            <button @click="open = !open"
+                    class="flex items-center justify-between w-full text-sm py-4 px-4 font-semibold text-gray-800 hover:text-black transition-colors">
+                <span>Categorias</span>
+                <svg class="w-3.5 h-3.5 transition-transform duration-200" :class="open && 'rotate-180'"
+                     fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5"/>
+                </svg>
+            </button>
+            <div x-show="open"
+                 x-transition:enter="transition ease-out duration-150"
+                 x-transition:enter-start="opacity-0"
+                 x-transition:enter-end="opacity-100"
+                 x-transition:leave="transition ease-in duration-100"
+                 x-transition:leave-start="opacity-100"
+                 x-transition:leave-end="opacity-0"
+                 class="pb-3 px-4">
                 <ul class="space-y-0.5">
                     @foreach ($this->subcategories as $sub)
-                        <li>
-                            <a href="{{ $sub->url }}"
-                               class="block text-sm text-gray-600 hover:text-indigo-600 py-1 px-2 rounded-lg hover:bg-indigo-50 transition-colors">
-                                {{ $sub->name }}
-                            </a>
-                        </li>
+                    <li>
+                        <a href="{{ $sub->url }}"
+                           class="block text-sm text-gray-700 hover:text-black py-1 transition-colors">
+                            {{ $sub->name }}
+                        </a>
+                    </li>
                     @endforeach
                 </ul>
             </div>
-            <hr class="border-gray-100">
+        </div>
         @endif
 
         {{-- Marcas (apenas em páginas de categoria) --}}
         @if ($this->availableBrands->isNotEmpty())
-            <div>
-                <p class="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-3">Marca</p>
+        @php $brandOpen = !empty($brandIds); @endphp
+        <div x-data="{ open: @js($brandOpen) }" class="border border-gray-200 rounded-xl mb-3">
+            <button @click="open = !open"
+                    class="flex items-center justify-between w-full py-4 px-4 text-sm font-semibold text-gray-800 hover:text-black transition-colors">
+                <span>Marca</span>
+                <div class="flex items-center gap-1.5">
+                    @if ($brandOpen)
+                    <span class="w-1.5 h-1.5 rounded-full bg-indigo-500 shrink-0"></span>
+                    @endif
+                    <svg class="w-3.5 h-3.5 transition-transform duration-200" :class="open && 'rotate-180'"
+                         fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5"/>
+                    </svg>
+                </div>
+            </button>
+            <div x-show="open"
+                 x-transition:enter="transition ease-out duration-150"
+                 x-transition:enter-start="opacity-0"
+                 x-transition:enter-end="opacity-100"
+                 x-transition:leave="transition ease-in duration-100"
+                 x-transition:leave-start="opacity-100"
+                 x-transition:leave-end="opacity-0"
+                 class="pb-4 px-4">
                 <div class="flex flex-wrap gap-1.5">
                     @foreach ($this->availableBrands as $brand)
-                        @php $isActive = in_array($brand->slug, $brandIds); @endphp
-                        <button
-                            wire:click="toggleBrand('{{ $brand->slug }}')"
-                            @class([
-                                'inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-full border transition-all duration-150',
-                                'bg-gray-900 border-gray-900 text-white shadow-sm' => $isActive,
-                                'bg-white border-gray-200 text-gray-700 hover:border-gray-400 hover:bg-gray-50' => ! $isActive,
-                            ])
-                        >
-                            @if ($brand->getFirstMediaUrl('logo', 'thumb'))
-                                <img src="{{ $brand->getFirstMediaUrl('logo', 'thumb') }}"
-                                     alt=""
-                                     class="h-3 w-auto object-contain {{ $isActive ? 'brightness-0 invert' : '' }}">
-                            @endif
-                            {{ $brand->name }}
-                        </button>
+                    @php $isActive = in_array($brand->slug, $brandIds); @endphp
+                    <button
+                        wire:click="toggleBrand('{{ $brand->slug }}')"
+                        @class([
+                            'inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-full border transition-all duration-150',
+                            'bg-gray-900 border-gray-900 text-white shadow-sm' => $isActive,
+                            'bg-white border-gray-200 text-gray-700 hover:border-gray-400 hover:bg-gray-50' => ! $isActive,
+                        ])
+                    >
+                        @if ($brand->getFirstMediaUrl('logo', 'thumb'))
+                        <img src="{{ $brand->getFirstMediaUrl('logo', 'thumb') }}"
+                             alt=""
+                             class="h-3 w-auto object-contain {{ $isActive ? 'brightness-0 invert' : '' }}">
+                        @endif
+                        {{ $brand->name }}
+                    </button>
                     @endforeach
                 </div>
             </div>
-            <hr class="border-gray-100">
+        </div>
         @endif
 
         {{-- Preço --}}
-        <div>
-            <p class="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-3">Preço</p>
-            <div class="flex items-center gap-2">
-                <div class="relative flex-1">
-                    <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 text-xs">R$</span>
-                    <input type="number"
-                           wire:model.live.debounce.600ms="minPrice"
-                           placeholder="{{ number_format($this->priceRange['min'], 0, ',', '.') }}"
-                           min="0"
-                           class="w-full pl-8 pr-2 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:outline-none bg-white">
+        @php
+            $rangeMin    = (int) floor($this->priceRange['min']);
+            $rangeMax    = (int) ceil($this->priceRange['max']);
+            $currentFrom = $minPrice !== '' ? (int) $minPrice : $rangeMin;
+            $currentTo   = $maxPrice !== '' ? (int) $maxPrice : $rangeMax;
+            $priceOpen   = ($minPrice !== '' || $maxPrice !== '');
+        @endphp
+        @if ($rangeMax > $rangeMin)
+        <div x-data="{
+                open:     @js($priceOpen),
+                rangeMin: {{ $rangeMin }},
+                rangeMax: {{ $rangeMax }},
+                from:     {{ $currentFrom }},
+                to:       {{ $currentTo }},
+                get fromPct() { return ((this.from - this.rangeMin) / (this.rangeMax - this.rangeMin)) * 100 },
+                get toPct()   { return ((this.to   - this.rangeMin) / (this.rangeMax - this.rangeMin)) * 100 },
+                applyMin() {
+                    if (this.from > this.to) this.from = this.to;
+                    $wire.set('minPrice', this.from <= this.rangeMin ? '' : this.from);
+                },
+                applyMax() {
+                    if (this.to < this.from) this.to = this.from;
+                    $wire.set('maxPrice', this.to >= this.rangeMax ? '' : this.to);
+                },
+                reset() { this.from = this.rangeMin; this.to = this.rangeMax; },
+             }"
+             @price-range-reset.window="reset()"
+             class="border border-gray-200 rounded-xl mb-3">
+
+            <button @click="open = !open"
+                    class="flex items-center justify-between w-full py-4 px-4 text-sm font-semibold text-gray-700 hover:text-black transition-colors">
+                <span>Preço</span>
+                <div class="flex items-center gap-1.5">
+                    @if ($priceOpen)
+                    <span class="w-1.5 h-1.5 rounded-full bg-indigo-500 shrink-0"></span>
+                    @endif
+                    <svg class="w-3.5 h-3.5 transition-transform duration-200" :class="open && 'rotate-180'"
+                         fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5"/>
+                    </svg>
                 </div>
-                <span class="text-gray-300 text-xs flex-shrink-0">até</span>
-                <div class="relative flex-1">
-                    <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 text-xs">R$</span>
-                    <input type="number"
-                           wire:model.live.debounce.600ms="maxPrice"
-                           placeholder="{{ number_format($this->priceRange['max'], 0, ',', '.') }}"
-                           min="0"
-                           class="w-full pl-8 pr-2 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:outline-none bg-white">
+            </button>
+
+            <div x-show="open"
+                 x-transition:enter="transition ease-out duration-150"
+                 x-transition:enter-start="opacity-0"
+                 x-transition:enter-end="opacity-100"
+                 x-transition:leave="transition ease-in duration-100"
+                 x-transition:leave-start="opacity-100"
+                 x-transition:leave-end="opacity-0"
+                 class="px-4 pb-5">
+
+                {{-- Valores selecionados --}}
+                <div class="flex justify-between text-xs font-semibold text-gray-700 mb-4">
+                    <span>R$ <span x-text="from.toLocaleString('pt-BR')"></span></span>
+                    <span>R$ <span x-text="to.toLocaleString('pt-BR')"></span></span>
                 </div>
+
+                {{-- Slider duplo --}}
+                <div class="relative flex items-center h-5">
+                    {{-- Track de fundo --}}
+                    <div class="absolute inset-x-0 h-1.5 bg-gray-200 rounded-full pointer-events-none">
+                        {{-- Preenchimento entre os dois thumbs --}}
+                        <div class="absolute h-full bg-indigo-500 rounded-full"
+                             :style="`left: ${fromPct}%; right: ${100 - toPct}%`"></div>
+                    </div>
+
+                    {{-- Thumb mínimo — z-index sobe quando encostado no máximo --}}
+                    <input type="range"
+                           :min="rangeMin" :max="rangeMax" step="1"
+                           x-model.number="from"
+                           @change="applyMin()"
+                           :style="`z-index: ${from >= to ? 3 : 1}`"
+                           class="price-range-input">
+
+                    {{-- Thumb máximo --}}
+                    <input type="range"
+                           :min="rangeMin" :max="rangeMax" step="1"
+                           x-model.number="to"
+                           @change="applyMax()"
+                           style="z-index: 2"
+                           class="price-range-input">
+                </div>
+
+                {{-- Rótulos de extremo --}}
+                <div class="flex justify-between text-xs text-gray-400 mt-3">
+                    <span>R$ {{ number_format($rangeMin, 0, ',', '.') }}</span>
+                    <span>R$ {{ number_format($rangeMax, 0, ',', '.') }}</span>
+                </div>
+
             </div>
         </div>
-
-        <hr class="border-gray-100">
+        @endif
 
         {{-- Atributos --}}
         @foreach ($this->availableAttributes as $attribute)
-            <div>
-                <p class="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-3">
-                    {{ $attribute->name }}
-                </p>
-
-                @if ($attribute->type === 'color')
-                    {{-- Swatches de cor --}}
-                    <div class="flex flex-wrap gap-2">
-                        @foreach ($attribute->values as $value)
-                            @php $isActive = in_array($value->slug, $attrs[$attribute->slug] ?? []); @endphp
-                            <button
-                                wire:click="toggleAttr('{{ $attribute->slug }}', '{{ $value->slug }}')"
-                                title="{{ $value->getLabel() }}"
-                                @class([
-                                    'relative w-8 h-8 rounded-full border-2 transition-all duration-150',
-                                    'border-gray-900 ring-2 ring-offset-2 ring-gray-900 scale-105' => $isActive,
-                                    'border-transparent hover:border-gray-300 hover:scale-105' => ! $isActive,
-                                ])
-                                style="background-color: {{ $value->color_hex }}"
-                            >
-                                @if ($isActive)
-                                    <span class="absolute inset-0 flex items-center justify-center">
-                                        <svg class="w-3.5 h-3.5 text-white drop-shadow-sm" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
-                                        </svg>
-                                    </span>
-                                @endif
-                            </button>
-                        @endforeach
-                    </div>
-                @else
-                    {{-- Pills de texto --}}
-                    <div class="flex flex-wrap gap-1.5">
-                        @foreach ($attribute->values as $value)
-                            @php $isActive = in_array($value->slug, $attrs[$attribute->slug] ?? []); @endphp
-                            <button
-                                wire:click="toggleAttr('{{ $attribute->slug }}', '{{ $value->slug }}')"
-                                @class([
-                                    'px-3 py-1.5 text-xs font-medium rounded-full border transition-all duration-150',
-                                    'bg-gray-900 border-gray-900 text-white shadow-sm' => $isActive,
-                                    'bg-white border-gray-200 text-gray-700 hover:border-gray-400 hover:bg-gray-50' => ! $isActive,
-                                ])
-                            >{{ $value->getLabel() }}</button>
-                        @endforeach
-                    </div>
-                @endif
+        @php $attrOpen = !empty($attrs[$attribute->slug] ?? []); @endphp
+        <div x-data="{ open: @js($attrOpen) }" class="border border-gray-200 rounded-xl mb-3">
+            <button @click="open = !open"
+                    class="flex items-center justify-between w-full py-4 px-4 text-sm font-semibold text-gray-700 hover:text-black transition-colors">
+                <span>{{ $attribute->name }}</span>
+                <div class="flex items-center gap-1.5">
+                    @if ($attrOpen)
+                    <span class="w-1.5 h-1.5 rounded-full bg-indigo-500 shrink-0"></span>
+                    @endif
+                    <svg class="w-3.5 h-3.5 transition-transform duration-200" :class="open && 'rotate-180'"
+                         fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5"/>
+                    </svg>
+                </div>
+            </button>
+            <div x-show="open"
+                 x-transition:enter="transition ease-out duration-150"
+                 x-transition:enter-start="opacity-0"
+                 x-transition:enter-end="opacity-100"
+                 x-transition:leave="transition ease-in duration-100"
+                 x-transition:leave-start="opacity-100"
+                 x-transition:leave-end="opacity-0"
+                 class="pb-4 px-4">
+                <div class="flex flex-wrap gap-1.5">
+                    @foreach ($attribute->values as $value)
+                    @php $isActive = in_array($value->slug, $attrs[$attribute->slug] ?? []); @endphp
+                    <button
+                        wire:click="toggleAttr('{{ $attribute->slug }}', '{{ $value->slug }}')"
+                        @class([
+                            'px-3 py-1.5 text-xs font-medium rounded-full border transition-all duration-150',
+                            'bg-gray-900 border-gray-900 text-white shadow-sm' => $isActive,
+                            'bg-white border-gray-200 text-gray-700 hover:border-gray-400 hover:bg-gray-50' => ! $isActive,
+                        ])
+                    >{{ $value->getLabel() }}</button>
+                    @endforeach
+                </div>
             </div>
-            <hr class="border-gray-100">
+        </div>
         @endforeach
 
         {{-- Em estoque --}}
-        <div>
+        <div class="py-3">
             <button
                 wire:click="$toggle('inStock')"
                 @class([
@@ -143,19 +238,19 @@
             >
                 <span>Somente em estoque</span>
                 @if ($inStock)
-                    <svg class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
-                    </svg>
+                <svg class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+                </svg>
                 @endif
             </button>
         </div>
 
         {{-- Limpar todos (sidebar) --}}
         @if ($this->hasActiveFilters)
-            <button wire:click="resetFilters"
-                    class="w-full text-xs font-medium text-red-500 hover:text-red-700 transition-colors text-left py-1">
-                ← Limpar todos os filtros
-            </button>
+        <button wire:click="resetFilters"
+                class="w-full text-xs font-medium text-red-500 hover:text-red-700 transition-colors text-left py-1">
+            ← Limpar todos os filtros
+        </button>
         @endif
 
     </aside>
@@ -185,8 +280,8 @@
 
         {{-- ── Filtros ativos ──────────────────────────────────────────── --}}
         @if ($this->hasActiveFilters)
-            <div class="flex flex-wrap items-center gap-2 mb-5 px-4 py-3 bg-gray-50 rounded-xl border border-gray-100">
-                <span class="text-xs font-semibold text-gray-400 uppercase tracking-wide flex-shrink-0">Ativos:</span>
+            <div class="flex flex-wrap items-center gap-2 mb-5">
+                <span class="text-xs font-semibold text-gray-400 uppercase tracking-wide flex-shrink-0">Filtros:</span>
 
                 {{-- Marcas --}}
                 @foreach ($brandIds as $bSlug)
@@ -244,11 +339,6 @@
                         </svg>
                     </button>
                 @endif
-
-                <button wire:click="resetFilters"
-                        class="ml-auto text-xs text-gray-400 hover:text-red-600 transition-colors font-medium flex-shrink-0">
-                    Limpar todos
-                </button>
             </div>
         @endif
 

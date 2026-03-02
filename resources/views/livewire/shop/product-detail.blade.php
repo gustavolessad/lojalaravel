@@ -289,47 +289,47 @@
                                         $isOutOfStock = in_array($value->slug, $this->outOfStockValueSlugs[$attribute->slug] ?? []);
                                         // cascade = clicável mas muda outra seleção para manter combinação válida
                                         $isCascade    = ! $isSelected && ! $isAvailable && ! $isOutOfStock;
-                                    @endphp
+                                        // Imagem da variante para atributo de expansão
+                                        $variantThumb = $this->variantImageMap[$attribute->slug][$value->slug] ?? null;
 
-                                    @php
-                                        // SVG reutilizado nos dois tipos de botão
+                                        // SVG badge sem-estoque reutilizado nos botões
                                         $xBadge = '<span class="absolute -top-1 -right-1 z-10 w-4 h-4 bg-red-500 border-2 border-white rounded-full flex items-center justify-center pointer-events-none"><svg class="w-2 h-2 text-white" viewBox="0 0 8 8" fill="none"><path d="M1.5 1.5l5 5M6.5 1.5l-5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></span>';
                                     @endphp
 
-                                    @if ($attribute->type === 'color' && $value->color_hex)
-                                        {{-- ── Swatch de cor — wrapper relative para o X não herdar opacity do botão ── --}}
+                                    @if ($variantThumb)
+                                        {{-- ── Pill com imagem da variante (atributo de expansão com foto) ── --}}
                                         <span class="relative inline-block">
                                             <button
                                                 wire:click="selectValue('{{ $attribute->slug }}', '{{ $value->slug }}')"
                                                 title="{{ $value->getLabel() }}{{ $isOutOfStock ? ' (sem estoque)' : ($isCascade ? ' — vai alterar outra seleção' : '') }}"
                                                 @class([
-                                                    'w-9 h-9 rounded-full border-2 transition-all duration-150',
-                                                    'border-indigo-500 ring-2 ring-indigo-200 scale-110'                    => $isSelected,
-                                                    'border-gray-200 hover:scale-105 hover:border-gray-400'                 => ! $isSelected && $isAvailable && ! $isOutOfStock,
-                                                    'border-dashed border-gray-300 hover:scale-105 hover:border-indigo-400' => $isCascade,
-                                                    'border-gray-200 opacity-40'                                            => $isOutOfStock,
+                                                    'flex items-center gap-2 pl-1.5 pr-3 py-1.5 rounded-xl border font-medium transition-all duration-150 text-sm',
+                                                    'border-gray-500 bg-gray-50 text-gray-700'                                                      => $isSelected,
+                                                    'border-gray-200 text-gray-700 hover:border-gray-400'                                           => ! $isSelected && $isAvailable && ! $isOutOfStock,
+                                                    'border-gray-200 text-gray-400 opacity-60'                                                      => $isAvailable && $isOutOfStock,
+                                                    'border-dashed border-gray-300 text-gray-600 hover:border-gray-400 hover:text-gray-800'         => $isCascade,
+                                                    'border-dashed border-gray-200 text-gray-300 opacity-60'                                        => ! $isAvailable && $isOutOfStock,
                                                 ])
-                                                style="background-color: {{ $value->color_hex }}"
-                                            ></button>
+                                            >
+                                                <img src="{{ $variantThumb }}"
+                                                     alt="{{ $value->getLabel() }}"
+                                                     class="w-8 h-8 rounded-lg object-cover shrink-0 {{ ($isAvailable && $isOutOfStock) || (! $isAvailable && $isOutOfStock) ? 'opacity-50' : '' }}">
+                                                <span>{{ $value->getLabel() }}</span>
+                                            </button>
                                             @if ($isOutOfStock) {!! $xBadge !!} @endif
                                         </span>
                                     @else
-                                        {{-- ── Chip de texto — wrapper relative para o X não herdar opacity do botão ── --}}
+                                        {{-- ── Chip de texto (padrão) ── --}}
                                         <span class="relative inline-block">
                                             <button
                                                 wire:click="selectValue('{{ $attribute->slug }}', '{{ $value->slug }}')"
                                                 @class([
                                                     'px-3.5 py-1.5 text-sm rounded-xl border font-medium transition-all duration-150',
-                                                    // Selecionado
-                                                    'border-indigo-500 bg-indigo-50 text-indigo-700'                        => $isSelected,
-                                                    // Disponível com seleção atual, em estoque
-                                                    'border-gray-200 text-gray-700 hover:border-indigo-400'                 => ! $isSelected && $isAvailable && ! $isOutOfStock,
-                                                    // Disponível mas sem estoque (context-aware)
-                                                    'border-gray-200 text-gray-400'                                         => $isAvailable && $isOutOfStock,
-                                                    // Cascade: vai alterar outra seleção — borda tracejada
-                                                    'border-dashed border-gray-300 text-gray-600 hover:border-indigo-400 hover:text-gray-800' => $isCascade,
-                                                    // Sem estoque + cascade (fora do alcance com seleção atual)
-                                                    'border-dashed border-gray-200 text-gray-300'                           => ! $isAvailable && $isOutOfStock,
+                                                    'border-gray-500 bg-gray-50 text-gray-700'                                                      => $isSelected,
+                                                    'border-gray-200 text-gray-700 hover:border-gray-400'                                           => ! $isSelected && $isAvailable && ! $isOutOfStock,
+                                                    'border-gray-200 text-gray-400'                                                                 => $isAvailable && $isOutOfStock,
+                                                    'border-dashed border-gray-300 text-gray-600 hover:border-gray-400 hover:text-gray-800'         => $isCascade,
+                                                    'border-dashed border-gray-200 text-gray-300'                                                   => ! $isAvailable && $isOutOfStock,
                                                 ])
                                             >{{ $value->getLabel() }}</button>
                                             @if ($isOutOfStock) {!! $xBadge !!} @endif
@@ -378,7 +378,7 @@
                         wire:click="addToCart"
                         wire:loading.attr="disabled"
                         wire:target="addToCart"
-                        class="w-full lg:w-sm py-3 px-6 rounded-xl font-semibold
+                        class="w-full lg:w-sm py-3 px-6 rounded-xl font-bold
                                bg-green-700 text-white hover:bg-green-800
                                transition-colors flex items-center justify-center
                                disabled:opacity-60 disabled:cursor-not-allowed"
@@ -433,7 +433,7 @@
                                     wire:model="notifyEmail"
                                     placeholder="seu@email.com"
                                     class="w-full px-3.5 py-2.5 text-sm border border-gray-300 rounded-xl
-                                           focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:outline-none
+                                           focus:ring-2 focus:ring-gray-500 focus:border-gray-500 focus:outline-none
                                            @error('notifyEmail') border-red-400 @enderror"
                                 >
                                 @error('notifyEmail')

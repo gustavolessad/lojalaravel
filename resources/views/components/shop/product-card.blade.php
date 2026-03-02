@@ -70,12 +70,12 @@
                 @endif
 
                 @if (($cardMode === 'pix' || $cardMode === 'both') && $pixP)
-                    <p class="text-xs text-green-600 mt-0.5 font-medium">
+                    <p class="text-xs text-green-600 mt-0.5 font-bold">
                         R$ {{ number_format($pixP, 2, ',', '.') }} no PIX
                     </p>
                 @endif
                 @if (($cardMode === 'installments' || $cardMode === 'both') && $instLabel)
-                    <p class="text-xs text-gray-500 mt-0.5">{{ $instLabel }}</p>
+                    <p class="text-xs text-gray-900 mt-0.5 font-medium">{{ $instLabel }}</p>
                 @endif
             @endif
         </div>

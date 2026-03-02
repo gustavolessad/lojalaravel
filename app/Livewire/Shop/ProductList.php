@@ -172,6 +172,7 @@ class ProductList extends Component
         $this->maxPrice = '';
         $this->resetPage();
         $this->pushUrl();
+        $this->dispatch('price-range-reset');
     }
 
     public function resetFilters(): void
@@ -184,6 +185,7 @@ class ProductList extends Component
         $this->sort     = 'newest';
         $this->resetPage();
         $this->pushUrl();
+        $this->dispatch('price-range-reset');
     }
 
     // ── Escopo ────────────────────────────────────────────────────────────

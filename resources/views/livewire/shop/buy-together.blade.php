@@ -352,7 +352,7 @@
                         wire:click="addAllToCart"
                         wire:loading.attr="disabled"
                         wire:target="addAllToCart"
-                        class="w-full bg-green-700 text-white font-medium py-2.5 px-4 rounded-xl hover:bg-green-800 transition-colors disabled:opacity-60 flex items-center justify-center gap-2">
+                        class="w-full bg-green-700 text-white text-sm font-bold py-2.5 px-4 rounded-xl hover:bg-green-800 transition-colors disabled:opacity-60 flex items-center justify-center gap-2">
                         <span wire:loading.remove wire:target="addAllToCart">
                             Adicionar {{ $totalItens }} {{ $totalItens === 1 ? 'item' : 'itens' }} ao carrinho
                         </span>

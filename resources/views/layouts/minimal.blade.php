@@ -32,7 +32,7 @@ $contactPhone = $storePhone;
 <body class="min-h-screen @yield('body-class', 'bg-gray-50') flex flex-col antialiased">
 
     {{-- Header --}}
-    <header class="bg-white border-b border-gray-200">
+    <header class="bg-white">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
             <div class="flex items-center">
 
@@ -78,7 +78,7 @@ $contactPhone = $storePhone;
     </main>
 
     {{-- Footer --}}
-    <footer class="bg-white border-t border-gray-200 mt-auto">
+    <footer class="bg-white mt-auto">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
             <div class="flex flex-col items-center gap-6">
 

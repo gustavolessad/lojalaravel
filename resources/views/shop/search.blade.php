@@ -5,7 +5,7 @@
 @section('content')
 
     {{-- Breadcrumb --}}
-    <nav class="flex items-center gap-1.5 text-sm text-gray-500 mb-6">
+    <nav class="flex items-center gap-1.5 text-xs text-gray-500 mb-6">
         <a href="/" class="hover:text-gray-900 transition-colors">Início</a>
         <span class="text-gray-300">/</span>
         <span class="text-gray-900 font-medium">Busca</span>

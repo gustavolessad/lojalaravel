@@ -4,7 +4,7 @@
 
 @section('content')
     {{-- Breadcrumb --}}
-    <nav class="text-sm text-gray-500 mb-6" aria-label="Breadcrumb">
+    <nav class="text-xs text-gray-500 mb-6" aria-label="Breadcrumb">
         <ol class="flex items-center gap-2">
             <li><a href="/" class="hover:text-gray-700">Início</a></li>
             <li><span class="text-gray-300">/</span></li>

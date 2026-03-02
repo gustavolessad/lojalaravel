@@ -1,6 +1,6 @@
 @extends('layouts.minimal')
 
-@section('body-class', 'bg-gray-100')
+
 
 {{-- Mobile Nav fica fora do container para ser full-width --}}
 @section('before-main')

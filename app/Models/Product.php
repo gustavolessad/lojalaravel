@@ -37,6 +37,7 @@ class Product extends Model implements HasMedia
         'height',
         'seo_title',
         'seo_description',
+        'seo_keywords',
         'featured',
         'is_new',
         'active',

@@ -20,6 +20,9 @@ class Brand extends Model implements HasMedia
         'description',
         'website',
         'active',
+        'seo_title',
+        'seo_description',
+        'seo_keywords',
     ];
 
     protected function casts(): array

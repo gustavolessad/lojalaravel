@@ -77,12 +77,28 @@ class ProductResource extends Resource
                         ->label('Preço')
                         ->required()
                         ->numeric()
-                        ->prefix('R$'),
+                        ->prefix('R$')
+                        ->live(onBlur: true),
 
                     Forms\Components\TextInput::make('sale_price')
                         ->label('Preço promocional')
                         ->numeric()
-                        ->prefix('R$'),
+                        ->prefix('R$')
+                        ->disabled(fn (Forms\Get $get): bool => blank($get('price')))
+                        ->dehydrated()
+                        ->helperText('Deve ser menor que o preço normal.')
+                        ->rules([
+                            fn (Forms\Get $get): \Closure => function (string $attribute, mixed $value, \Closure $fail) use ($get) {
+                                if (! filled($value)) return;
+                                if (! filled($get('price'))) {
+                                    $fail('Preencha o preço normal antes de definir o preço promocional.');
+                                    return;
+                                }
+                                if ((float) $value >= (float) $get('price')) {
+                                    $fail('O preço promocional deve ser menor que o preço normal.');
+                                }
+                            },
+                        ]),
 
                     Forms\Components\DateTimePicker::make('sale_start')
                         ->label('Promoção início')
@@ -240,6 +256,7 @@ class ProductResource extends Resource
                                             ($v = $get('../../price'))
                                                 ? 'Padrão: R$ ' . number_format((float) $v, 2, ',', '.')
                                                 : 'Usa preço do produto')
+                                        ->live(onBlur: true)
                                         ->columnSpan(2),
 
                                     Forms\Components\TextInput::make('sale_price')
@@ -250,6 +267,26 @@ class ProductResource extends Resource
                                             ($v = $get('../../sale_price'))
                                                 ? 'Padrão: R$ ' . number_format((float) $v, 2, ',', '.')
                                                 : '—')
+                                        ->disabled(fn (Forms\Get $get): bool =>
+                                            blank($get('price')) && blank($get('../../price'))
+                                        )
+                                        ->dehydrated()
+                                        ->helperText('Deve ser menor que o preço efetivo da variante.')
+                                        ->rules([
+                                            fn (Forms\Get $get): \Closure => function (string $attribute, mixed $value, \Closure $fail) use ($get) {
+                                                if (! filled($value)) return;
+                                                $effectivePrice = filled($get('price'))
+                                                    ? (float) $get('price')
+                                                    : (float) $get('../../price');
+                                                if ($effectivePrice <= 0) {
+                                                    $fail('Preencha o preço (da variante ou do produto) antes de definir o preço promocional.');
+                                                    return;
+                                                }
+                                                if ((float) $value >= $effectivePrice) {
+                                                    $fail('O preço promocional deve ser menor que o preço efetivo da variante.');
+                                                }
+                                            },
+                                        ])
                                         ->columnSpan(2),
 
                                     // Dimensões
@@ -301,6 +338,8 @@ class ProductResource extends Resource
                                         ->multiple()
                                         ->image()
                                         ->reorderable()
+                                        ->panelLayout('grid')
+                                        ->imagePreviewHeight('80')
                                         ->getUploadedFileNameForStorageUsing(function (TemporaryUploadedFile $file, $record): string {
                                             $ext         = strtolower($file->getClientOriginalExtension() ?: 'jpg');
                                             $productSlug = Str::slug($record?->product?->name ?? $record?->name ?? 'variante');
@@ -373,6 +412,11 @@ class ProductResource extends Resource
                     Forms\Components\TextInput::make('seo_description')
                         ->label('Descrição SEO')
                         ->maxLength(255),
+                    Forms\Components\TextInput::make('seo_keywords')
+                        ->label('Palavras-chave SEO')
+                        ->maxLength(255)
+                        ->placeholder('palavra1, palavra2, palavra3')
+                        ->columnSpanFull(),
                 ])->columns(2)->collapsed(),
 
             ])->columnSpan(['lg' => 2]),
@@ -403,22 +447,35 @@ class ProductResource extends Resource
                 ]),
 
                 Forms\Components\Section::make('Categorias')->schema([
-                    Forms\Components\Select::make('categories')
+                    Forms\Components\CheckboxList::make('categories')
                         ->label('')
                         ->relationship('categories', 'name')
-                        ->multiple()
-                        ->preload()
+                        ->allowHtml()
+                        ->options(function (): array {
+                            $options = [];
+                            $buildLevel = function ($categories, int $depth = 0) use (&$buildLevel, &$options) {
+                                foreach ($categories as $cat) {
+                                    $paddingLeft = $depth * 16; // px por nível
+                                    $label = $depth > 0
+                                        ? '<span style="display:flex;align-items:center;padding-left:' . $paddingLeft . 'px"><span style="color:#9ca3af;margin-right:4px">↳</span>' . e($cat->name) . '</span>'
+                                        : e($cat->name);
+                                    $options[$cat->id] = $label;
+                                    if ($cat->children->isNotEmpty()) {
+                                        $buildLevel($cat->children, $depth + 1);
+                                    }
+                                }
+                            };
+                            $buildLevel(
+                                Category::with('children.children')
+                                    ->whereNull('parent_id')
+                                    ->orderBy('name')
+                                    ->get()
+                            );
+                            return $options;
+                        })
                         ->searchable()
-                        ->createOptionForm([
-                            Forms\Components\TextInput::make('name')
-                                ->label('Nome')
-                                ->required()
-                                ->live(onBlur: true)
-                                ->afterStateUpdated(fn ($state, Forms\Set $set) => $set('slug', Str::slug($state))),
-                            Forms\Components\TextInput::make('slug')
-                                ->label('Slug')
-                                ->required(),
-                        ]),
+                        ->bulkToggleable()
+                        ->columns(1),
                 ]),
 
                 Forms\Components\Section::make('Tags')->schema([
@@ -458,6 +515,8 @@ class ProductResource extends Resource
                         ->multiple()
                         ->image()
                         ->reorderable()
+                        ->panelLayout('grid')
+                        ->imagePreviewHeight('80')
                         ->getUploadedFileNameForStorageUsing(function (TemporaryUploadedFile $file, ?Product $record): string {
                             $ext  = strtolower($file->getClientOriginalExtension() ?: 'jpg');
                             $slug = Str::slug($record?->name ?? 'produto');
@@ -477,6 +536,7 @@ class ProductResource extends Resource
                 Tables\Columns\SpatieMediaLibraryImageColumn::make('cover')
                     ->label('')
                     ->collection('cover')
+                    ->conversion('thumb')
                     ->width(48)
                     ->height(48)
                     ->defaultImageUrl(fn () => 'https://ui-avatars.com/api/?name=P&size=48&background=e5e7eb'),
@@ -499,6 +559,11 @@ class ProductResource extends Resource
 
                 Tables\Columns\TextColumn::make('stock')
                     ->label('Estoque')
+                    ->formatStateUsing(fn (Product $record): string =>
+                        $record->type === 'variable'
+                            ? (string) $record->variants()->sum('stock')
+                            : ($record->stock !== null ? (string) (int) $record->stock : '—')
+                    )
                     ->sortable(),
 
                 Tables\Columns\ToggleColumn::make('active')

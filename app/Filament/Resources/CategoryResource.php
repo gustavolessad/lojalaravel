@@ -67,6 +67,11 @@ class CategoryResource extends Resource
                 Forms\Components\TextInput::make('seo_description')
                     ->label('Descrição SEO')
                     ->maxLength(255),
+                Forms\Components\TextInput::make('seo_keywords')
+                    ->label('Palavras-chave SEO')
+                    ->maxLength(255)
+                    ->placeholder('palavra1, palavra2, palavra3')
+                    ->columnSpanFull(),
             ])->columns(2)->collapsed(),
         ]);
     }

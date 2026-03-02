@@ -18,6 +18,7 @@ class Category extends Model
         'description',
         'seo_title',
         'seo_description',
+        'seo_keywords',
         'order',
         'active',
     ];

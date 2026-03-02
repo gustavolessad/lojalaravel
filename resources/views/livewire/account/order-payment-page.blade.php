@@ -3,6 +3,7 @@
 @section('title', 'Efetuar Pagamento — Pedido #' . $order->order_number)
 
 @section('page-content')
+<div>
 
 {{-- Voltar --}}
 <div class="mb-5">
@@ -404,4 +405,5 @@
 
 </div>
 
+</div>
 @endsection

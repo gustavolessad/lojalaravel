@@ -338,6 +338,12 @@ class OrderPaymentPage extends Component
 
     public function render(): View
     {
-        return view('livewire.account.order-payment-page');
+        // Computed properties com #[Computed] não são injetadas automaticamente
+        // dentro de @section quando o view usa @extends — passamos explicitamente.
+        return view('livewire.account.order-payment-page', [
+            'pixTotal'           => isset($this->order) ? $this->pixTotal           : null,
+            'pixSavings'         => isset($this->order) ? $this->pixSavings         : 0.0,
+            'installmentOptions' => isset($this->order) ? $this->installmentOptions : [],
+        ]);
     }
 }

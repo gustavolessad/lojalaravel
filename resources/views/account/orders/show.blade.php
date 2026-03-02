@@ -35,10 +35,21 @@
             <h1 class="text-xl font-semibold text-gray-900">Pedido #{{ $order->order_number }}</h1>
             <p class="text-sm text-gray-500 mt-0.5">Realizado em {{ $order->created_at->format('d/m/Y \à\s H:i') }}</p>
         </div>
-        <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium border {{ $statusConfig['bg'] }} {{ $statusConfig['text'] }} {{ $statusConfig['border'] }}">
-            <span class="w-2 h-2 rounded-full {{ $statusConfig['dot'] }}"></span>
-            {{ $order->status_label }}
-        </span>
+        <div class="flex items-center gap-3 flex-wrap">
+            @if ($order->payment_status === 'pending' && ! in_array($order->status, ['cancelled', 'refunded']))
+            <a href="{{ route('account.orders.payment', $order->order_number) }}"
+               class="inline-flex items-center gap-1.5 bg-gray-900 hover:bg-gray-700 text-white text-sm font-medium px-4 py-2 rounded-xl transition-colors">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25v10.5A2.25 2.25 0 0 0 4.5 19.5Z" />
+                </svg>
+                Efetuar Pagamento
+            </a>
+            @endif
+            <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium border {{ $statusConfig['bg'] }} {{ $statusConfig['text'] }} {{ $statusConfig['border'] }}">
+                <span class="w-2 h-2 rounded-full {{ $statusConfig['dot'] }}"></span>
+                {{ $order->status_label }}
+            </span>
+        </div>
     </div>
 </div>
 
@@ -338,6 +349,30 @@
                         @elseif ($payment->isConfirmed() && $payment->confirmed_at)
                             <p class="text-xs text-gray-500 mt-0.5">Confirmado em {{ $payment->confirmed_at->format('d/m/Y \à\s H:i') }}</p>
                         @endif
+                    </div>
+                </div>
+                @endforeach
+            </div>
+        </div>
+        @endif
+
+        {{-- Histórico do pedido --}}
+        @php $events = $order->orderEvents; @endphp
+        @if ($events->isNotEmpty())
+        <div class="bg-white rounded-2xl border border-gray-200 overflow-hidden">
+            <div class="px-5 py-4 border-b border-gray-100">
+                <h2 class="text-sm font-semibold text-gray-900">Histórico</h2>
+            </div>
+            <div class="divide-y divide-gray-100">
+                @foreach ($events as $event)
+                <div class="px-5 py-3.5 flex items-start gap-3">
+                    <span class="mt-1.5 w-2 h-2 rounded-full flex-shrink-0 {{ $event->dot_color }}"></span>
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-start justify-between gap-2 flex-wrap">
+                            <span class="text-xs font-medium {{ $event->text_color }}">{{ $event->label }}</span>
+                            <span class="text-xs text-gray-400 shrink-0">{{ $event->created_at->format('d/m/Y H:i') }}</span>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-0.5 leading-relaxed">{{ $event->description }}</p>
                     </div>
                 </div>
                 @endforeach

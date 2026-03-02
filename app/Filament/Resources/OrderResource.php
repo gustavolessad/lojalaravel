@@ -551,6 +551,7 @@ class OrderResource extends Resource
     {
         return [
             RelationManagers\PaymentsRelationManager::class,
+            RelationManagers\OrderEventsRelationManager::class,
         ];
     }
 

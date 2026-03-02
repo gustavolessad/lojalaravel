@@ -62,6 +62,7 @@ Route::prefix('minha-conta')->name('account.')->middleware(AuthenticateCustomer:
     Route::prefix('pedidos')->name('orders.')->group(function () {
         Route::get('/', [OrderController::class, 'index'])->name('index');
         Route::get('/{orderNumber}', [OrderController::class, 'show'])->name('show');
+        Route::get('/{orderNumber}/pagamento', \App\Livewire\Account\OrderPaymentPage::class)->name('payment');
     });
 
     // Perfil

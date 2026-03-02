@@ -22,7 +22,7 @@ class OrderController extends Controller
     {
         $order = Order::where('order_number', $orderNumber)
             ->where('customer_id', auth('customer')->id())
-            ->with('items.product', 'items.variant', 'payments')
+            ->with('items.product', 'items.variant', 'payments', 'orderEvents')
             ->firstOrFail();
 
         return view('account.orders.show', compact('order'));

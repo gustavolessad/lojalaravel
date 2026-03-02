@@ -9,6 +9,7 @@ use App\Models\Cart;
 use App\Models\Coupon;
 use App\Models\Customer;
 use App\Models\Order;
+use App\Models\OrderEvent;
 use App\Models\Payment;
 use App\Models\User;
 use App\Services\PaymentCalculator;
@@ -166,6 +167,9 @@ class OrderService
             return $order;
         });
 
+        // Registra evento de criação do pedido
+        $this->logEvent($order, 'order_created', "Pedido criado via checkout — método: {$order->payment_method_label}");
+
         // E-mail ao cliente — falha aqui não desfaz o pedido
         try {
             if ($order->buyer_email && $order->buyer_email !== '—') {
@@ -227,6 +231,9 @@ class OrderService
                 'confirmed_at' => now(),
             ]);
 
+        // Registra evento de confirmação
+        $this->logEvent($order, 'payment_confirmed', 'Pagamento confirmado', ['payment_id' => $paymentId]);
+
         // Envia e-mail de pagamento confirmado (via fila)
         if ($order->buyer_email && $order->buyer_email !== '—') {
             Mail::to($order->buyer_email)->queue(new PaymentConfirmed($order));
@@ -259,6 +266,27 @@ class OrderService
     }
 
     /**
+     * Registra um evento no histórico do pedido.
+     */
+    public function logEvent(Order $order, string $type, string $description, array $metadata = []): void
+    {
+        try {
+            $order->orderEvents()->create([
+                'type'        => $type,
+                'description' => $description,
+                'metadata'    => $metadata ?: null,
+                'created_at'  => now(),
+            ]);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('OrderService: falha ao registrar evento', [
+                'order' => $order->order_number,
+                'type'  => $type,
+                'error' => $e->getMessage(),
+            ]);
+        }
+    }
+
+    /**
      * Salva os dados de pagamento no pedido e cria o registro na tabela payments.
      */
     public function attachPaymentData(Order $order, string $paymentId, array $data): void
@@ -267,6 +295,14 @@ class OrderService
             'payment_id'   => $paymentId,
             'payment_data' => $data,
         ]);
+
+        $methodLabel = match ($order->payment_method) {
+            'pix'         => 'PIX',
+            'credit_card' => 'Cartão de crédito',
+            'boleto'      => 'Boleto',
+            default       => $order->payment_method,
+        };
+        $this->logEvent($order, 'payment_attempted', "Tentativa de pagamento via {$methodLabel} iniciada", ['payment_id' => $paymentId]);
 
         // Cria registro de tentativa de pagamento
         $order->payments()->create([
@@ -289,11 +325,25 @@ class OrderService
     public function recordFailedPayment(Order $order, string $method, float $amount, ?string $errorMessage = null): void
     {
         $order->payments()->create([
-            'gateway'      => 'asaas',
-            'method'       => $method,
-            'status'       => 'failed',
-            'amount'       => $amount,
+            'gateway'       => 'asaas',
+            'method'        => $method,
+            'status'        => 'failed',
+            'amount'        => $amount,
             'error_message' => $errorMessage,
         ]);
+
+        $methodLabel = match ($method) {
+            'pix'         => 'PIX',
+            'credit_card' => 'cartão de crédito',
+            'boleto'      => 'boleto',
+            default       => $method,
+        };
+
+        $desc = "Pagamento via {$methodLabel} falhou";
+        if ($errorMessage) {
+            $desc .= ": {$errorMessage}";
+        }
+
+        $this->logEvent($order, 'payment_failed', $desc, $errorMessage ? ['error' => $errorMessage] : []);
     }
 }

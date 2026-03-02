@@ -23,13 +23,13 @@ class PaymentsRelationManager extends RelationManager
                 Tables\Columns\TextColumn::make('method')
                     ->label('Método')
                     ->badge()
-                    ->formatStateUsing(fn ($s) => match ($s) {
+                    ->formatStateUsing(fn ($state) => match ($state) {
                         'pix'         => 'PIX',
                         'credit_card' => 'Cartão',
                         'boleto'      => 'Boleto',
-                        default       => $s,
+                        default       => $state,
                     })
-                    ->color(fn ($s) => match ($s) {
+                    ->color(fn ($state) => match ($state) {
                         'pix'         => 'success',
                         'credit_card' => 'info',
                         default       => 'gray',
@@ -38,14 +38,14 @@ class PaymentsRelationManager extends RelationManager
                 Tables\Columns\TextColumn::make('status')
                     ->label('Status')
                     ->badge()
-                    ->formatStateUsing(fn ($s) => match ($s) {
+                    ->formatStateUsing(fn ($state) => match ($state) {
                         'pending'   => 'Aguardando',
                         'confirmed' => 'Confirmado',
                         'failed'    => 'Falhou',
                         'refunded'  => 'Reembolsado',
-                        default     => $s,
+                        default     => $state,
                     })
-                    ->color(fn ($s) => match ($s) {
+                    ->color(fn ($state) => match ($state) {
                         'pending'   => 'warning',
                         'confirmed' => 'success',
                         'failed'    => 'danger',
@@ -58,7 +58,7 @@ class PaymentsRelationManager extends RelationManager
 
                 Tables\Columns\TextColumn::make('installments')
                     ->label('Parcelas')
-                    ->formatStateUsing(fn ($s) => $s > 1 ? "{$s}×" : '1×'),
+                    ->formatStateUsing(fn ($state) => $state > 1 ? "{$state}×" : '1×'),
 
                 Tables\Columns\TextColumn::make('gateway_payment_id')
                     ->label('ID Asaas')

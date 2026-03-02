@@ -93,6 +93,26 @@ class CheckoutPage extends Component
         $cart = app(CartService::class)->current()->load('items');
 
         if ($cart->items->isEmpty()) {
+            // Verifica se há um pedido com pagamento pendente salvo na sessão
+            // (cenário: cartão foi recusado e o usuário deu F5 na página)
+            $sessionOrderId = session('checkout_pending_order_id');
+
+            if ($sessionOrderId) {
+                $pendingOrder = Order::find($sessionOrderId);
+
+                if ($pendingOrder && $pendingOrder->payment_status === 'pending') {
+                    $this->pendingOrderId = $pendingOrder->id;
+                    $this->paymentMethod  = $pendingOrder->payment_method;
+                    $this->step           = 3;
+
+                    $customer = Auth::guard('customer')->user();
+                    if (! $customer) {
+                        $this->step = 0;
+                    }
+                    return;
+                }
+            }
+
             $this->redirect(route('cart.index'), navigate: true);
             return;
         }
@@ -602,6 +622,7 @@ class CheckoutPage extends Component
 
                 if (! $paymentData) {
                     $this->pendingOrderId = $order->id;
+                    session(['checkout_pending_order_id' => $order->id]);
                     Log::error('Checkout: Asaas não retornou payment_data (PIX)', ['order' => $order->order_number]);
                     app(OrderService::class)->recordFailedPayment(
                         order:        $order,
@@ -639,6 +660,7 @@ class CheckoutPage extends Component
                 if (! $paymentData) {
                     $errorDesc = $asaas->lastError['errors'][0]['description'] ?? null;
                     $this->pendingOrderId = $order->id;
+                    session(['checkout_pending_order_id' => $order->id]);
                     app(OrderService::class)->recordFailedPayment(
                         order:        $order,
                         method:       'credit_card',
@@ -674,6 +696,7 @@ class CheckoutPage extends Component
             }
 
             $this->pendingOrderId = null;
+            session()->forget('checkout_pending_order_id');
 
             // 3. Redireciona para a confirmação
             $this->redirect(route('order.confirmation', $order->order_number), navigate: false);
@@ -695,6 +718,7 @@ class CheckoutPage extends Component
         // Se voltar para frete ou endereço, descarta o pedido pendente (dados mudaram)
         if ($step <= 2) {
             $this->pendingOrderId = null;
+            session()->forget('checkout_pending_order_id');
         }
         $this->step = max(1, $step);
         $this->dispatch('checkout-step-changed', step: $this->step);

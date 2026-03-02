@@ -241,7 +241,7 @@
             </a>
         @endauth
         <a href="/"
-           class="flex-1 py-2.5 px-5 bg-gray-100 text-gray-700 text-sm font-medium rounded-xl text-center hover:bg-gray-200 transition-colors">
+           class="flex-1 py-2.5 px-5 border border-gray-200 text-gray-600 text-sm font-medium rounded-xl text-center hover:bg-gray-50 transition-colors">
             Continuar comprando
         </a>
     </div>

@@ -41,7 +41,21 @@ class RegisterRequest extends FormRequest
         if ($this->input('type') === 'pf') {
             $rules['name']       = ['required', 'string', 'max:255'];
             $rules['cpf']        = ['required', 'digits:11', new ValidCpf(), 'unique:customers,cpf'];
-            $rules['birth_date'] = ['nullable', 'date', 'before:today'];
+            $rules['birth_date'] = ['nullable', function ($attribute, $value, $fail) {
+                if (! $value) return;
+                if (! preg_match('/^\d{2}\/\d{2}\/\d{4}$/', $value)) {
+                    $fail('Informe a data no formato DD/MM/AAAA.');
+                    return;
+                }
+                $d = \DateTime::createFromFormat('d/m/Y', $value);
+                if (! $d || $d->format('d/m/Y') !== $value) {
+                    $fail('Data de nascimento inválida.');
+                    return;
+                }
+                if ($d >= new \DateTime('today')) {
+                    $fail('A data de nascimento deve ser anterior a hoje.');
+                }
+            }];
         }
 
         if ($this->input('type') === 'pj') {

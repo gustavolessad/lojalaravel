@@ -197,7 +197,8 @@
                                         </div>
                                         <div>
                                             <label class="block text-xs font-medium text-gray-700 mb-1">Data de nascimento</label>
-                                            <input wire:model="registerBirthDate" type="date"
+                                            <input wire:model="registerBirthDate" type="tel"
+                                                   placeholder="DD/MM/AAAA" x-mask="99/99/9999"
                                                    class="w-full px-3.5 py-2 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-gray-900 focus:border-gray-900 focus:outline-none">
                                         </div>
                                     </div>
@@ -695,7 +696,7 @@
                                 <p class="text-xs text-gray-500 mt-0.5">
                                     **** {{ substr(preg_replace('/\D/', '', $cardNumber), -4) }}
                                     @if ($installments > 1)
-                                        · {{ $installments }}x {{ $isInterestFree ? 'sem juros' : 'com juros' }}
+                                        · {{ $installments }}x de R$ {{ number_format($chosenOpt['installment_value'] ?? 0, 2, ',', '.') }} {{ $isInterestFree ? 'sem juros' : 'com juros' }}
                                     @endif
                                 </p>
                             @elseif ($paymentMethod === 'pix')
@@ -743,7 +744,7 @@
                         class="w-full py-4 px-6 bg-green-700 text-white text-base font-bold rounded-2xl hover:bg-green-800 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
                     >
                         <span wire:loading.remove wire:target="placeOrder">
-                            Confirmar Pedido — R$ {{ number_format($this->total, 2, ',', '.') }} no {{ $paymentMethod === 'pix' ? 'PIX' : 'Cartão de crédito' }}
+                            Confirmar Pedido — R$ {{ number_format($this->finalTotal, 2, ',', '.') }} no {{ $paymentMethod === 'pix' ? 'PIX' : 'Cartão de crédito' }}
                         </span>
                         <span wire:loading wire:target="placeOrder" class="flex items-center justify-center gap-2">
                             <svg class="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
@@ -816,9 +817,25 @@
                         @endif
                     </div>
 
+                    {{-- Desconto PIX (visível a partir da etapa de pagamento) --}}
+                    @if ($step >= 3 && $paymentMethod === 'pix' && $this->pixSavings > 0)
+                        <div class="flex justify-between text-emerald-600">
+                            <span>Desconto PIX</span>
+                            <span>− R$ {{ number_format($this->pixSavings, 2, ',', '.') }}</span>
+                        </div>
+                    @endif
+
+                    {{-- Juros de parcelamento (visível quando parcelas com juros selecionadas) --}}
+                    @if ($step >= 3 && $paymentMethod === 'credit_card' && $this->cardInterestAmount > 0)
+                        <div class="flex justify-between text-orange-600">
+                            <span>Juros de parcelamento</span>
+                            <span>+ R$ {{ number_format($this->cardInterestAmount, 2, ',', '.') }}</span>
+                        </div>
+                    @endif
+
                     <div class="flex justify-between font-bold text-gray-900 pt-2 border-t border-gray-100 text-base">
                         <span>Total</span>
-                        <span>R$ {{ number_format($this->total, 2, ',', '.') }}</span>
+                        <span>R$ {{ number_format($step >= 3 ? $this->finalTotal : $this->total, 2, ',', '.') }}</span>
                     </div>
 
                     @php
@@ -826,7 +843,7 @@
                         $pixHint  = $calc->pixPrice($this->total);
                         $instHint = $calc->bestFreeInstallmentLabel($this->total);
                     @endphp
-                    @if ($pixHint || $instHint)
+                    @if ($step < 3 && ($pixHint || $instHint))
                         <div class="pt-3 border-t border-gray-100 space-y-1">
                             @if ($pixHint)
                                 <p class="text-sm text-green-700 text-end">

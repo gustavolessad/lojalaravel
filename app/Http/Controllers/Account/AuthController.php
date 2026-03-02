@@ -50,6 +50,12 @@ class AuthController extends Controller
         $data = $request->validated();
         $data['status'] = 'active';
 
+        // Converte birth_date de DD/MM/AAAA → Y-m-d antes de persistir
+        if (! empty($data['birth_date'])) {
+            $d = \DateTime::createFromFormat('d/m/Y', $data['birth_date']);
+            $data['birth_date'] = $d ? $d->format('Y-m-d') : null;
+        }
+
         $customer = Customer::create($data);
 
         Auth::guard('customer')->login($customer);

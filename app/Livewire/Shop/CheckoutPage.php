@@ -182,6 +182,42 @@ class CheckoutPage extends Component
         return app(PaymentCalculator::class)->pixSavings($this->total);
     }
 
+    /**
+     * Valor dos juros de parcelamento quando o cliente escolhe parcelas com juros.
+     * Retorna 0 quando sem juros ou método != cartão.
+     */
+    #[Computed]
+    public function cardInterestAmount(): float
+    {
+        if ($this->paymentMethod !== 'credit_card' || $this->installments <= 1) {
+            return 0.0;
+        }
+
+        $chosenOpt = collect($this->installmentOptions)->firstWhere('value', $this->installments);
+
+        if (! $chosenOpt || ($chosenOpt['interest_free'] ?? true)) {
+            return 0.0;
+        }
+
+        $actualAmount = round(($chosenOpt['installment_value'] ?? 0) * $this->installments, 2);
+
+        return max(0.0, round($actualAmount - $this->total, 2));
+    }
+
+    /**
+     * Total final considerando método de pagamento escolhido:
+     * PIX → aplica desconto PIX; Cartão com juros → soma os juros.
+     */
+    #[Computed]
+    public function finalTotal(): float
+    {
+        if ($this->paymentMethod === 'pix') {
+            return $this->pixTotal ?? $this->total;
+        }
+
+        return round($this->total + $this->cardInterestAmount, 2);
+    }
+
     // ── Etapa 0: Autenticação ─────────────────────────────────────────────
 
     public function switchAuthMode(string $mode): void
@@ -279,7 +315,13 @@ class CheckoutPage extends Component
         if ($this->registerType === 'pf') {
             $data['name']       = $this->registerName;
             $data['cpf']        = $cpf ?: null;
-            $data['birth_date'] = $this->registerBirthDate ?: null;
+            // Converte birth_date de DD/MM/AAAA → Y-m-d antes de persistir
+            $birthDate = null;
+            if ($this->registerBirthDate) {
+                $d = \DateTime::createFromFormat('d/m/Y', $this->registerBirthDate);
+                $birthDate = $d ? $d->format('Y-m-d') : null;
+            }
+            $data['birth_date'] = $birthDate;
         } else {
             $data['name']               = $this->registerResponsibleName;
             $data['company_name']       = $this->registerCompanyName;

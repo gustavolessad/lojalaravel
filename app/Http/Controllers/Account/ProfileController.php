@@ -27,7 +27,21 @@ class ProfileController extends Controller
         if ($customer->isPF()) {
             $rules['name']       = ['required', 'string', 'max:120'];
             $rules['rg']         = ['nullable', 'string', 'max:20'];
-            $rules['birth_date'] = ['nullable', 'date', 'before:today'];
+            $rules['birth_date'] = ['nullable', function ($attribute, $value, $fail) {
+                if (! $value) return;
+                if (! preg_match('/^\d{2}\/\d{2}\/\d{4}$/', $value)) {
+                    $fail('Informe a data no formato DD/MM/AAAA.');
+                    return;
+                }
+                $d = \DateTime::createFromFormat('d/m/Y', $value);
+                if (! $d || $d->format('d/m/Y') !== $value) {
+                    $fail('Data de nascimento inválida.');
+                    return;
+                }
+                if ($d >= new \DateTime('today')) {
+                    $fail('A data de nascimento deve ser anterior a hoje.');
+                }
+            }];
         } else {
             $rules['company_name']       = ['required', 'string', 'max:120'];
             $rules['responsible_name']   = ['nullable', 'string', 'max:120'];
@@ -35,6 +49,20 @@ class ProfileController extends Controller
         }
 
         $validated = $request->validate($rules);
+
+        // Converte birth_date de DD/MM/AAAA → Y-m-d antes de persistir
+        if (! empty($validated['birth_date'])) {
+            $d = \DateTime::createFromFormat('d/m/Y', $validated['birth_date']);
+            $validated['birth_date'] = $d ? $d->format('Y-m-d') : null;
+        }
+
+        // Remove formatação de máscara dos campos de telefone antes de salvar
+        if (isset($validated['mobile'])) {
+            $validated['mobile'] = preg_replace('/\D/', '', $validated['mobile']) ?: null;
+        }
+        if (isset($validated['phone'])) {
+            $validated['phone'] = preg_replace('/\D/', '', $validated['phone']) ?: null;
+        }
 
         $customer->update($validated);
 

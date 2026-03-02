@@ -17,10 +17,7 @@ class Dashboard extends BaseDashboard
     protected static ?string $navigationIcon = 'heroicon-o-home';
     protected static ?string $title          = 'Dashboard';
 
-    public function getMaxContentWidth(): MaxWidth | string | null
-    {
-        return MaxWidth::Full;
-    }
+    
 
     public function getColumns(): int | array
     {

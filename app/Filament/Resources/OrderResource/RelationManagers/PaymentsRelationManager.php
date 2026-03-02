@@ -61,7 +61,7 @@ class PaymentsRelationManager extends RelationManager
                     ->formatStateUsing(fn ($state) => $state > 1 ? "{$state}×" : '1×'),
 
                 Tables\Columns\TextColumn::make('gateway_payment_id')
-                    ->label('ID Asaas')
+                    ->label('ID Gateway')
                     ->copyable()
                     ->placeholder('—'),
 

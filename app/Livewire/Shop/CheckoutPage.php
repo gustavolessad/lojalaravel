@@ -6,6 +6,7 @@ use App\Mail\CustomerWelcome;
 use App\Models\Cart;
 use App\Models\Customer;
 use App\Models\CustomerAddress;
+use App\Models\Order;
 use App\Rules\ValidCpf;
 use App\Rules\ValidCnpj;
 use App\Services\Payment\PaymentManager;
@@ -548,15 +549,28 @@ class CheckoutPage extends Component
                 $installmentValue  = $chosenInstallment['installment_value'] ?? round($orderTotal / $this->installments, 2);
                 $interestFree      = $chosenInstallment['interest_free'] ?? true;
 
+                // Valor real cobrado no cartão: sem juros = total original;
+                // com juros = installmentValue × parcelas (juros calculados na loja,
+                // Asaas usa installmentValue×n como total — não aplica juros próprios).
+                $actualAmount = $interestFree
+                    ? $orderTotal
+                    : round($installmentValue * $this->installments, 2);
+                $cardInterest = round($actualAmount - $orderTotal, 2);
+
+                // Pré-gera o número do pedido para usar na descrição da cobrança.
+                // Asaas não permite editar cobranças já aprovadas (CONFIRMED), então
+                // precisamos do número antes de criar a charge.
+                $preOrderNumber = Order::generateOrderNumber();
+
                 $expiryParts = explode('/', $this->cardExpiry);
                 $month = $expiryParts[0] ?? '';
                 $year  = $expiryParts[1] ?? '';
 
                 $payload = new PaymentPayload(
                     method:               'credit_card',
-                    amount:               $orderTotal,
-                    description:          'Compra na loja',
-                    reference:            'cart-' . $this->cart->id,
+                    amount:               $actualAmount,
+                    description:          "Pedido #{$preOrderNumber}",
+                    reference:            $preOrderNumber,
                     customerName:         $customer->display_name,
                     customerEmail:        $customer->email,
                     customerCpfCnpj:      $customer->cpf ?? $customer->cnpj,
@@ -586,16 +600,21 @@ class CheckoutPage extends Component
 
                 // Pagamento aprovado → criar pedido, limpar carrinho, decrementar estoque
                 $order = $orderService->createFromCart(
-                    cart:          $this->cart,
-                    address:       $address,
-                    shipping:      $shipping,
+                    cart:         $this->cart,
+                    address:      $address,
+                    shipping:     $shipping,
                     paymentMethod: 'credit_card',
-                    customer:      $customer,
-                    notes:         $this->notes ?: null,
-                    pixDiscount:   0.0,
+                    customer:     $customer,
+                    notes:        $this->notes ?: null,
+                    pixDiscount:  0.0,
+                    cardInterest: $cardInterest,
+                    orderNumber:  $preOrderNumber,
                 );
 
                 $storageData = $result->toStorageArray($this->installments, $installmentValue, $interestFree);
+                if ($cardInterest > 0) {
+                    $storageData['card_interest'] = $cardInterest;
+                }
 
                 $orderService->attachPaymentData(
                     order:     $order,

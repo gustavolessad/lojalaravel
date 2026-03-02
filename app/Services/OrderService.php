@@ -12,6 +12,7 @@ use App\Models\Customer;
 use App\Models\Order;
 use App\Models\OrderEvent;
 use App\Models\Payment;
+use App\Models\Setting;
 use App\Models\User;
 use App\Services\PaymentCalculator;
 use Filament\Notifications\Actions\Action as NotificationAction;
@@ -41,10 +42,12 @@ class OrderService
         array    $guest     = [],
         ?string  $notes       = null,
         float    $pixDiscount  = 0.0,
+        float    $cardInterest = 0.0,
+        ?string  $orderNumber  = null,   // pré-gerado no checkout de cartão
     ): Order {
         // O e-mail é enviado FORA da transaction para não quebrar o pedido
         // caso a fila (Redis) esteja indisponível.
-        $order = DB::transaction(function () use ($cart, $address, $shipping, $paymentMethod, $customer, $guest, $notes, $pixDiscount) {
+        $order = DB::transaction(function () use ($cart, $address, $shipping, $paymentMethod, $customer, $guest, $notes, $pixDiscount, $cardInterest, $orderNumber) {
 
             // ── 1. Lock pessimista + verificação de estoque ───────────────────────
             // Previne overselling quando dois pedidos concorrentes chegam ao mesmo tempo.
@@ -97,14 +100,15 @@ class OrderService
 
             // ── 3. Totais ─────────────────────────────────────────────────────────
             $baseTotal = max(0, $subtotal - $discount) + $shippingCost;
-            $total     = max(0, $baseTotal - $pixDiscount);
+            $total     = max(0, $baseTotal - $pixDiscount) + $cardInterest;
 
             // Cria o pedido
             $order = Order::create([
-                'customer_id' => $customer?->id,
-                'guest_name'  => $customer ? null : ($guest['name'] ?? null),
-                'guest_email' => $customer ? null : ($guest['email'] ?? null),
-                'guest_phone' => $customer ? null : ($guest['phone'] ?? null),
+                'order_number' => $orderNumber,   // null = booted() gera automaticamente
+                'customer_id'  => $customer?->id,
+                'guest_name'   => $customer ? null : ($guest['name'] ?? null),
+                'guest_email'  => $customer ? null : ($guest['email'] ?? null),
+                'guest_phone'  => $customer ? null : ($guest['phone'] ?? null),
 
                 'status'         => 'pending',
                 'payment_status' => 'pending',
@@ -239,31 +243,6 @@ class OrderService
         if ($order->buyer_email && $order->buyer_email !== '—') {
             Mail::to($order->buyer_email)->queue(new PaymentConfirmed($order));
         }
-
-        // Notificação no painel admin
-        try {
-            FilamentNotification::make()
-                ->title('Pagamento confirmado')
-                ->body("Pedido #{$order->order_number} de {$order->buyer_name} — R$ " . number_format($order->total, 2, ',', '.'))
-                ->icon('heroicon-o-check-circle')
-                ->iconColor('success')
-                ->actions([
-                    NotificationAction::make('ver')
-                        ->label('Ver pedido')
-                        ->button()
-                        ->url(\App\Filament\Resources\OrderResource::getUrl('view', ['record' => $order->id]))
-                        ->extraAttributes(function () use ($order) {
-                            $url = \App\Filament\Resources\OrderResource::getUrl('view', ['record' => $order->id]);
-                            return ['x-on:click.prevent' => "markAsRead(); setTimeout(() => { window.location.href = '{$url}'; }, 300)"];
-                        }),
-                ])
-                ->sendToDatabase(User::all());
-        } catch (\Throwable $e) {
-            \Illuminate\Support\Facades\Log::warning('OrderService: falha ao enviar notificação admin (pagamento)', [
-                'order' => $order->order_number,
-                'error' => $e->getMessage(),
-            ]);
-        }
     }
 
     /**
@@ -344,7 +323,7 @@ class OrderService
 
         // Cria registro de tentativa de pagamento
         $order->payments()->create([
-            'gateway'            => 'asaas',
+            'gateway'            => Setting::get('payment_gateway', 'asaas'),
             'gateway_payment_id' => $paymentId,
             'method'             => $order->payment_method,
             'status'             => 'pending',

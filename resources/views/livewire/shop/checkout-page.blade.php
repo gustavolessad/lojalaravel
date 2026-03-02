@@ -688,10 +688,14 @@
                                 {{ $paymentMethod === 'pix' ? 'PIX' : 'Cartão de crédito' }}
                             </p>
                             @if ($paymentMethod === 'credit_card' && $cardNumber)
+                                @php
+                                    $chosenOpt      = collect($this->installmentOptions)->firstWhere('value', $installments);
+                                    $isInterestFree = $chosenOpt['interest_free'] ?? true;
+                                @endphp
                                 <p class="text-xs text-gray-500 mt-0.5">
                                     **** {{ substr(preg_replace('/\D/', '', $cardNumber), -4) }}
                                     @if ($installments > 1)
-                                        · {{ $installments }}x sem juros
+                                        · {{ $installments }}x {{ $isInterestFree ? 'sem juros' : 'com juros' }}
                                     @endif
                                 </p>
                             @elseif ($paymentMethod === 'pix')

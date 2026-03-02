@@ -74,7 +74,7 @@ $contactPhone = $storePhone;
     @yield('before-main')
 
     {{-- Conteúdo da página --}}
-    <main class="@yield('main-class', 'flex-1 max-w-5xl mx-auto w-full px-4 sm:px-6 lg:px-8 pt-10 pb-16')">
+    <main class="@yield('main-class', 'flex-1 max-w-6xl mx-auto w-full px-4 sm:px-6 lg:px-8 pt-10 pb-16')">
         @yield('content')
     </main>
 
@@ -86,7 +86,7 @@ $contactPhone = $storePhone;
                 {{-- Logo --}}
                 <a href="/" class="shrink-0 text-center">
                     @if ($logoUrl)
-                    <img src="{{ $logoUrl }}" alt="{{ $storeName }}" class="h-7 w-auto">
+                    <img src="{{ $logoUrl }}" alt="{{ $storeName }}" class="h-8 w-auto">
                     @else
                     <span class="text-lg font-bold text-gray-800">{{ $storeName }}</span>
                     @endif
@@ -106,21 +106,22 @@ $contactPhone = $storePhone;
                     <p>{{ $storeAddress }}</p>
                     @endif
                     @if ($storeHours)
-                    <p>Atendimento: {{ $storeHours }}</p>
+                    <p>Atendimento: {{ $storeHours }} &nbsp;·&nbsp; 
                     @endif
                     @if ($storePhone || $storeEmail)
-                    <p>
+                    
                         @if ($storePhone){{ $storePhone }}@endif
                         @if ($storePhone && $storeEmail) &nbsp;·&nbsp; @endif
                         @if ($storeEmail){{ $storeEmail }}@endif
                     </p>
                     @endif
+                    <p>© {{ date('Y') }} {{ $storeName }}. Todos os direitos reservados.</p>
                 </div>
 
             </div>
 
             <div class="mt-6 pt-6 border-t border-gray-100 text-center text-xs text-gray-500">
-                © {{ date('Y') }} {{ $storeName }}. Todos os direitos reservados.
+                
                 Desevolvido por Targos
             </div>
         </div>

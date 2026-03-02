@@ -44,7 +44,104 @@
     </div>
 </div>
 
-{{-- Rastreamento (se disponível) --}}
+{{-- Steps de progresso --}}
+@php
+    $isCancelled  = in_array($order->status, ['cancelled', 'refunded']);
+    $paymentPaid  = $order->payment_status === 'paid';
+    $isShipped    = in_array($order->status, ['shipped', 'delivered']);
+    $isDelivered  = $order->status === 'delivered';
+
+    $s2 = $isCancelled && !$paymentPaid
+        ? 'cancelled'
+        : ($paymentPaid ? 'done' : 'current');
+
+    $s3 = $isCancelled ? 'cancelled'
+        : ($isShipped ? 'done' : ($paymentPaid ? 'current' : 'pending'));
+
+    $s4 = $isCancelled ? 'cancelled'
+        : ($isDelivered ? 'done' : ($isShipped ? 'current' : 'pending'));
+
+    $progressSteps = [
+        [
+            'state' => 'done',
+            'label' => 'Pedido criado',
+            'date'  => $order->created_at->format('d/m'),
+        ],
+        [
+            'state' => $s2,
+            'label' => match(true) {
+                $paymentPaid                  => 'Pagamento aprovado',
+                $isCancelled && !$paymentPaid => 'Pagamento cancelado',
+                default                       => 'Aguardando pagamento',
+            },
+            'date'  => $paymentPaid && $order->paid_at ? $order->paid_at->format('d/m') : null,
+        ],
+        [
+            'state' => $s3,
+            'label' => $isShipped ? 'Enviado' : 'Aguardando envio',
+            'date'  => null,
+        ],
+        [
+            'state' => $s4,
+            'label' => $isDelivered ? 'Entregue' : 'Entrega',
+            'date'  => null,
+        ],
+    ];
+@endphp
+<div class="bg-white rounded-2xl border border-gray-200 px-5 py-5 mb-4">
+    <div class="flex items-start">
+        @foreach ($progressSteps as $i => $step)
+
+            {{-- Linha conectora (antes de cada step, exceto o primeiro) --}}
+            @if ($i > 0)
+                <div class="flex-1 mt-[13px]">
+                    <div class="h-0.5 {{ $progressSteps[$i - 1]['state'] === 'done' ? 'bg-green-400' : 'bg-gray-200' }}"></div>
+                </div>
+            @endif
+
+            {{-- Nó do step --}}
+            <div class="flex flex-col items-center text-center w-16 sm:w-20 shrink-0">
+                @if ($step['state'] === 'current')
+                    <div class="relative flex items-center justify-center w-7 h-7">
+                        <span class="absolute inset-0 rounded-full bg-indigo-300 animate-ping"></span>
+                        <div class="relative w-7 h-7 rounded-full flex items-center justify-center bg-indigo-600 text-white">
+                            <span class="w-1.5 h-1.5 rounded-full bg-white block"></span>
+                        </div>
+                    </div>
+                @else
+                    <div class="w-7 h-7 rounded-full flex items-center justify-center
+                        @if ($step['state'] === 'done') bg-green-500 text-white
+                        @elseif ($step['state'] === 'cancelled') bg-red-50 border-2 border-red-200 text-red-400
+                        @else bg-white border-2 border-gray-200 text-gray-300
+                        @endif">
+                        @if ($step['state'] === 'done')
+                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+                            </svg>
+                        @elseif ($step['state'] === 'cancelled')
+                            <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+                            </svg>
+                        @else
+                            <span class="text-xs font-medium">{{ $i + 1 }}</span>
+                        @endif
+                    </div>
+                @endif
+                <p class="mt-2 text-xs font-medium leading-tight
+                    @if ($step['state'] === 'done') text-green-700
+                    @elseif ($step['state'] === 'current') text-indigo-700
+                    @elseif ($step['state'] === 'cancelled') text-red-500
+                    @else text-gray-400
+                    @endif">{{ $step['label'] }}</p>
+                @if (!empty($step['date']))
+                    <p class="text-xs text-gray-400 mt-0.5">{{ $step['date'] }}</p>
+                @endif
+            </div>
+
+        @endforeach
+    </div>
+</div>
+
 {{-- PIX pendente --}}
 @if ($order->payment_method === 'pix' && $order->payment_status === 'pending')
 @php $pd = $order->payment_data ?? []; @endphp
@@ -237,13 +334,13 @@
                 @endif
 
                 @php
-                    $paymentData = $order->payment_data ?? [];
-                    $hasInterest = !empty($paymentData['total_with_interest']) && $paymentData['total_with_interest'] > $order->total;
+                    $paymentData  = $order->payment_data ?? [];
+                    $cardInterest = (float) ($paymentData['card_interest'] ?? 0);
                 @endphp
-                @if ($hasInterest)
+                @if ($cardInterest > 0)
                 <div class="flex items-center justify-between">
                     <span class="text-gray-500">Juros parcelamento</span>
-                    <span class="text-gray-700">+R$ {{ number_format($paymentData['total_with_interest'] - $order->total, 2, ',', '.') }}</span>
+                    <span class="text-gray-700">+R$ {{ number_format($cardInterest, 2, ',', '.') }}</span>
                 </div>
                 @endif
 
@@ -305,71 +402,6 @@
                 @endif
             </div>
         </div>
-
-        {{-- Histórico de pagamentos --}}
-        @if ($order->payments->isNotEmpty())
-        <div class="bg-white rounded-2xl border border-gray-200 overflow-hidden">
-            <div class="px-5 py-4 border-b border-gray-100">
-                <h2 class="text-sm font-semibold text-gray-900">Tentativas de Pagamento</h2>
-            </div>
-            <div class="divide-y divide-gray-100">
-                @foreach ($order->payments as $payment)
-                @php
-                    $pDot = match($payment->status) {
-                        'confirmed' => 'bg-emerald-500',
-                        'failed'    => 'bg-red-400',
-                        default     => 'bg-amber-400',
-                    };
-                    $pText = match($payment->status) {
-                        'confirmed' => 'text-emerald-700',
-                        'failed'    => 'text-red-600',
-                        default     => 'text-amber-700',
-                    };
-                @endphp
-                <div class="px-5 py-3.5 flex items-start gap-3">
-                    <span class="mt-1.5 w-2 h-2 rounded-full flex-shrink-0 {{ $pDot }}"></span>
-                    <div class="flex-1 min-w-0">
-                        <div class="flex items-center justify-between gap-2 flex-wrap">
-                            <span class="text-xs font-medium {{ $pText }}">
-                                {{ $payment->status_label }}
-                            </span>
-                            <span class="text-xs text-gray-400">{{ $payment->created_at->format('d/m/Y H:i') }}</span>
-                        </div>
-                        @if ($payment->error_message)
-                            <p class="text-xs text-gray-500 mt-0.5">{{ $payment->error_message }}</p>
-                        @elseif ($payment->isConfirmed() && $payment->confirmed_at)
-                            <p class="text-xs text-gray-500 mt-0.5">Confirmado em {{ $payment->confirmed_at->format('d/m/Y \à\s H:i') }}</p>
-                        @endif
-                    </div>
-                </div>
-                @endforeach
-            </div>
-        </div>
-        @endif
-
-        {{-- Histórico do pedido --}}
-        @php $events = $order->orderEvents; @endphp
-        @if ($events->isNotEmpty())
-        <div class="bg-white rounded-2xl border border-gray-200 overflow-hidden">
-            <div class="px-5 py-4 border-b border-gray-100">
-                <h2 class="text-sm font-semibold text-gray-900">Histórico</h2>
-            </div>
-            <div class="divide-y divide-gray-100">
-                @foreach ($events as $event)
-                <div class="px-5 py-3.5 flex items-start gap-3">
-                    <span class="mt-1.5 w-2 h-2 rounded-full flex-shrink-0 {{ $event->dot_color }}"></span>
-                    <div class="flex-1 min-w-0">
-                        <div class="flex items-start justify-between gap-2 flex-wrap">
-                            <span class="text-xs font-medium {{ $event->text_color }}">{{ $event->label }}</span>
-                            <span class="text-xs text-gray-400 shrink-0">{{ $event->created_at->format('d/m/Y H:i') }}</span>
-                        </div>
-                        <p class="text-xs text-gray-500 mt-0.5 leading-relaxed">{{ $event->description }}</p>
-                    </div>
-                </div>
-                @endforeach
-            </div>
-        </div>
-        @endif
 
     </div>
 </div>

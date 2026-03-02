@@ -203,6 +203,29 @@ class AsaasGateway implements PaymentGatewayInterface
         return $response->json('id');
     }
 
+    // ── Atualização de cobrança ───────────────────────────────────────────
+
+    /**
+     * Atualiza a descrição e a referência externa de uma cobrança já criada.
+     * Chamado após a criação do pedido para substituir "Compra na loja" pelo
+     * número real do pedido.
+     */
+    public function updatePaymentReference(string $paymentId, string $description, string $externalReference): void
+    {
+        $response = $this->put("/payments/{$paymentId}", [
+            'description'       => $description,
+            'externalReference' => $externalReference,
+        ]);
+
+        if (! $response->successful()) {
+            Log::warning('AsaasGateway: falha ao atualizar referência do pagamento', [
+                'paymentId' => $paymentId,
+                'status'    => $response->status(),
+                'body'      => $response->json(),
+            ]);
+        }
+    }
+
     // ── HTTP ──────────────────────────────────────────────────────────────
 
     private function get(string $path, array $query = []): Response
@@ -213,6 +236,18 @@ class AsaasGateway implements PaymentGatewayInterface
                 ->get("{$this->baseUrl}{$path}", $query);
         } catch (\Throwable $e) {
             Log::error('AsaasGateway: falha de conexão (GET)', ['path' => $path, 'error' => $e->getMessage()]);
+            return Http::response(['error' => $e->getMessage()], 503);
+        }
+    }
+
+    private function put(string $path, array $data): Response
+    {
+        try {
+            return Http::withHeaders($this->headers())
+                ->timeout(15)
+                ->put("{$this->baseUrl}{$path}", $data);
+        } catch (\Throwable $e) {
+            Log::error('AsaasGateway: falha de conexão (PUT)', ['path' => $path, 'error' => $e->getMessage()]);
             return Http::response(['error' => $e->getMessage()], 503);
         }
     }

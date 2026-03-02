@@ -45,7 +45,7 @@ readonly class PaymentResult
             'installments'        => $installments > 1 ? $installments : null,
             'installment_value'   => $installments > 1 ? $installmentValue : null,
             'interest_free'       => $installments > 1 ? $interestFree : null,
-            'total_with_interest' => $installments > 1 ? round($installmentValue * $installments, 2) : null,
+            'total_with_interest' => ($installments > 1 && ! $interestFree) ? round($installmentValue * $installments, 2) : null,
         ], fn ($v) => $v !== null);
     }
 }

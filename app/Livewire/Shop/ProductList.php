@@ -4,6 +4,7 @@ namespace App\Livewire\Shop;
 
 use App\Catalog\BrandScope;
 use App\Catalog\CategoryScope;
+use App\Catalog\SearchScope;
 use App\Contracts\ProductScopeInterface;
 use App\Data\CatalogEntry;
 use App\Models\Attribute;
@@ -22,8 +23,9 @@ class ProductList extends Component
 {
     use WithPagination;
 
-    public string $scopeType = 'category'; // 'category' | 'brand'
-    public int $scopeId;
+    public string $scopeType = 'category'; // 'category' | 'brand' | 'search'
+    public int $scopeId = 0;
+    public string $searchQuery = '';
 
     // URL base da página (salva no mount para uso em requests AJAX do Livewire)
     public string $pageUrl = '';
@@ -37,7 +39,7 @@ class ProductList extends Component
     public string $sort     = 'newest';
 
     // Parâmetros reservados que não são slugs de atributos na URL
-    private const RESERVED_PARAMS = ['min', 'max', 'estoque', 'ordem', 'marca', 'page', 'v'];
+    private const RESERVED_PARAMS = ['min', 'max', 'estoque', 'ordem', 'marca', 'page', 'v', 'q'];
 
     // ── Inicialização ─────────────────────────────────────────────────────
 
@@ -79,6 +81,11 @@ class ProductList extends Component
     private function filterParams(): array
     {
         $params = [];
+
+        // Mantém o termo de busca na URL em modo search
+        if ($this->scopeType === 'search' && $this->searchQuery !== '') {
+            $params['q'] = $this->searchQuery;
+        }
 
         foreach ($this->attrs as $slug => $values) {
             if (! empty($values)) {
@@ -186,6 +193,7 @@ class ProductList extends Component
     {
         return match ($this->scopeType) {
             'brand'  => new BrandScope(Brand::findOrFail($this->scopeId)),
+            'search' => new SearchScope($this->searchQuery),
             default  => new CategoryScope(Category::findOrFail($this->scopeId)),
         };
     }
@@ -440,7 +448,7 @@ class ProductList extends Component
     #[Computed]
     public function availableBrands(): Collection
     {
-        if ($this->scopeType !== 'category') {
+        if ($this->scopeType === 'brand') {
             return collect();
         }
 

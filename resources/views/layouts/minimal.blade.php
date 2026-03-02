@@ -33,13 +33,13 @@ $contactPhone = $storePhone;
 
     {{-- Header --}}
     <header class="bg-white border-b border-gray-200">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex items-center h-16">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div class="flex items-center">
 
                 {{-- Logo --}}
                 <a href="/" class="shrink-0">
                     @if ($logoUrl)
-                    <img src="{{ $logoUrl }}" alt="{{ $storeName }}" class="h-8 w-auto">
+                    <img src="{{ $logoUrl }}" alt="{{ $storeName }}" class="h-10 w-auto">
                     @else
                     <span class="text-xl font-bold text-gray-900 tracking-tight">{{ $storeName }}</span>
                     @endif

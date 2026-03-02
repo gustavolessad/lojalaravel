@@ -19,6 +19,10 @@ Route::get('/', function () {
     return view('welcome');
 });
 
+Route::get('/busca', function () {
+    return view('shop.search');
+})->name('search');
+
 /*
 |--------------------------------------------------------------------------
 | Webhooks (sem CSRF — excluído em bootstrap/app.php)

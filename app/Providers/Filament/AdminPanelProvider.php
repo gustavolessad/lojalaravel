@@ -2,13 +2,19 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Pages\Dashboard;
+use App\Models\Brand;
+use App\Models\Category;
+use App\Models\StorePage;
+use Datlechin\FilamentMenuBuilder\FilamentMenuBuilderPlugin;
+use Datlechin\FilamentMenuBuilder\MenuPanel\ModelMenuPanel;
+use Datlechin\FilamentMenuBuilder\MenuPanel\StaticMenuPanel;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Filament\Navigation\MenuItem;
 use Filament\Navigation\NavigationGroup;
-use App\Filament\Pages\Dashboard;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
@@ -35,7 +41,29 @@ class AdminPanelProvider extends PanelProvider
                 NavigationGroup::make('Vendas'),
                 NavigationGroup::make('Catálogo'),
                 NavigationGroup::make('Marketing'),
+                NavigationGroup::make('Aparência'),
                 NavigationGroup::make('Configurações'),
+            ])
+            ->plugins([
+                FilamentMenuBuilderPlugin::make()
+                    ->addLocation('principal', 'Menu Principal')
+                    ->navigationGroup('Aparência')
+                    ->navigationLabel('Menus')
+                    ->navigationIcon('heroicon-o-bars-3')
+                    ->navigationSort(2)
+                    ->showCustomTextPanel()
+                    ->addMenuPanels([
+                        StaticMenuPanel::make('Links Rápidos')
+                            ->addMany([
+                                'Início'          => '/',
+                                'Todas as Marcas' => '/marcas',
+                                'Carrinho'        => '/carrinho',
+                                'Minha Conta'     => '/minha-conta',
+                            ]),
+                        ModelMenuPanel::make()->model(Category::class),
+                        ModelMenuPanel::make()->model(Brand::class),
+                        ModelMenuPanel::make()->model(StorePage::class),
+                    ]),
             ])
             ->databaseNotifications()
             ->databaseNotificationsPolling('30s')

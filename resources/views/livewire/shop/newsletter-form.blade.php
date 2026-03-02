@@ -1,4 +1,4 @@
-<div>
+<div class="w-full">
     @if ($subscribed)
         <div class="flex flex-col items-center justify-center gap-3 py-4 text-center">
             <div class="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center">
@@ -17,7 +17,7 @@
                     wire:model="name"
                     placeholder="Seu nome"
                     class="w-full px-4 py-3 rounded-xl text-sm text-gray-900 bg-white border-0
-                           focus:ring-2 focus:ring-white focus:outline-none placeholder-gray-400
+                           focus:ring-0 focus:outline-none placeholder-gray-400
                            @error('name') ring-2 ring-red-400 @enderror"
                 >
                 @error('name')
@@ -30,7 +30,7 @@
                     wire:model="email"
                     placeholder="Seu e-mail"
                     class="w-full px-4 py-3 rounded-xl text-sm text-gray-900 bg-white border-0
-                           focus:ring-2 focus:ring-white focus:outline-none placeholder-gray-400
+                           focus:ring-0 focus:outline-none placeholder-gray-400
                            @error('email') ring-2 ring-red-400 @enderror"
                 >
                 @error('email')
@@ -44,7 +44,7 @@
                     x-mask="(99) 99999-9999"
                     placeholder="Seu telefone (opcional)"
                     class="w-full px-4 py-3 rounded-xl text-sm text-gray-900 bg-white border-0
-                           focus:ring-2 focus:ring-white focus:outline-none placeholder-gray-400
+                           focus:ring-0 focus:outline-none placeholder-gray-400
                            @error('phone') ring-2 ring-red-400 @enderror"
                 >
                 @error('phone')
@@ -55,8 +55,8 @@
                 type="submit"
                 wire:loading.attr="disabled"
                 wire:target="subscribe"
-                class="flex-shrink-0 px-6 py-3 bg-white text-indigo-700 text-sm font-semibold
-                       rounded-xl hover:bg-indigo-50 active:scale-95 transition-all duration-150
+                class="flex-shrink-0 px-6 py-3 bg-green-700 text-sm text-white font-semibold
+                       rounded-xl hover:bg-green-800 transition-all duration-150
                        disabled:opacity-60"
             >
                 <span wire:loading.remove wire:target="subscribe">Inscrever-se</span>

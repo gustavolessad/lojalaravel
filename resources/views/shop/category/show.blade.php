@@ -5,7 +5,7 @@
 @section('content')
 
     {{-- Breadcrumb --}}
-    <nav class="flex items-center gap-1.5 text-sm text-gray-500 mb-6">
+    <nav class="flex items-center gap-1.5 text-xs text-gray-500 mb-2">
         <a href="/" class="hover:text-gray-900 transition-colors">Início</a>
         @foreach ($category->breadcrumb as $crumb)
             <span class="text-gray-300">/</span>
@@ -18,7 +18,7 @@
     </nav>
 
     {{-- Cabeçalho da categoria --}}
-    <div class="mb-8">
+    <div class="mb-4">
         <h1 class="text-2xl font-bold text-gray-900">{{ $category->name }}</h1>
         @if ($category->description)
             <p class="text-gray-500 mt-2 text-sm max-w-2xl">{{ $category->description }}</p>

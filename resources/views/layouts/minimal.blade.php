@@ -32,14 +32,14 @@ $contactPhone = $storePhone;
 <body class="min-h-screen @yield('body-class', 'bg-gray-50') flex flex-col antialiased">
 
     {{-- Header --}}
-    <header class="bg-white border-b border-gray-200">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex items-center h-16">
+    <header class="bg-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div class="flex items-center">
 
                 {{-- Logo --}}
                 <a href="/" class="shrink-0">
                     @if ($logoUrl)
-                    <img src="{{ $logoUrl }}" alt="{{ $storeName }}" class="h-8 w-auto">
+                    <img src="{{ $logoUrl }}" alt="{{ $storeName }}" class="h-10 w-auto">
                     @else
                     <span class="text-xl font-bold text-gray-900 tracking-tight">{{ $storeName }}</span>
                     @endif
@@ -78,7 +78,7 @@ $contactPhone = $storePhone;
     </main>
 
     {{-- Footer --}}
-    <footer class="bg-white border-t border-gray-200 mt-auto">
+    <footer class="bg-white mt-auto">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
             <div class="flex flex-col items-center gap-6">
 

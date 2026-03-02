@@ -14,6 +14,7 @@ use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Str;
 use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 
@@ -476,6 +477,41 @@ class ProductResource extends Resource
                         ->searchable()
                         ->bulkToggleable()
                         ->columns(1),
+                ]),
+
+                Forms\Components\Section::make('Compre Junto')->schema([
+                    Forms\Components\Select::make('compraJunto')
+                        ->label('')
+                        ->relationship(
+                            name: 'compraJunto',
+                            titleAttribute: 'name',
+                            modifyQueryUsing: fn (Builder $query, $livewire) => $query->when(
+                                $livewire->record?->id,
+                                fn ($q) => $q->where('id', '!=', $livewire->record->id)
+                            )
+                        )
+                        ->multiple()
+                        ->maxItems(3)
+                        ->searchable()
+                        ->preload()
+                        ->placeholder('Buscar produtos... (máx. 3)'),
+                ]),
+
+                Forms\Components\Section::make('Produtos Recomendados')->schema([
+                    Forms\Components\Select::make('recommended')
+                        ->label('')
+                        ->relationship(
+                            name: 'recommended',
+                            titleAttribute: 'name',
+                            modifyQueryUsing: fn (Builder $query, $livewire) => $query->when(
+                                $livewire->record?->id,
+                                fn ($q) => $q->where('id', '!=', $livewire->record->id)
+                            )
+                        )
+                        ->multiple()
+                        ->searchable()
+                        ->preload()
+                        ->placeholder('Buscar produtos recomendados...'),
                 ]),
 
                 Forms\Components\Section::make('Tags')->schema([

@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Shop;
 
+use App\Data\CatalogEntry;
 use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\StockNotification;
@@ -125,6 +126,7 @@ class ProductDetail extends Component
             'media',
             'categories',
             'brand',
+            'compraJunto',
         ])->findOrFail($this->productId);
     }
 
@@ -331,6 +333,39 @@ class ProductDetail extends Component
         return $result;
     }
 
+    // ── Produtos Recomendados (selecionados manualmente no admin) ─────────
+
+    #[Computed]
+    public function recommendedProducts(): Collection
+    {
+        return $this->product->recommended()
+            ->where('active', true)
+            ->with('media')
+            ->get()
+            ->map(fn (Product $p) => CatalogEntry::fromProduct($p));
+    }
+
+    // ── Produtos da mesma categoria (dinâmico, exclui o atual) ────────────
+
+    #[Computed]
+    public function categoryProducts(): Collection
+    {
+        $categoryIds = $this->product->categories->pluck('id');
+
+        if ($categoryIds->isEmpty()) {
+            return collect();
+        }
+
+        return Product::query()
+            ->where('active', true)
+            ->where('id', '!=', $this->productId)
+            ->whereHas('categories', fn ($q) => $q->whereIn('id', $categoryIds))
+            ->with('media')
+            ->limit(8)
+            ->get()
+            ->map(fn (Product $p) => CatalogEntry::fromProduct($p));
+    }
+
     // ── Ações ─────────────────────────────────────────────────────────────
 
     public function selectValue(string $attrSlug, string $valueSlug): void
@@ -373,6 +408,12 @@ class ProductDetail extends Component
         }
 
         $this->pushUrl();
+
+        // Notifica o BuyTogether sobre a nova variante/preço do produto principal
+        $this->dispatch('main-variant-updated',
+            variantId: $this->currentVariant?->id,
+            price:     (float) $this->currentPrice,
+        );
     }
 
     public function incrementQty(): void

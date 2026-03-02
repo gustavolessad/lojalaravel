@@ -129,6 +129,16 @@ class Product extends Model implements HasMedia
         return $this->hasMany(ProductVariant::class)->orderBy('order');
     }
 
+    public function compraJunto(): BelongsToMany
+    {
+        return $this->belongsToMany(Product::class, 'product_compre_junto', 'product_id', 'related_id');
+    }
+
+    public function recommended(): BelongsToMany
+    {
+        return $this->belongsToMany(Product::class, 'product_recommended', 'product_id', 'recommended_id');
+    }
+
     public function registerMediaCollections(): void
     {
         $this->addMediaCollection('gallery');

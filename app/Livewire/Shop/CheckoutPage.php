@@ -117,6 +117,19 @@ class CheckoutPage extends Component
             ->load(['items.product', 'items.variant.attributeValues.attribute']);
     }
 
+    /**
+     * Retorna o pedido pendente (criado mas com pagamento ainda não confirmado).
+     * Usado no resumo lateral quando o carrinho já foi limpo após createFromCart().
+     */
+    #[Computed]
+    public function pendingOrder(): ?Order
+    {
+        if (! $this->pendingOrderId) {
+            return null;
+        }
+        return Order::with('items')->find($this->pendingOrderId);
+    }
+
     #[Computed]
     public function customer(): ?Customer
     {

@@ -774,8 +774,17 @@
                     @if ($inRetry)
                         {{-- Retry: usa dados snapshot do pedido já criado --}}
                         @foreach ($po->items as $item)
+                            @php
+                                $imgUrl = $item->variant_id
+                                    ? $item->variant?->getFirstMediaUrl('variant-cover', 'thumb')
+                                    : $item->product?->getFirstMediaUrl('cover', 'thumb');
+                            @endphp
                             <div class="flex gap-3 items-center">
-                                <div class="w-10 h-10 flex-shrink-0 rounded-lg bg-gray-100"></div>
+                                <div class="w-10 h-10 flex-shrink-0 rounded-lg overflow-hidden bg-gray-100">
+                                    @if ($imgUrl)
+                                        <img src="{{ $imgUrl }}" alt="" class="w-full h-full object-cover">
+                                    @endif
+                                </div>
                                 <div class="flex-1 min-w-0">
                                     <p class="text-xs font-medium text-gray-900 truncate">{{ $item->product_name }}</p>
                                     @if ($item->variant_label)

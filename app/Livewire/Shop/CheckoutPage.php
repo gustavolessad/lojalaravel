@@ -127,7 +127,7 @@ class CheckoutPage extends Component
         if (! $this->pendingOrderId) {
             return null;
         }
-        return Order::with('items')->find($this->pendingOrderId);
+        return Order::with(['items.product', 'items.variant'])->find($this->pendingOrderId);
     }
 
     #[Computed]

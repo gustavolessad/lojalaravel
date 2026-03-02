@@ -7,6 +7,7 @@ use App\Mail\OrderPlaced;
 use App\Mail\PaymentConfirmed;
 use App\Models\Cart;
 use App\Models\Coupon;
+use App\Models\CouponUsage;
 use App\Models\Customer;
 use App\Models\Order;
 use App\Models\OrderEvent;
@@ -263,6 +264,43 @@ class OrderService
                 'error' => $e->getMessage(),
             ]);
         }
+    }
+
+    /**
+     * Cancela o pedido e restaura o estoque de todos os itens.
+     * Usado pelo comando de cancelamento automático de PIX expirados.
+     */
+    public function cancelAndRestoreStock(Order $order, string $reason = 'Cancelado automaticamente'): void
+    {
+        DB::transaction(function () use ($order, $reason) {
+            // Recarrega itens dentro da transaction para ter dados frescos
+            $items = $order->items()->with(['product', 'variant'])->get();
+
+            foreach ($items as $item) {
+                if ($item->variant) {
+                    $item->variant->increment('stock', $item->quantity);
+                } elseif ($item->product && $item->product->stock !== null) {
+                    $item->product->increment('stock', $item->quantity);
+                }
+            }
+
+            // Estorna uso do cupom, se houver
+            if ($order->coupon_code) {
+                CouponUsage::where('order_id', $order->id)->delete();
+
+                $coupon = Coupon::where('code', $order->coupon_code)->first();
+                if ($coupon && $coupon->uses_count > 0) {
+                    $coupon->decrement('uses_count');
+                }
+            }
+
+            $order->update([
+                'status'         => 'cancelled',
+                'payment_status' => 'cancelled',
+            ]);
+        });
+
+        $this->logEvent($order, 'order_cancelled', $reason);
     }
 
     /**

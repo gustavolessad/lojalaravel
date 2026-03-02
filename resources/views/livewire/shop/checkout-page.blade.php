@@ -759,11 +759,7 @@
         ════════════════════════════════════════════════════════════════ --}}
         <div class="lg:sticky lg:top-24 space-y-4">
             <div class="bg-white rounded-2xl border border-gray-200 p-5">
-                @php
-                    $po         = $this->pendingOrder;
-                    $inRetry    = $pendingOrderId && $po;
-                    $itemCount  = $inRetry ? $po->items->sum('quantity') : $this->cart->item_count;
-                @endphp
+                @php $itemCount = $this->cart->item_count; @endphp
 
                 <h3 class="text-sm font-semibold text-gray-900 mb-4">
                     Resumo do pedido
@@ -771,68 +767,34 @@
                 </h3>
 
                 <div class="space-y-3 mb-4">
-                    @if ($inRetry)
-                        {{-- Retry: usa dados snapshot do pedido já criado --}}
-                        @foreach ($po->items as $item)
-                            @php
-                                $imgUrl = $item->variant_id
-                                    ? $item->variant?->getFirstMediaUrl('variant-cover', 'thumb')
-                                    : $item->product?->getFirstMediaUrl('cover', 'thumb');
-                            @endphp
-                            <div class="flex gap-3 items-center">
-                                <div class="w-10 h-10 flex-shrink-0 rounded-lg overflow-hidden bg-gray-100">
-                                    @if ($imgUrl)
-                                        <img src="{{ $imgUrl }}" alt="" class="w-full h-full object-cover">
-                                    @endif
-                                </div>
-                                <div class="flex-1 min-w-0">
-                                    <p class="text-xs font-medium text-gray-900 truncate">{{ $item->product_name }}</p>
-                                    @if ($item->variant_label)
-                                        <p class="text-xs text-gray-500">{{ $item->variant_label }}</p>
-                                    @endif
-                                    <p class="text-xs text-gray-500">Qtd: {{ $item->quantity }}</p>
-                                </div>
-                                <p class="text-xs font-semibold text-gray-900 flex-shrink-0">
-                                    R$ {{ number_format($item->total, 2, ',', '.') }}
-                                </p>
+                    @foreach ($this->cart->items as $item)
+                        <div class="flex gap-3 items-center">
+                            <div class="w-10 h-10 flex-shrink-0 rounded-lg overflow-hidden bg-gray-100">
+                                @if ($item->image_url)
+                                    <img src="{{ $item->image_url }}" alt="" class="w-full h-full object-cover">
+                                @endif
                             </div>
-                        @endforeach
-                    @else
-                        {{-- Normal: usa dados do carrinho --}}
-                        @foreach ($this->cart->items as $item)
-                            <div class="flex gap-3 items-center">
-                                <div class="w-10 h-10 flex-shrink-0 rounded-lg overflow-hidden bg-gray-100">
-                                    @if ($item->image_url)
-                                        <img src="{{ $item->image_url }}" alt="" class="w-full h-full object-cover">
-                                    @endif
-                                </div>
-                                <div class="flex-1 min-w-0">
-                                    <p class="text-xs font-medium text-gray-900 truncate">{{ $item->product->name }}</p>
-                                    @if ($item->variant)
-                                        <p class="text-xs text-gray-500">{{ $item->variant->label }}</p>
-                                    @endif
-                                    <p class="text-xs text-gray-500">Qtd: {{ $item->quantity }}</p>
-                                </div>
-                                <p class="text-xs font-semibold text-gray-900 flex-shrink-0">
-                                    R$ {{ number_format($item->subtotal, 2, ',', '.') }}
-                                </p>
+                            <div class="flex-1 min-w-0">
+                                <p class="text-xs font-medium text-gray-900 truncate">{{ $item->product->name }}</p>
+                                @if ($item->variant)
+                                    <p class="text-xs text-gray-500">{{ $item->variant->label }}</p>
+                                @endif
+                                <p class="text-xs text-gray-500">Qtd: {{ $item->quantity }}</p>
                             </div>
-                        @endforeach
-                    @endif
+                            <p class="text-xs font-semibold text-gray-900 flex-shrink-0">
+                                R$ {{ number_format($item->subtotal, 2, ',', '.') }}
+                            </p>
+                        </div>
+                    @endforeach
                 </div>
 
                 <div class="border-t border-gray-100 pt-3 space-y-2 text-sm">
                     <div class="flex justify-between text-gray-600">
                         <span>Subtotal</span>
-                        <span>R$ {{ number_format($inRetry ? $po->subtotal : $this->cart->subtotal, 2, ',', '.') }}</span>
+                        <span>R$ {{ number_format($this->cart->subtotal, 2, ',', '.') }}</span>
                     </div>
 
-                    @if ($inRetry && $po->discount > 0)
-                        <div class="flex justify-between text-emerald-600">
-                            <span>Desconto{{ $po->coupon_code ? ' (' . $po->coupon_code . ')' : '' }}</span>
-                            <span>− R$ {{ number_format($po->discount, 2, ',', '.') }}</span>
-                        </div>
-                    @elseif (! $inRetry && $this->cart->coupon_discount > 0)
+                    @if ($this->cart->coupon_discount > 0)
                         <div class="flex justify-between text-emerald-600">
                             <span>Cupom ({{ $this->cart->coupon_code }})</span>
                             <span>− R$ {{ number_format($this->cart->coupon_discount, 2, ',', '.') }}</span>
@@ -841,11 +803,7 @@
 
                     <div class="flex justify-between text-gray-600">
                         <span>Frete</span>
-                        @if ($inRetry)
-                            <span class="{{ $po->shipping_cost == 0 ? 'text-emerald-600' : '' }}">
-                                {{ $po->shipping_cost == 0 ? 'Grátis' : 'R$ ' . number_format($po->shipping_cost, 2, ',', '.') }}
-                            </span>
-                        @elseif ($this->selectedShipping)
+                        @if ($this->selectedShipping)
                             <span class="{{ $this->selectedShipping['price'] == 0 ? 'text-emerald-600' : '' }}">
                                 {{ $this->selectedShipping['price'] == 0 ? 'Grátis' : 'R$ ' . number_format($this->selectedShipping['price'], 2, ',', '.') }}
                             </span>
@@ -856,28 +814,25 @@
 
                     <div class="flex justify-between font-bold text-gray-900 pt-2 border-t border-gray-100 text-base">
                         <span>Total</span>
-                        <span>R$ {{ number_format($inRetry ? $po->total : $this->total, 2, ',', '.') }}</span>
+                        <span>R$ {{ number_format($this->total, 2, ',', '.') }}</span>
                     </div>
 
-                    {{-- Hints PIX / Parcelamento (não exibir durante retry) --}}
-                    @if (! $inRetry)
-                        @php
-                            $calc     = app(\App\Services\PaymentCalculator::class);
-                            $pixHint  = $calc->pixPrice($this->total);
-                            $instHint = $calc->bestFreeInstallmentLabel($this->total);
-                        @endphp
-                        @if ($pixHint || $instHint)
-                            <div class="pt-3 border-t border-gray-100 space-y-1">
-                                @if ($pixHint)
-                                    <p class="text-sm text-green-700 text-end">
-                                        ou <span class="font-semibold">R$ {{ number_format($pixHint, 2, ',', '.') }}</span> no PIX
-                                    </p>
-                                @endif
-                                @if ($instHint)
-                                    <p class="text-xs text-gray-500 text-end">ou {{ $instHint }}</p>
-                                @endif
-                            </div>
-                        @endif
+                    @php
+                        $calc     = app(\App\Services\PaymentCalculator::class);
+                        $pixHint  = $calc->pixPrice($this->total);
+                        $instHint = $calc->bestFreeInstallmentLabel($this->total);
+                    @endphp
+                    @if ($pixHint || $instHint)
+                        <div class="pt-3 border-t border-gray-100 space-y-1">
+                            @if ($pixHint)
+                                <p class="text-sm text-green-700 text-end">
+                                    ou <span class="font-semibold">R$ {{ number_format($pixHint, 2, ',', '.') }}</span> no PIX
+                                </p>
+                            @endif
+                            @if ($instHint)
+                                <p class="text-xs text-gray-500 text-end">ou {{ $instHint }}</p>
+                            @endif
+                        </div>
                     @endif
                 </div>
             </div>

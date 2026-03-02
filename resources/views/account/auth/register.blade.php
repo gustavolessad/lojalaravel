@@ -3,23 +3,29 @@
 @section('title', 'Criar conta')
 @section('heading', 'Crie sua conta')
 
+@section('icon')
+    <svg class="w-3.5 h-3.5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
+    </svg>
+@endsection
+
 @section('form')
-    <form method="POST" action="{{ route('account.register') }}" class="space-y-5" x-data="{ type: '{{ old('type', 'pf') }}' }">
+    <form method="POST" action="{{ route('account.register') }}" class="space-y-4" x-data="{ type: '{{ old('type', 'pf') }}' }">
         @csrf
 
         {{-- Tipo de pessoa --}}
         <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">Tipo de cadastro</label>
+            <label class="block text-xs font-medium text-gray-700 mb-1.5">Tipo de cadastro</label>
             <div class="grid grid-cols-2 gap-3">
                 <label
-                    class="flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg border-2 cursor-pointer transition-colors"
+                    class="flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl border-2 cursor-pointer transition-colors"
                     :class="type === 'pf' ? 'border-gray-900 bg-gray-900 text-white' : 'border-gray-200 text-gray-600 hover:border-gray-400'"
                 >
                     <input type="radio" name="type" value="pf" x-model="type" class="sr-only">
                     <span class="text-sm font-medium">Pessoa Física</span>
                 </label>
                 <label
-                    class="flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg border-2 cursor-pointer transition-colors"
+                    class="flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl border-2 cursor-pointer transition-colors"
                     :class="type === 'pj' ? 'border-gray-900 bg-gray-900 text-white' : 'border-gray-200 text-gray-600 hover:border-gray-400'"
                 >
                     <input type="radio" name="type" value="pj" x-model="type" class="sr-only">
@@ -33,11 +39,11 @@
 
         {{-- Nome --}}
         <div>
-            <label for="name" class="block text-sm font-medium text-gray-700 mb-1">
+            <label for="name" class="block text-xs font-medium text-gray-700 mb-1.5">
                 Nome completo
             </label>
             <input type="text" id="name" name="name" value="{{ old('name') }}" required
-                class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-900 @error('name') border-red-400 @enderror"
+                class="w-full rounded-xl border border-gray-300 px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent @error('name') border-red-400 @enderror"
                 placeholder="Seu nome completo">
             @error('name')
                 <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
@@ -46,11 +52,11 @@
 
         {{-- CPF (Pessoa Física) --}}
         <div x-show="type === 'pf'" x-transition>
-            <label for="cpf" class="block text-sm font-medium text-gray-700 mb-1">CPF</label>
+            <label for="cpf" class="block text-xs font-medium text-gray-700 mb-1.5">CPF</label>
             <input type="text" id="cpf" name="cpf" value="{{ old('cpf') }}"
                 x-bind:required="type === 'pf'"
                 x-mask="999.999.999-99"
-                class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-900 @error('cpf') border-red-400 @enderror"
+                class="w-full rounded-xl border border-gray-300 px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent @error('cpf') border-red-400 @enderror"
                 placeholder="000.000.000-00">
             @error('cpf')
                 <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
@@ -59,12 +65,12 @@
 
         {{-- Data de nascimento (Pessoa Física) --}}
         <div x-show="type === 'pf'" x-transition>
-            <label for="birth_date" class="block text-sm font-medium text-gray-700 mb-1">
+            <label for="birth_date" class="block text-xs font-medium text-gray-700 mb-1.5">
                 Data de nascimento
             </label>
             <input type="tel" id="birth_date" name="birth_date" value="{{ old('birth_date') }}"
                 placeholder="DD/MM/AAAA" x-mask="99/99/9999"
-                class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-900 @error('birth_date') border-red-400 @enderror">
+                class="w-full rounded-xl border border-gray-300 px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent @error('birth_date') border-red-400 @enderror">
             @error('birth_date')
                 <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
             @enderror
@@ -72,12 +78,12 @@
 
         {{-- Razão Social (Pessoa Jurídica) --}}
         <div x-show="type === 'pj'" x-transition>
-            <label for="company_name" class="block text-sm font-medium text-gray-700 mb-1">
+            <label for="company_name" class="block text-xs font-medium text-gray-700 mb-1.5">
                 Razão Social
             </label>
             <input type="text" id="company_name" name="company_name" value="{{ old('company_name') }}"
                 x-bind:required="type === 'pj'"
-                class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-900 @error('company_name') border-red-400 @enderror"
+                class="w-full rounded-xl border border-gray-300 px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent @error('company_name') border-red-400 @enderror"
                 placeholder="Nome da empresa">
             @error('company_name')
                 <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
@@ -86,11 +92,11 @@
 
         {{-- CNPJ (Pessoa Jurídica) --}}
         <div x-show="type === 'pj'" x-transition>
-            <label for="cnpj" class="block text-sm font-medium text-gray-700 mb-1">CNPJ</label>
+            <label for="cnpj" class="block text-xs font-medium text-gray-700 mb-1.5">CNPJ</label>
             <input type="text" id="cnpj" name="cnpj" value="{{ old('cnpj') }}"
                 x-bind:required="type === 'pj'"
                 x-mask="99.999.999/9999-99"
-                class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-900 @error('cnpj') border-red-400 @enderror"
+                class="w-full rounded-xl border border-gray-300 px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent @error('cnpj') border-red-400 @enderror"
                 placeholder="00.000.000/0000-00">
             @error('cnpj')
                 <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
@@ -99,12 +105,12 @@
 
         {{-- Nome do Responsável (Pessoa Jurídica) --}}
         <div x-show="type === 'pj'" x-transition>
-            <label for="responsible_name" class="block text-sm font-medium text-gray-700 mb-1">
+            <label for="responsible_name" class="block text-xs font-medium text-gray-700 mb-1.5">
                 Nome do responsável
             </label>
             <input type="text" id="responsible_name" name="responsible_name" value="{{ old('responsible_name') }}"
                 x-bind:required="type === 'pj'"
-                class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-900 @error('responsible_name') border-red-400 @enderror"
+                class="w-full rounded-xl border border-gray-300 px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent @error('responsible_name') border-red-400 @enderror"
                 placeholder="Nome completo do responsável">
             @error('responsible_name')
                 <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
@@ -113,9 +119,9 @@
 
         {{-- E-mail --}}
         <div>
-            <label for="email" class="block text-sm font-medium text-gray-700 mb-1">E-mail</label>
+            <label for="email" class="block text-xs font-medium text-gray-700 mb-1.5">E-mail</label>
             <input type="email" id="email" name="email" value="{{ old('email') }}" required
-                class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-900 @error('email') border-red-400 @enderror"
+                class="w-full rounded-xl border border-gray-300 px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent @error('email') border-red-400 @enderror"
                 placeholder="seu@email.com">
             @error('email')
                 <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
@@ -124,20 +130,20 @@
 
         {{-- Celular --}}
         <div>
-            <label for="mobile" class="block text-sm font-medium text-gray-700 mb-1">
+            <label for="mobile" class="block text-xs font-medium text-gray-700 mb-1.5">
                 Celular
             </label>
             <input type="tel" id="mobile" name="mobile" value="{{ old('mobile') }}"
                 x-mask="(99) 99999-9999"
-                class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
+                class="w-full rounded-xl border border-gray-300 px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
                 placeholder="(00) 00000-0000">
         </div>
 
         {{-- Senha --}}
         <div>
-            <label for="password" class="block text-sm font-medium text-gray-700 mb-1">Senha</label>
+            <label for="password" class="block text-xs font-medium text-gray-700 mb-1.5">Senha</label>
             <input type="password" id="password" name="password" required
-                class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-900 @error('password') border-red-400 @enderror"
+                class="w-full rounded-xl border border-gray-300 px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent @error('password') border-red-400 @enderror"
                 placeholder="Mínimo 8 caracteres">
             @error('password')
                 <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
@@ -146,26 +152,28 @@
 
         {{-- Confirmar Senha --}}
         <div>
-            <label for="password_confirmation" class="block text-sm font-medium text-gray-700 mb-1">
+            <label for="password_confirmation" class="block text-xs font-medium text-gray-700 mb-1.5">
                 Confirmar senha
             </label>
             <input type="password" id="password_confirmation" name="password_confirmation" required
-                class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
+                class="w-full rounded-xl border border-gray-300 px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
                 placeholder="Repita a senha">
         </div>
 
         <button
             type="submit"
-            class="w-full bg-gray-900 text-white py-2.5 px-4 rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-900"
+            class="w-full bg-gray-900 text-white py-2.5 px-5 rounded-xl text-sm font-medium hover:bg-gray-700 transition-colors"
         >
             Criar conta
         </button>
     </form>
 
-    <p class="mt-6 text-center text-sm text-gray-600">
-        Já tem conta?
-        <a href="{{ route('account.login') }}" class="font-medium text-gray-900 hover:underline">
-            Entrar
-        </a>
-    </p>
+    <div class="mt-5 pt-4 border-t border-gray-100 text-center">
+        <p class="text-sm text-gray-500">
+            Já tem conta?
+            <a href="{{ route('account.login') }}" class="font-medium text-gray-900 hover:underline">
+                Entrar
+            </a>
+        </p>
+    </div>
 @endsection

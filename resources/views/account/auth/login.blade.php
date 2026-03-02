@@ -3,13 +3,19 @@
 @section('title', 'Entrar')
 @section('heading', 'Acesse sua conta')
 
+@section('icon')
+    <svg class="w-3.5 h-3.5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" />
+    </svg>
+@endsection
+
 @section('form')
-    <form method="POST" action="{{ route('account.login') }}" class="space-y-5">
+    <form method="POST" action="{{ route('account.login') }}" class="space-y-4">
         @csrf
 
         {{-- E-mail --}}
         <div>
-            <label for="email" class="block text-sm font-medium text-gray-700 mb-1">
+            <label for="email" class="block text-xs font-medium text-gray-700 mb-1.5">
                 E-mail
             </label>
             <input
@@ -19,7 +25,7 @@
                 value="{{ old('email') }}"
                 autocomplete="email"
                 required
-                class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent @error('email') border-red-400 @enderror"
+                class="w-full rounded-xl border border-gray-300 px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent @error('email') border-red-400 @enderror"
                 placeholder="seu@email.com"
             >
             @error('email')
@@ -29,8 +35,8 @@
 
         {{-- Senha --}}
         <div>
-            <div class="flex justify-between items-center mb-1">
-                <label for="password" class="block text-sm font-medium text-gray-700">
+            <div class="flex justify-between items-center mb-1.5">
+                <label for="password" class="block text-xs font-medium text-gray-700">
                     Senha
                 </label>
                 <a href="#" class="text-xs text-gray-500 hover:text-gray-900">Esqueceu a senha?</a>
@@ -41,7 +47,7 @@
                 name="password"
                 autocomplete="current-password"
                 required
-                class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent @error('password') border-red-400 @enderror"
+                class="w-full rounded-xl border border-gray-300 px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent @error('password') border-red-400 @enderror"
                 placeholder="••••••••"
             >
             @error('password')
@@ -64,16 +70,18 @@
 
         <button
             type="submit"
-            class="w-full bg-gray-900 text-white py-2.5 px-4 rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-900"
+            class="w-full bg-gray-900 text-white py-2.5 px-5 rounded-xl text-sm font-medium hover:bg-gray-700 transition-colors"
         >
             Entrar
         </button>
     </form>
 
-    <p class="mt-6 text-center text-sm text-gray-600">
-        Não tem cadastro?
-        <a href="{{ route('account.register') }}" class="font-medium text-gray-900 hover:underline">
-            Criar conta
-        </a>
-    </p>
+    <div class="mt-5 pt-4 border-t border-gray-100 text-center">
+        <p class="text-sm text-gray-500">
+            Não tem cadastro?
+            <a href="{{ route('account.register') }}" class="font-medium text-gray-900 hover:underline">
+                Criar conta
+            </a>
+        </p>
+    </div>
 @endsection

@@ -7,18 +7,38 @@
 
         {{-- ═══════════════════════════════════════════════════════════════
              GALERIA DE IMAGENS (Alpine.js — reinicializa via wire:key)
+             Layout: thumbnails verticais à esquerda + imagem principal
+             Lightbox: clique na imagem principal para abrir
         ═══════════════════════════════════════════════════════════════ --}}
         <div
-            x-data='{ images: @json($this->currentImages->toArray()), activeIdx: 0 }'
+            x-data='{
+                images: @json($this->currentImages->toArray()),
+                activeIdx: 0,
+                lightboxOpen: false,
+                prev() { this.activeIdx = (this.activeIdx - 1 + this.images.length) % this.images.length },
+                next() { this.activeIdx = (this.activeIdx + 1) % this.images.length },
+                openAt(idx) { this.activeIdx = idx; this.lightboxOpen = true },
+                close() { this.lightboxOpen = false }
+            }'
             wire:key="gallery-{{ $this->currentVariant?->id ?? 'base' }}"
-            class="space-y-3"
+            @keydown.window="if (lightboxOpen) {
+                if ($event.key === 'ArrowLeft')  { $event.preventDefault(); prev() }
+                if ($event.key === 'ArrowRight') { $event.preventDefault(); next() }
+                if ($event.key === 'Escape')     { close() }
+            }"
         >
+            {{-- ── Galeria: mobile = imagem + thumbs baixo | desktop = thumbs esquerda + imagem ── --}}
+
             {{-- Imagem principal --}}
-            <div class="aspect-square bg-gray-100 rounded-2xl overflow-hidden">
+            <div
+                @click="images.length > 0 && openAt(activeIdx)"
+                :class="images.length > 0 ? 'cursor-zoom-in' : ''"
+                class="relative aspect-square bg-gray-100 rounded-2xl overflow-hidden group sm:hidden"
+            >
                 <template x-if="images.length > 0">
                     <img :src="images[activeIdx]"
                          alt="{{ $this->product->name }}"
-                         class="w-full h-full object-cover">
+                         class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.02]">
                 </template>
                 <template x-if="images.length === 0">
                     <div class="w-full h-full flex items-center justify-center text-gray-300">
@@ -28,68 +48,178 @@
                         </svg>
                     </div>
                 </template>
+                <div x-show="images.length > 0"
+                     class="absolute bottom-3 right-3 bg-black/30 text-white rounded-lg p-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m5.25 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15" />
+                    </svg>
+                </div>
             </div>
 
-            {{-- Miniaturas --}}
-            <template x-if="images.length > 1">
-                <div class="flex gap-2 overflow-x-auto pb-1">
-                    <template x-for="(img, idx) in images" :key="idx">
+            {{-- Thumbnails horizontais — mobile only (embaixo da imagem) --}}
+            <div x-show="images.length > 1"
+                 class="flex gap-2 mt-2 overflow-x-auto pb-1 sm:hidden">
+                <template x-for="(img, idx) in images" :key="'mob-' + idx">
+                    <button
+                        @click="activeIdx = idx"
+                        :class="activeIdx === idx ? 'opacity-100' : 'opacity-40 hover:opacity-75'"
+                        class="w-[60px] h-[60px] shrink-0 rounded-xl overflow-hidden bg-gray-100 transition-opacity duration-150"
+                    >
+                        <img :src="img" class="w-full h-full object-cover">
+                    </button>
+                </template>
+            </div>
+
+            {{-- Layout desktop: thumbnails esquerda + imagem principal --}}
+            <div class="hidden sm:flex gap-3">
+
+                {{-- Miniaturas verticais --}}
+                <div x-show="images.length > 1"
+                     class="flex flex-col gap-2 shrink-0 w-[72px] overflow-y-auto max-h-[480px]">
+                    <template x-for="(img, idx) in images" :key="'desk-' + idx">
                         <button
                             @click="activeIdx = idx"
-                            :class="activeIdx === idx
-                                ? 'ring-2 ring-indigo-500 ring-offset-1'
-                                : 'ring-1 ring-gray-200 hover:ring-gray-300'"
-                            class="flex-shrink-0 w-16 h-16 rounded-xl overflow-hidden transition-all"
+                            :class="activeIdx === idx ? 'opacity-100' : 'opacity-40 hover:opacity-75'"
+                            class="w-[68px] h-[68px] shrink-0 rounded-xl overflow-hidden bg-gray-100 transition-opacity duration-150"
                         >
                             <img :src="img" class="w-full h-full object-cover">
                         </button>
                     </template>
                 </div>
-            </template>
-        </div>
+
+                {{-- Imagem principal --}}
+                <div
+                    @click="images.length > 0 && openAt(activeIdx)"
+                    :class="images.length > 0 ? 'cursor-zoom-in' : ''"
+                    class="flex-1 relative aspect-square bg-gray-100 rounded-2xl overflow-hidden group"
+                >
+                    <template x-if="images.length > 0">
+                        <img :src="images[activeIdx]"
+                             alt="{{ $this->product->name }}"
+                             class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.02]">
+                    </template>
+                    <template x-if="images.length === 0">
+                        <div class="w-full h-full flex items-center justify-center text-gray-300">
+                            <svg class="w-24 h-24" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1"
+                                      d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                            </svg>
+                        </div>
+                    </template>
+                    {{-- Ícone de zoom (aparece no hover) --}}
+                    <div x-show="images.length > 0"
+                         class="absolute bottom-3 right-3 bg-black/30 text-white rounded-lg p-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m5.25 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15" />
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            {{-- ── Lightbox ──────────────────────────────────────────────── --}}
+            <div
+                x-show="lightboxOpen"
+                x-transition:enter="transition ease-out duration-200"
+                x-transition:enter-start="opacity-0"
+                x-transition:enter-end="opacity-100"
+                x-transition:leave="transition ease-in duration-150"
+                x-transition:leave-start="opacity-100"
+                x-transition:leave-end="opacity-0"
+                @click.self="close()"
+                class="fixed inset-0 z-50 bg-black/90 flex flex-col items-center justify-center p-4 sm:p-8"
+                style="display: none;"
+            >
+                {{-- Botão fechar --}}
+                <button
+                    @click="close()"
+                    class="absolute top-4 right-4 bg-white/10 hover:bg-white/25 text-white/80 hover:text-white rounded-full p-2 transition-colors"
+                >
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+
+                {{-- Contador (ex.: 2 / 5) --}}
+                <div x-show="images.length > 1"
+                     class="absolute top-4 left-4 text-white/50 text-sm tabular-nums select-none">
+                    <span x-text="activeIdx + 1"></span> / <span x-text="images.length"></span>
+                </div>
+
+                {{-- Imagem + botões prev / next --}}
+                <div class="relative flex items-center justify-center w-full max-w-5xl">
+
+                    <button
+                        @click.stop="prev()"
+                        x-show="images.length > 1"
+                        class="absolute left-0 sm:-left-14 z-10 bg-white/10 hover:bg-white/25 text-white rounded-full p-2 sm:p-3 transition-colors"
+                    >
+                        <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+                        </svg>
+                    </button>
+
+                    <img
+                        :src="images[activeIdx]"
+                        alt="{{ $this->product->name }}"
+                        class="max-h-[75vh] max-w-full object-contain rounded-xl select-none"
+                        @click.stop
+                    >
+
+                    <button
+                        @click.stop="next()"
+                        x-show="images.length > 1"
+                        class="absolute right-0 sm:-right-14 z-10 bg-white/10 hover:bg-white/25 text-white rounded-full p-2 sm:p-3 transition-colors"
+                    >
+                        <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                        </svg>
+                    </button>
+                </div>
+
+                {{-- Strip de miniaturas na parte inferior --}}
+                <div x-show="images.length > 1"
+                     class="flex gap-2 mt-5 overflow-x-auto max-w-full pb-1">
+                    <template x-for="(img, idx) in images" :key="idx">
+                        <button
+                            @click.stop="activeIdx = idx"
+                            :class="activeIdx === idx ? 'opacity-100' : 'opacity-40 hover:opacity-75'"
+                            class="w-14 h-14 rounded-xl overflow-hidden shrink-0 transition-opacity duration-150"
+                        >
+                            <img :src="img" class="w-full h-full object-cover">
+                        </button>
+                    </template>
+                </div>
+            </div>
+
+        </div>{{-- /gallery --}}
 
         {{-- ═══════════════════════════════════════════════════════════════
              INFORMAÇÕES DO PRODUTO
         ═══════════════════════════════════════════════════════════════ --}}
         <div class="flex flex-col space-y-5">
 
-            {{-- Categoria + Marca --}}
-            @if ($this->product->categories->isNotEmpty() || $this->product->brand)
-                <div class="flex items-center gap-2 text-sm flex-wrap">
-                    @if ($this->product->categories->isNotEmpty())
-                        @php $cat = $this->product->categories->first(); @endphp
-                        <a href="{{ $cat->url }}"
-                           class="font-medium text-indigo-600 hover:text-indigo-800 transition-colors">
-                            {{ $cat->name }}
-                        </a>
-                    @endif
-                    @if ($this->product->categories->isNotEmpty() && $this->product->brand)
-                        <span class="text-gray-300">·</span>
-                    @endif
-                    @if ($this->product->brand)
-                        <a href="{{ $this->product->brand->url }}"
-                           class="flex items-center gap-1.5 text-gray-500 hover:text-gray-800 transition-colors">
-                            @if ($this->product->brand->getFirstMediaUrl('logo', 'thumb'))
-                                <img src="{{ $this->product->brand->getFirstMediaUrl('logo', 'thumb') }}"
-                                     alt="{{ $this->product->brand->name }}"
-                                     class="h-4 w-auto object-contain">
-                            @else
-                                {{ $this->product->brand->name }}
-                            @endif
-                        </a>
-                    @endif
-                </div>
-            @endif
-
             {{-- Título --}}
-            <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 leading-tight">
+            <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 leading-tight mb-1">
                 {{ $this->product->name }}
             </h1>
 
-            {{-- SKU --}}
+            {{-- SKU + Marca --}}
             @php $sku = $this->currentVariant?->sku ?? $this->product->sku; @endphp
-            @if ($sku)
-                <p class="text-xs text-gray-400 -mt-2">REF: {{ $sku }}</p>
+            @if ($sku || $this->product->brand)
+                <div class="flex items-center gap-3 flex-wrap mb-4">
+                    @if ($sku)
+                        <p class="text-xs text-gray-400">REF: {{ $sku }}</p>
+                    @endif
+                    @if ($sku && $this->product->brand)
+                        <span class="text-gray-200 select-none">|</span>
+                    @endif
+                    @if ($this->product->brand)
+                        <p class="text-xs text-gray-400">Marca: <a href="{{ $this->product->brand->url }}"
+                           class="text-xs text-gray-500 hover:text-gray-800 transition-colors">
+                            {{ $this->product->brand->name }}
+                        </a></p>
+                    @endif
+                </div>
             @endif
 
             {{-- Preço + hints PIX/Parcelamento --}}
@@ -174,10 +304,10 @@
                                                 title="{{ $value->getLabel() }}{{ $isOutOfStock ? ' (sem estoque)' : ($isCascade ? ' — vai alterar outra seleção' : '') }}"
                                                 @class([
                                                     'w-9 h-9 rounded-full border-2 transition-all duration-150',
-                                                    'border-indigo-600 ring-2 ring-indigo-300 scale-110'                => $isSelected,
-                                                    'border-gray-300 hover:scale-105 hover:border-gray-400'             => ! $isSelected && $isAvailable && ! $isOutOfStock,
-                                                    'border-dashed border-gray-400 hover:scale-105 hover:border-indigo-400' => $isCascade,
-                                                    'border-gray-200 opacity-40'                                        => $isOutOfStock,
+                                                    'border-indigo-500 ring-2 ring-indigo-200 scale-110'                    => $isSelected,
+                                                    'border-gray-200 hover:scale-105 hover:border-gray-400'                 => ! $isSelected && $isAvailable && ! $isOutOfStock,
+                                                    'border-dashed border-gray-300 hover:scale-105 hover:border-indigo-400' => $isCascade,
+                                                    'border-gray-200 opacity-40'                                            => $isOutOfStock,
                                                 ])
                                                 style="background-color: {{ $value->color_hex }}"
                                             ></button>
@@ -189,17 +319,17 @@
                                             <button
                                                 wire:click="selectValue('{{ $attribute->slug }}', '{{ $value->slug }}')"
                                                 @class([
-                                                    'px-4 py-2 text-sm rounded-lg border font-medium transition-all duration-150',
+                                                    'px-3.5 py-1.5 text-sm rounded-xl border font-medium transition-all duration-150',
                                                     // Selecionado
-                                                    'border-indigo-600 bg-indigo-50 text-indigo-700'                       => $isSelected,
+                                                    'border-indigo-500 bg-indigo-50 text-indigo-700'                        => $isSelected,
                                                     // Disponível com seleção atual, em estoque
-                                                    'border-gray-300 text-gray-700 hover:border-indigo-400'                => ! $isSelected && $isAvailable && ! $isOutOfStock,
+                                                    'border-gray-200 text-gray-700 hover:border-indigo-400'                 => ! $isSelected && $isAvailable && ! $isOutOfStock,
                                                     // Disponível mas sem estoque (context-aware)
-                                                    'border-gray-200 text-gray-400'                                        => $isAvailable && $isOutOfStock,
+                                                    'border-gray-200 text-gray-400'                                         => $isAvailable && $isOutOfStock,
                                                     // Cascade: vai alterar outra seleção — borda tracejada
-                                                    'border-dashed border-gray-400 text-gray-600 hover:border-indigo-400 hover:text-gray-800' => $isCascade,
+                                                    'border-dashed border-gray-300 text-gray-600 hover:border-indigo-400 hover:text-gray-800' => $isCascade,
                                                     // Sem estoque + cascade (fora do alcance com seleção atual)
-                                                    'border-dashed border-gray-200 text-gray-300'                          => ! $isAvailable && $isOutOfStock,
+                                                    'border-dashed border-gray-200 text-gray-300'                           => ! $isAvailable && $isOutOfStock,
                                                 ])
                                             >{{ $value->getLabel() }}</button>
                                             @if ($isOutOfStock) {!! $xBadge !!} @endif
@@ -211,28 +341,6 @@
                     @endforeach
                 </div>
             @endif
-
-            {{-- ─── Status de estoque ──────────────────────────────── --}}
-            <div>
-                @if ($this->inStock)
-                    <span class="inline-flex items-center gap-1.5 text-sm text-emerald-700">
-                        <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
-                        Em estoque
-                        @if ($this->currentVariant && $this->currentStock > 0 && $this->currentStock <= 5)
-                            <span class="text-amber-600 font-medium">
-                                (apenas {{ $this->currentStock }} {{ $this->currentStock === 1 ? 'unidade' : 'unidades' }})
-                            </span>
-                        @endif
-                    </span>
-                @elseif ($this->product->isVariable() && ! $this->currentVariant)
-                    <span class="text-sm text-gray-400">Selecione as opções para ver disponibilidade</span>
-                @else
-                    <span class="inline-flex items-center gap-1.5 text-sm text-red-500">
-                        <span class="w-2 h-2 rounded-full bg-red-500"></span>
-                        Fora de estoque
-                    </span>
-                @endif
-            </div>
 
             {{-- ─── Ações de compra ────────────────────────────────── --}}
             @php
@@ -248,20 +356,20 @@
 
             @if ($canBuy)
                 {{-- ── Em estoque: quantidade + botão ──────────────── --}}
-                <div class="flex items-center gap-3 pt-1">
+                <div class="flex items-center gap-2.5 pt-1">
 
-                    {{-- Seletor de quantidade --}}
-                    <div class="flex items-center border border-gray-300 rounded-xl overflow-hidden select-none">
+                    {{-- Seletor de quantidade (oculto por ora — ajuste no carrinho) --}}
+                    <div class="hidden flex items-center border border-gray-200 rounded-xl overflow-hidden select-none">
                         <button
                             wire:click="decrementQty"
-                            class="px-3.5 py-2.5 text-gray-600 hover:bg-gray-100 transition-colors text-lg leading-none"
+                            class="px-3 py-2 text-gray-500 hover:bg-gray-100 transition-colors text-base leading-none"
                         >−</button>
-                        <span class="px-4 py-2.5 text-sm font-semibold min-w-[44px] text-center tabular-nums">
+                        <span class="px-3 py-2 text-sm font-semibold min-w-[36px] text-center tabular-nums border-x border-gray-200">
                             {{ $quantity }}
                         </span>
                         <button
                             wire:click="incrementQty"
-                            class="px-3.5 py-2.5 text-gray-600 hover:bg-gray-100 transition-colors text-lg leading-none"
+                            class="px-3 py-2 text-gray-500 hover:bg-gray-100 transition-colors text-base leading-none"
                         >+</button>
                     </div>
 
@@ -270,15 +378,15 @@
                         wire:click="addToCart"
                         wire:loading.attr="disabled"
                         wire:target="addToCart"
-                        class="flex-1 py-3 px-6 rounded-xl text-sm font-semibold
+                        class="w-full lg:w-sm py-3 px-6 rounded-xl font-semibold
                                bg-green-700 text-white hover:bg-green-800
-                               active:scale-95 transition-colors
+                               transition-colors flex items-center justify-center
                                disabled:opacity-60 disabled:cursor-not-allowed"
                     >
                         <span wire:loading.remove wire:target="addToCart">
                             Adicionar ao Carrinho
                         </span>
-                        <span wire:loading wire:target="addToCart" class="flex items-center justify-center gap-2">
+                        <span wire:loading wire:target="addToCart" class="flex items-center gap-2">
                             <svg class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
                                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
                                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
@@ -292,7 +400,7 @@
                 {{-- ── Variável sem variante selecionada: orientar usuário -- --}}
                 <div class="pt-1">
                     <button disabled
-                        class="w-full py-3 px-6 rounded-xl text-sm font-semibold
+                        class="w-full py-2 px-5 rounded-xl text-sm font-semibold
                                bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200"
                     >
                         Selecione as opções acima
@@ -355,67 +463,125 @@
                 </p>
             @endif
 
-            {{-- ─── Simulador de frete ─────────────────────────── --}}
-            <div class="pt-4 border-t border-gray-100">
-                <h3 class="font-semibold text-gray-900 mb-3">Calcular frete</h3>
-
-                @if ($this->product->isVariable() && $this->currentVariant === null)
-                    <p class="text-xs text-gray-400">Selecione as opções do produto para calcular o frete.</p>
-                @else
-                    <form wire:submit.prevent="calculateShipping" class="flex gap-2">
-                        <input type="text"
-                            wire:model="shippingCep"
-                            wire:keydown.enter.prevent="calculateShipping"
-                            placeholder="00000-000"
-                            maxlength="9"
-                            x-mask="99999-999"
-                            class="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                        <button type="submit"
-                            wire:loading.attr="disabled"
-                            class="px-4 py-2 border border-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50 transition-colors">
-                            <span wire:loading.remove wire:target="calculateShipping">Calcular</span>
-                            <span wire:loading wire:target="calculateShipping">
-                                <svg class="size-3 animate-spin text-gray-700" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                </svg>
-                            </span>
-                        </button>
-                    </form>
-
-                    @if ($shippingError)
-                        <p class="mt-2 text-xs text-red-600">{{ $shippingError }}</p>
-                    @endif
-
+            {{-- ─── Simulador de frete — só quando em estoque ─────── --}}
+            @if ($canBuy)
+            <div
+                x-data="{ open: @js(! empty($shippingOptions)) }"
+                class="rounded-xl border transition-colors w-full lg:w-sm"
+                :class="open ? 'border-gray-300' : 'border-gray-200'"
+            >
+                <button type="button" @click="open = !open"
+                    class="w-full flex items-center gap-2.5 px-4 py-3 text-sm font-medium text-gray-700 text-left">
+                    <svg class="w-4 h-4 shrink-0 transition-colors" :class="open ? 'text-gray-900' : 'text-gray-400'" fill="none" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 18.75a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 0 1-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 0 0-3.213-9.193 2.056 2.056 0 0 0-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 0 0-10.026 0 1.106 1.106 0 0 0-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12" />
+                    </svg>
                     @if (! empty($shippingOptions))
-                        <ul class="mt-3 space-y-2">
-                            @foreach ($shippingOptions as $option)
-                                <li class="flex justify-between text-sm">
-                                    <span class="text-gray-700">
-                                        {{ trim(($option['company'] ?? '') . ' ' . $option['name']) }}
-                                        <span class="text-gray-400 text-xs">({{ $option['days'] }} dias)</span>
-                                    </span>
-                                    <span class="font-semibold {{ $option['price'] == 0 ? 'text-green-600' : 'text-gray-900' }}">
-                                        {{ $option['price'] == 0 ? 'Grátis' : 'R$ ' . number_format($option['price'], 2, ',', '.') }}
-                                    </span>
-                                </li>
-                            @endforeach
-                        </ul>
+                        <span class="truncate flex-1 text-gray-700">Frete calculado</span>
+                        <span class="w-1.5 h-1.5 rounded-full bg-green-500 shrink-0"></span>
+                    @else
+                        <span class="truncate flex-1">Calcular frete</span>
                     @endif
-                @endif
+                    <svg class="w-3.5 h-3.5 text-gray-300 shrink-0 transition-transform" :class="open ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+                    </svg>
+                </button>
+
+                <div x-show="open"
+                    x-transition:enter="transition ease-out duration-150"
+                    x-transition:enter-start="opacity-0"
+                    x-transition:enter-end="opacity-100"
+                    x-transition:leave="transition ease-in duration-100"
+                    x-transition:leave-start="opacity-100"
+                    x-transition:leave-end="opacity-0"
+                    class="px-4 pb-4 border-t border-gray-100 pt-3">
+
+                        <form wire:submit.prevent="calculateShipping" class="flex gap-2">
+                            <input type="text"
+                                wire:model="shippingCep"
+                                wire:keydown.enter.prevent="calculateShipping"
+                                placeholder="00000-000"
+                                maxlength="9"
+                                x-mask="99999-999"
+                                class="flex-1 min-w-0 px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent transition">
+                            <button type="submit"
+                                wire:loading.attr="disabled"
+                                class="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium rounded-xl transition-colors disabled:opacity-50 shrink-0">
+                                <span wire:loading.remove wire:target="calculateShipping">Calcular</span>
+                                <span wire:loading wire:target="calculateShipping">
+                                    <svg class="w-4 h-4 animate-spin text-gray-500" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
+                                </span>
+                            </button>
+                        </form>
+
+                        @if ($shippingError)
+                            <p class="mt-2 text-xs text-red-500">{{ $shippingError }}</p>
+                        @endif
+
+                        @if (! empty($shippingOptions))
+                            <ul class="mt-4 space-y-2">
+                                @foreach ($shippingOptions as $option)
+                                    <li class="flex items-start justify-between gap-2 text-xs pt-2 border-t border-gray-50 first:border-0 first:pt-0">
+                                        <span class="text-gray-700 leading-snug">
+                                            {{ trim(($option['company'] ?? '') . ' ' . $option['name']) }}
+                                            <span class="text-gray-400 block">{{ $option['days'] }} dias úteis</span>
+                                        </span>
+                                        <span class="font-semibold shrink-0 {{ $option['price'] == 0 ? 'text-green-600' : 'text-gray-900' }}">
+                                            {{ $option['price'] == 0 ? 'Grátis' : 'R$ ' . number_format($option['price'], 2, ',', '.') }}
+                                        </span>
+                                    </li>
+                                @endforeach
+                            </ul>
+                        @endif
+                </div>
             </div>
+            @endif {{-- /canBuy --}}
 
         </div>{{-- /info --}}
     </div>{{-- /grid --}}
 
     {{-- ═══════════════════════════════════════════════════════════════
+         COMPRE JUNTO
+    ═══════════════════════════════════════════════════════════════ --}}
+    @if ($this->product->compraJunto->isNotEmpty())
+        @livewire('shop.buy-together', ['product' => $this->product], key('buy-together-' . $this->productId))
+    @endif
+
+    {{-- ═══════════════════════════════════════════════════════════════
          DESCRIÇÃO DO PRODUTO
     ═══════════════════════════════════════════════════════════════ --}}
     @if ($this->product->description)
-        <div class="mt-12 pt-8 border-t border-gray-200">
-            <h2 class="text-lg font-semibold text-gray-900 mb-4">Descrição</h2>
+        <div class="mt-18 lg:max-w-5xl mx-auto">
+            <h2 class="text-xl font-medium text-gray-900 mb-6">Mais detalhes sobre {{ $this->product->name }} </h2>
             <div class="prose prose-sm max-w-none text-gray-600">
                 {!! $this->product->description !!}
+            </div>
+        </div>
+    @endif
+
+    {{-- ═══════════════════════════════════════════════════════════════
+         PRODUTOS RECOMENDADOS
+    ═══════════════════════════════════════════════════════════════ --}}
+    @if ($this->recommendedProducts->isNotEmpty())
+        <div class="mt-18">
+            <h2 class="text-xl font-medium text-gray-900 mb-6">Produtos recomendados</h2>
+            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                @foreach ($this->recommendedProducts as $entry)
+                    <x-shop.product-card :entry="$entry" />
+                @endforeach
+            </div>
+        </div>
+    @endif
+
+    {{-- ═══════════════════════════════════════════════════════════════
+         PRODUTOS RELACIONADOS (mesma categoria)
+    ═══════════════════════════════════════════════════════════════ --}}
+    @if ($this->categoryProducts->isNotEmpty())
+        <div class="mt-18">
+            <h2 class="text-xl font-semibold text-gray-900 mb-6">Produtos relacionados</h2>
+            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">
+                @foreach ($this->categoryProducts as $entry)
+                    <x-shop.product-card :entry="$entry" />
+                @endforeach
             </div>
         </div>
     @endif

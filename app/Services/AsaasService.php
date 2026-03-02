@@ -12,6 +12,7 @@ class AsaasService
 {
     private string $baseUrl;
     private string $apiKey;
+    public ?array $lastError = null;
 
     public function __construct()
     {
@@ -159,9 +160,10 @@ class AsaasService
         ]);
 
         if (! $response->successful()) {
+            $this->lastError = $response->json();
             Log::error('Asaas: erro ao cobrar cartão', [
                 'status' => $response->status(),
-                'body'   => $response->json(),
+                'body'   => $this->lastError,
             ]);
             return null;
         }

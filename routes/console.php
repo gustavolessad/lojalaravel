@@ -11,3 +11,6 @@ Artisan::command('inspire', function () {
 
 // Verifica carrinhos abandonados a cada hora
 Schedule::job(new SendAbandonedCartEmails)->hourly();
+
+// Cancela pedidos PIX não pagos após 24h e restaura estoque
+Schedule::command(\App\Console\Commands\CancelExpiredPixOrders::class)->hourly();

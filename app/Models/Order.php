@@ -74,6 +74,16 @@ class Order extends Model
         return $this->hasMany(OrderItem::class);
     }
 
+    public function payments(): HasMany
+    {
+        return $this->hasMany(Payment::class)->latest();
+    }
+
+    public function orderEvents(): HasMany
+    {
+        return $this->hasMany(OrderEvent::class)->orderBy('created_at');
+    }
+
     // ── Geração do número do pedido ───────────────────────────────────────
 
     protected static function booted(): void

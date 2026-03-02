@@ -3,7 +3,7 @@
 @section('title', 'Criar conta')
 @section('heading', 'Crie sua conta')
 
-@section('content')
+@section('form')
     <form method="POST" action="{{ route('account.register') }}" class="space-y-5" x-data="{ type: '{{ old('type', 'pf') }}' }">
         @csrf
 
@@ -49,6 +49,7 @@
             <label for="cpf" class="block text-sm font-medium text-gray-700 mb-1">CPF</label>
             <input type="text" id="cpf" name="cpf" value="{{ old('cpf') }}"
                 x-bind:required="type === 'pf'"
+                x-mask="999.999.999-99"
                 class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-900 @error('cpf') border-red-400 @enderror"
                 placeholder="000.000.000-00">
             @error('cpf')
@@ -87,6 +88,7 @@
             <label for="cnpj" class="block text-sm font-medium text-gray-700 mb-1">CNPJ</label>
             <input type="text" id="cnpj" name="cnpj" value="{{ old('cnpj') }}"
                 x-bind:required="type === 'pj'"
+                x-mask="99.999.999/9999-99"
                 class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-900 @error('cnpj') border-red-400 @enderror"
                 placeholder="00.000.000/0000-00">
             @error('cnpj')
@@ -125,6 +127,7 @@
                 Celular
             </label>
             <input type="tel" id="mobile" name="mobile" value="{{ old('mobile') }}"
+                x-mask="(99) 99999-9999"
                 class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
                 placeholder="(00) 00000-0000">
         </div>

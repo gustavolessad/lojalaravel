@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Services\Payment\Drivers\AsaasGateway;
+use App\Services\Payment\PaymentManager;
 use Illuminate\Mail\Events\MessageSending;
 use Illuminate\Mail\Events\MessageSent;
 use Illuminate\Queue\Events\JobFailed;
@@ -11,7 +13,14 @@ use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
 {
-    public function register(): void {}
+    public function register(): void
+    {
+        $this->app->singleton(PaymentManager::class, function ($app) {
+            $manager = new PaymentManager();
+            $manager->registerGateway('asaas', $app->make(AsaasGateway::class));
+            return $manager;
+        });
+    }
 
     public function boot(): void
     {

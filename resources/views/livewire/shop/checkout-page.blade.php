@@ -1,35 +1,82 @@
-<div class="max-w-5xl mx-auto">
+@push('header-steps')
+{{-- Steps inline no header — Alpine reage a eventos Livewire 'checkout-step-changed' --}}
+<div
+    x-data="{ step: {{ $step }} }"
+    x-on:checkout-step-changed.window="step = $event.detail.step"
+    x-show="step > 0"
+    class="select-none">
 
-    {{-- ── Indicador de etapas ─────────────────────────────────────────── --}}
-    @if ($step > 0)
-        <div class="flex items-center gap-2 mb-8 select-none">
-            @foreach ([1 => 'Endereço', 2 => 'Frete', 3 => 'Pagamento', 4 => 'Revisão'] as $n => $label)
-                <div class="flex items-center gap-2 {{ $loop->last ? '' : 'flex-1' }}">
-                    <div class="flex items-center gap-2">
-                        <div @class([
-                            'w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0',
-                            'bg-indigo-600 text-white' => $step >= $n,
-                            'bg-gray-200 text-gray-400' => $step < $n,
-                        ])>
-                            @if ($step > $n)
-                                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
-                                </svg>
-                            @else
-                                {{ $n }}
-                            @endif
-                        </div>
-                        <span @class(['text-sm font-medium', 'text-indigo-700' => $step >= $n, 'text-gray-400' => $step < $n])>
-                            {{ $label }}
-                        </span>
-                    </div>
-                    @if (! $loop->last)
-                        <div class="flex-1 h-px {{ $step > $n ? 'bg-indigo-400' : 'bg-gray-200' }} mx-1"></div>
-                    @endif
-                </div>
-            @endforeach
+    {{-- Desktop: círculos + labels + conectores curtos --}}
+    <div class="hidden sm:flex items-center">
+
+        <div class="flex items-center gap-1.5">
+            <div class="w-5 h-5 rounded-full flex items-center justify-center font-bold flex-shrink-0 transition-colors"
+                 :class="step >= 1 ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-400'">
+                <svg x-show="step > 1" class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+                </svg>
+                <span x-show="step <= 1" class="text-[10px]">1</span>
+            </div>
+            <span class="text-xs font-medium transition-colors"
+                  :class="step >= 1 ? 'text-green-700' : 'text-gray-400'">Endereço</span>
         </div>
-    @endif
+
+        <div class="w-5 h-px mx-2 transition-colors" :class="step > 1 ? 'bg-green-400' : 'bg-gray-300'"></div>
+
+        <div class="flex items-center gap-1.5">
+            <div class="w-5 h-5 rounded-full flex items-center justify-center font-bold flex-shrink-0 transition-colors"
+                 :class="step >= 2 ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-400'">
+                <svg x-show="step > 2" class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+                </svg>
+                <span x-show="step <= 2" class="text-[10px]">2</span>
+            </div>
+            <span class="text-xs font-medium transition-colors"
+                  :class="step >= 2 ? 'text-green-700' : 'text-gray-400'">Frete</span>
+        </div>
+
+        <div class="w-5 h-px mx-2 transition-colors" :class="step > 2 ? 'bg-green-400' : 'bg-gray-300'"></div>
+
+        <div class="flex items-center gap-1.5">
+            <div class="w-5 h-5 rounded-full flex items-center justify-center font-bold flex-shrink-0 transition-colors"
+                 :class="step >= 3 ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-400'">
+                <svg x-show="step > 3" class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+                </svg>
+                <span x-show="step <= 3" class="text-[10px]">3</span>
+            </div>
+            <span class="text-xs font-medium transition-colors"
+                  :class="step >= 3 ? 'text-green-700' : 'text-gray-400'">Pagamento</span>
+        </div>
+
+        <div class="w-5 h-px mx-2 transition-colors" :class="step > 3 ? 'bg-green-400' : 'bg-gray-300'"></div>
+
+        <div class="flex items-center gap-1.5">
+            <div class="w-5 h-5 rounded-full flex items-center justify-center font-bold flex-shrink-0 transition-colors"
+                 :class="step >= 4 ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-400'">
+                <span class="text-[10px]">4</span>
+            </div>
+            <span class="text-xs font-medium transition-colors"
+                  :class="step >= 4 ? 'text-green-700' : 'text-gray-400'">Revisão</span>
+        </div>
+
+    </div>
+
+    {{-- Mobile: 4 dots com conector --}}
+    <div class="flex sm:hidden items-center gap-1">
+        <div class="w-2 h-2 rounded-full transition-colors" :class="step >= 1 ? 'bg-green-600' : 'bg-gray-300'"></div>
+        <div class="w-3 h-px transition-colors" :class="step > 1 ? 'bg-green-400' : 'bg-gray-300'"></div>
+        <div class="w-2 h-2 rounded-full transition-colors" :class="step >= 2 ? 'bg-green-600' : 'bg-gray-300'"></div>
+        <div class="w-3 h-px transition-colors" :class="step > 2 ? 'bg-green-400' : 'bg-gray-300'"></div>
+        <div class="w-2 h-2 rounded-full transition-colors" :class="step >= 3 ? 'bg-green-600' : 'bg-gray-300'"></div>
+        <div class="w-3 h-px transition-colors" :class="step > 3 ? 'bg-green-400' : 'bg-gray-300'"></div>
+        <div class="w-2 h-2 rounded-full transition-colors" :class="step >= 4 ? 'bg-green-600' : 'bg-gray-300'"></div>
+    </div>
+
+</div>
+@endpush
+
+<div>
 
     {{-- ── Layout principal ────────────────────────────────────────────── --}}
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
@@ -50,26 +97,18 @@
                  ETAPA 0 — Identificação (Login / Cadastro)
             ══════════════════════════════════════════════════════ --}}
             @if ($step === 0)
-                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 space-y-5">
+                <div class="bg-white rounded-2xl border border-gray-200 p-5 space-y-4">
 
-                    <div class="text-center">
-                        <div class="inline-flex items-center justify-center w-12 h-12 bg-indigo-100 rounded-full mb-3">
-                            <svg class="w-6 h-6 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-                            </svg>
-                        </div>
-                        <h2 class="text-lg font-semibold text-gray-900">Identificação</h2>
-                        <p class="text-sm text-gray-500 mt-1">Entre na sua conta ou crie uma para continuar</p>
-                    </div>
+                    <h2 class="text-base font-semibold text-gray-900">Identificação</h2>
 
                     {{-- Abas Login / Cadastro --}}
                     <div class="flex border border-gray-200 rounded-xl overflow-hidden">
                         <button
                             type="button"
                             wire:click="switchAuthMode('login')"
-                            class="flex-1 py-2.5 text-sm font-medium transition-colors
+                            class="flex-1 py-2 text-sm font-medium transition-colors
                                 {{ $authMode === 'login'
-                                    ? 'bg-indigo-600 text-white'
+                                    ? 'bg-gray-900 text-white'
                                     : 'bg-white text-gray-600 hover:bg-gray-50' }}"
                         >
                             Entrar na conta
@@ -77,9 +116,9 @@
                         <button
                             type="button"
                             wire:click="switchAuthMode('register')"
-                            class="flex-1 py-2.5 text-sm font-medium transition-colors
+                            class="flex-1 py-2 text-sm font-medium transition-colors
                                 {{ $authMode === 'register'
-                                    ? 'bg-indigo-600 text-white'
+                                    ? 'bg-gray-900 text-white'
                                     : 'bg-white text-gray-600 hover:bg-gray-50' }}"
                         >
                             Criar conta
@@ -88,90 +127,102 @@
 
                     {{-- ── LOGIN ── --}}
                     @if ($authMode === 'login')
-                        <form wire:submit.prevent="attemptLogin" class="space-y-4">
+                        <form wire:submit.prevent="attemptLogin" class="space-y-3">
                             <div>
                                 <label class="block text-xs font-medium text-gray-700 mb-1">E-mail *</label>
                                 <input wire:model="loginEmail" type="email" placeholder="seu@email.com" autocomplete="email"
-                                       class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:outline-none @error('loginEmail') border-red-400 @enderror">
+                                       class="w-full px-3.5 py-2 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-gray-900 focus:border-gray-900 focus:outline-none @error('loginEmail') border-red-400 @enderror">
                                 @error('loginEmail') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
                             </div>
                             <div>
                                 <label class="block text-xs font-medium text-gray-700 mb-1">Senha *</label>
                                 <input wire:model="loginPassword" type="password" placeholder="••••••••" autocomplete="current-password"
-                                       class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:outline-none @error('loginPassword') border-red-400 @enderror">
+                                       class="w-full px-3.5 py-2 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-gray-900 focus:border-gray-900 focus:outline-none @error('loginPassword') border-red-400 @enderror">
                                 @error('loginPassword') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
                             </div>
                             <button type="submit" wire:loading.attr="disabled"
-                                    class="w-full py-3 px-6 bg-indigo-600 text-white text-sm font-semibold rounded-xl hover:bg-indigo-700 transition-colors disabled:opacity-60">
-                                <span wire:loading.remove wire:target="attemptLogin">Entrar e continuar →</span>
+                                    class="w-full py-3 px-6 bg-green-700 text-white font-semibold rounded-xl hover:bg-green-800 transition-colors disabled:opacity-60">
+                                <span wire:loading.remove wire:target="attemptLogin" class="flex items-center justify-center gap-2">
+                                    Entrar e continuar
+                                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"/></svg>
+                                </span>
                                 <span wire:loading wire:target="attemptLogin">Verificando...</span>
                             </button>
+                            <p class="text-center text-xs text-gray-500">
+                                Ainda não tem uma conta?
+                                <button type="button" wire:click="switchAuthMode('register')" class="text-gray-900 font-medium hover:underline">Crie a sua</button>
+                            </p>
                         </form>
 
                     {{-- ── CADASTRO ── --}}
                     @else
-                        <form wire:submit.prevent="attemptRegister" class="space-y-4">
+                        <form wire:submit.prevent="attemptRegister" class="space-y-3">
 
                             {{-- Tipo de cadastro — controlado pelo Livewire (sem Alpine) --}}
-                            <div>
-                                <label class="block text-xs font-medium text-gray-700 mb-2">Tipo de cadastro</label>
-                                <div class="grid grid-cols-2 gap-3">
-                                    <label class="flex items-center justify-center py-2.5 px-4 rounded-lg border-2 cursor-pointer transition-colors
-                                        {{ $registerType === 'pf' ? 'border-indigo-600 bg-indigo-50 text-indigo-700' : 'border-gray-200 text-gray-600 hover:border-gray-400' }}">
-                                        <input type="radio" wire:model.live="registerType" value="pf" class="sr-only">
-                                        <span class="text-sm font-medium">Pessoa Física</span>
-                                    </label>
-                                    <label class="flex items-center justify-center py-2.5 px-4 rounded-lg border-2 cursor-pointer transition-colors
-                                        {{ $registerType === 'pj' ? 'border-indigo-600 bg-indigo-50 text-indigo-700' : 'border-gray-200 text-gray-600 hover:border-gray-400' }}">
-                                        <input type="radio" wire:model.live="registerType" value="pj" class="sr-only">
-                                        <span class="text-sm font-medium">Pessoa Jurídica</span>
-                                    </label>
-                                </div>
+                            <div class="grid grid-cols-2 gap-3">
+                                <label class="flex items-center justify-center gap-2 py-2 px-4 rounded-xl border cursor-pointer transition-colors
+                                    {{ $registerType === 'pf' ? 'border-gray-900 bg-gray-50 text-gray-900' : 'border-gray-200 text-gray-500 hover:border-gray-300' }}">
+                                    <input type="radio" wire:model.live="registerType" value="pf" class="sr-only">
+                                    <svg class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"/>
+                                    </svg>
+                                    <span class="text-sm font-medium">Pessoa Física</span>
+                                </label>
+                                <label class="flex items-center justify-center gap-2 py-2 px-4 rounded-xl border cursor-pointer transition-colors
+                                    {{ $registerType === 'pj' ? 'border-gray-900 bg-gray-50 text-gray-900' : 'border-gray-200 text-gray-500 hover:border-gray-300' }}">
+                                    <input type="radio" wire:model.live="registerType" value="pj" class="sr-only">
+                                    <svg class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 21h16.5M4.5 3h15M5.25 3v18m13.5-18v18M9 6.75h1.5m-1.5 3h1.5m-1.5 3h1.5m3-6h1.5m-1.5 3h1.5m-1.5 3h1.5M9 21v-3.375c0-.621.504-1.125 1.125-1.125h3.75c.621 0 1.125.504 1.125 1.125V21"/>
+                                    </svg>
+                                    <span class="text-sm font-medium">Pessoa Jurídica</span>
+                                </label>
                             </div>
 
                             {{-- Campos Pessoa Física --}}
                             @if ($registerType === 'pf')
-                                <div class="space-y-4">
+                                <div class="space-y-3">
                                     <div>
                                         <label class="block text-xs font-medium text-gray-700 mb-1">Nome completo *</label>
                                         <input wire:model="registerName" type="text" placeholder="Seu nome completo" autocomplete="name"
-                                               class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:outline-none @error('registerName') border-red-400 @enderror">
+                                               class="w-full px-3.5 py-2 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-gray-900 focus:border-gray-900 focus:outline-none @error('registerName') border-red-400 @enderror">
                                         @error('registerName') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
                                     </div>
-                                    <div class="grid grid-cols-2 gap-4">
+                                    <div class="grid grid-cols-2 gap-3">
                                         <div>
                                             <label class="block text-xs font-medium text-gray-700 mb-1">CPF</label>
                                             <input wire:model="registerCpf" type="text" placeholder="000.000.000-00"
-                                                   class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:outline-none @error('registerCpf') border-red-400 @enderror">
+                                                   x-mask="999.999.999-99"
+                                                   class="w-full px-3.5 py-2 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-gray-900 focus:border-gray-900 focus:outline-none @error('registerCpf') border-red-400 @enderror">
                                             @error('registerCpf') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
                                         </div>
                                         <div>
                                             <label class="block text-xs font-medium text-gray-700 mb-1">Data de nascimento</label>
                                             <input wire:model="registerBirthDate" type="date"
-                                                   class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:outline-none">
+                                                   class="w-full px-3.5 py-2 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-gray-900 focus:border-gray-900 focus:outline-none">
                                         </div>
                                     </div>
                                 </div>
                             @else
                             {{-- Campos Pessoa Jurídica --}}
-                                <div class="space-y-4">
+                                <div class="space-y-3">
                                     <div>
                                         <label class="block text-xs font-medium text-gray-700 mb-1">Razão Social *</label>
                                         <input wire:model="registerCompanyName" type="text" placeholder="Nome da empresa"
-                                               class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:outline-none @error('registerCompanyName') border-red-400 @enderror">
+                                               class="w-full px-3.5 py-2 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-gray-900 focus:border-gray-900 focus:outline-none @error('registerCompanyName') border-red-400 @enderror">
                                         @error('registerCompanyName') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
                                     </div>
-                                    <div class="grid grid-cols-2 gap-4">
+                                    <div class="grid grid-cols-2 gap-3">
                                         <div>
                                             <label class="block text-xs font-medium text-gray-700 mb-1">CNPJ</label>
                                             <input wire:model="registerCnpj" type="text" placeholder="00.000.000/0000-00"
-                                                   class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:outline-none @error('registerCnpj') border-red-400 @enderror">
+                                                   x-mask="99.999.999/9999-99"
+                                                   class="w-full px-3.5 py-2 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-gray-900 focus:border-gray-900 focus:outline-none @error('registerCnpj') border-red-400 @enderror">
                                             @error('registerCnpj') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
                                         </div>
                                         <div>
                                             <label class="block text-xs font-medium text-gray-700 mb-1">Nome do responsável *</label>
                                             <input wire:model="registerResponsibleName" type="text" placeholder="Nome completo"
-                                                   class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:outline-none @error('registerResponsibleName') border-red-400 @enderror">
+                                                   class="w-full px-3.5 py-2 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-gray-900 focus:border-gray-900 focus:outline-none @error('registerResponsibleName') border-red-400 @enderror">
                                             @error('registerResponsibleName') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
                                         </div>
                                     </div>
@@ -179,32 +230,40 @@
                             @endif
 
                             {{-- Campos comuns --}}
-                            <div>
-                                <label class="block text-xs font-medium text-gray-700 mb-1">E-mail *</label>
-                                <input wire:model="registerEmail" type="email" placeholder="seu@email.com" autocomplete="email"
-                                       class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:outline-none @error('registerEmail') border-red-400 @enderror">
-                                @error('registerEmail') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-700 mb-1">E-mail *</label>
+                                    <input wire:model="registerEmail" type="email" placeholder="seu@email.com" autocomplete="email"
+                                           class="w-full px-3.5 py-2 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-gray-900 focus:border-gray-900 focus:outline-none @error('registerEmail') border-red-400 @enderror">
+                                    @error('registerEmail') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-700 mb-1">Celular</label>
+                                    <input wire:model="registerMobile" type="tel" placeholder="(11) 99999-9999" autocomplete="tel"
+                                           x-mask="(99) 99999-9999"
+                                           class="w-full px-3.5 py-2 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-gray-900 focus:border-gray-900 focus:outline-none">
+                                </div>
                             </div>
-                            <div>
-                                <label class="block text-xs font-medium text-gray-700 mb-1">Celular</label>
-                                <input wire:model="registerMobile" type="tel" placeholder="(11) 99999-9999" autocomplete="tel"
-                                       class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:outline-none">
-                            </div>
-                            <div>
-                                <label class="block text-xs font-medium text-gray-700 mb-1">Senha *</label>
-                                <input wire:model="registerPassword" type="password" placeholder="Mínimo 8 caracteres" autocomplete="new-password"
-                                       class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:outline-none @error('registerPassword') border-red-400 @enderror">
-                                @error('registerPassword') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
-                            </div>
-                            <div>
-                                <label class="block text-xs font-medium text-gray-700 mb-1">Confirmar senha *</label>
-                                <input wire:model="registerPasswordConfirmation" type="password" placeholder="Repita a senha" autocomplete="new-password"
-                                       class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:outline-none @error('registerPasswordConfirmation') border-red-400 @enderror">
-                                @error('registerPasswordConfirmation') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-700 mb-1">Senha *</label>
+                                    <input wire:model="registerPassword" type="password" placeholder="Mín. 8 caracteres" autocomplete="new-password"
+                                           class="w-full px-3.5 py-2 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-gray-900 focus:border-gray-900 focus:outline-none @error('registerPassword') border-red-400 @enderror">
+                                    @error('registerPassword') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-700 mb-1">Confirmar senha *</label>
+                                    <input wire:model="registerPasswordConfirmation" type="password" placeholder="Repita a senha" autocomplete="new-password"
+                                           class="w-full px-3.5 py-2 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-gray-900 focus:border-gray-900 focus:outline-none @error('registerPasswordConfirmation') border-red-400 @enderror">
+                                    @error('registerPasswordConfirmation') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
+                                </div>
                             </div>
                             <button type="submit" wire:loading.attr="disabled"
-                                    class="w-full py-3 px-6 bg-indigo-600 text-white text-sm font-semibold rounded-xl hover:bg-indigo-700 transition-colors disabled:opacity-60">
-                                <span wire:loading.remove wire:target="attemptRegister">Criar conta e continuar →</span>
+                                    class="w-full py-3 px-6 bg-green-700 text-white font-semibold rounded-xl hover:bg-green-800 transition-colors disabled:opacity-60">
+                                <span wire:loading.remove wire:target="attemptRegister" class="flex items-center justify-center gap-2">
+                                    Criar conta e continuar
+                                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"/></svg>
+                                </span>
                                 <span wire:loading wire:target="attemptRegister">Criando conta...</span>
                             </button>
                         </form>
@@ -216,7 +275,7 @@
                  ETAPA 1 — Endereço
             ══════════════════════════════════════════════════════ --}}
             @elseif ($step === 1)
-                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 space-y-5">
+                <div class="bg-white rounded-2xl border border-gray-200 p-6 space-y-5">
 
                     {{-- Info do cliente logado --}}
                     @if ($this->customer)
@@ -311,7 +370,7 @@
                             <div>
                                 <label class="block text-xs font-medium text-gray-700 mb-1">CEP *</label>
                                 <input wire:model.blur="addrZip" type="text" placeholder="00000-000" maxlength="9"
-                                       wire:change="lookupZip"
+                                       wire:change="lookupZip" x-mask="99999-999"
                                        class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:outline-none @error('addrZip') border-red-400 @enderror">
                                 @error('addrZip') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
                             </div>
@@ -320,6 +379,7 @@
                             <div>
                                 <label class="block text-xs font-medium text-gray-700 mb-1">Telefone</label>
                                 <input wire:model="addrPhone" type="tel" placeholder="(11) 99999-9999"
+                                       x-mask="(99) 99999-9999"
                                        class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:outline-none">
                             </div>
 
@@ -377,8 +437,11 @@
 
                     <div class="pt-2">
                         <button wire:click="goToShipping" wire:loading.attr="disabled"
-                                class="w-full py-3 px-6 bg-indigo-600 text-white text-sm font-semibold rounded-xl hover:bg-indigo-700 transition-colors disabled:opacity-60">
-                            <span wire:loading.remove wire:target="goToShipping">Continuar para o Frete →</span>
+                                class="w-full py-3 px-6 bg-green-700 text-white font-semibold rounded-xl hover:bg-green-800 transition-colors disabled:opacity-60">
+                            <span wire:loading.remove wire:target="goToShipping" class="flex items-center justify-center gap-2">
+                                Continuar para o Frete
+                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"/></svg>
+                            </span>
                             <span wire:loading wire:target="goToShipping">Calculando...</span>
                         </button>
                     </div>
@@ -388,7 +451,7 @@
                  ETAPA 2 — Frete
             ══════════════════════════════════════════════════════ --}}
             @elseif ($step === 2)
-                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 space-y-4"
+                <div class="bg-white rounded-2xl border border-gray-200 p-6 space-y-4"
                      wire:init="loadShipping">
                     <div class="flex items-center gap-3">
                         <h2 class="text-base font-semibold text-gray-900 flex-1">Opções de entrega</h2>
@@ -455,8 +518,9 @@
 
                     <button wire:click="goToPayment"
                             @disabled($loadingShipping || empty($shippingOptions))
-                            class="w-full py-3 px-6 bg-indigo-600 text-white text-sm font-semibold rounded-xl hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
-                        Continuar para o Pagamento →
+                            class="w-full flex items-center justify-center gap-2 py-3 px-6 bg-green-700 text-white font-semibold rounded-xl hover:bg-green-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                        Continuar para o Pagamento
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"/></svg>
                     </button>
                 </div>
 
@@ -464,7 +528,7 @@
                  ETAPA 3 — Pagamento
             ══════════════════════════════════════════════════════ --}}
             @elseif ($step === 3)
-                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 space-y-5">
+                <div class="bg-white rounded-2xl border border-gray-200 p-6 space-y-5">
                     <div class="flex items-center gap-3">
                         <h2 class="text-base font-semibold text-gray-900 flex-1">Forma de pagamento</h2>
                         <button type="button" wire:click="backTo(2)" class="text-sm text-indigo-600 hover:text-indigo-800">← Frete</button>
@@ -507,20 +571,23 @@
                             </div>
                             <div>
                                 <label class="block text-xs font-medium text-gray-700 mb-1">Número do cartão *</label>
-                                <input wire:model="cardNumber" type="text" placeholder="0000 0000 0000 0000" maxlength="19" autocomplete="cc-number"
+                                <input wire:model.blur="cardNumber" type="text" placeholder="0000 0000 0000 0000" maxlength="19" autocomplete="cc-number"
+                                       x-mask="9999 9999 9999 9999"
                                        class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:outline-none @error('cardNumber') border-red-400 @enderror">
                                 @error('cardNumber') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
                             </div>
                             <div class="grid grid-cols-2 gap-4">
                                 <div>
                                     <label class="block text-xs font-medium text-gray-700 mb-1">Validade *</label>
-                                    <input wire:model="cardExpiry" type="text" placeholder="MM/AA" maxlength="5" autocomplete="cc-exp"
+                                    <input wire:model.blur="cardExpiry" type="text" placeholder="MM/AA" maxlength="5" autocomplete="cc-exp"
+                                           x-mask="99/99"
                                            class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:outline-none @error('cardExpiry') border-red-400 @enderror">
                                     @error('cardExpiry') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
                                 </div>
                                 <div>
                                     <label class="block text-xs font-medium text-gray-700 mb-1">CVV *</label>
-                                    <input wire:model="cardCvv" type="text" placeholder="000" maxlength="4" autocomplete="cc-csc"
+                                    <input wire:model.blur="cardCvv" type="text" placeholder="000" maxlength="4" autocomplete="cc-csc"
+                                           x-mask="9999"
                                            class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:outline-none @error('cardCvv') border-red-400 @enderror">
                                     @error('cardCvv') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
                                 </div>
@@ -563,8 +630,9 @@
                     @endif
 
                     <button wire:click="goToReview"
-                            class="w-full py-3 px-6 bg-indigo-600 text-white text-sm font-semibold rounded-xl hover:bg-indigo-700 transition-colors">
-                        Revisar pedido →
+                            class="w-full flex items-center justify-center gap-2 py-3 px-6 bg-green-700 text-white font-semibold rounded-xl hover:bg-green-800 transition-colors">
+                        Revisar pedido
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"/></svg>
                     </button>
                 </div>
 
@@ -575,7 +643,7 @@
                 <div class="space-y-4">
 
                     {{-- Resumo do endereço --}}
-                    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
+                    <div class="bg-white rounded-2xl border border-gray-200 p-5">
                         <div class="flex items-center justify-between mb-3">
                             <h3 class="text-sm font-semibold text-gray-900">Entrega</h3>
                             <button type="button" wire:click="backTo(1)" class="text-xs text-indigo-600 hover:text-indigo-800">Alterar</button>
@@ -588,45 +656,83 @@
                         <p class="text-sm text-gray-500">{{ $addrDistrict }}, {{ $addrCity }}/{{ strtoupper($addrState) }} — {{ $addrZip }}</p>
                     </div>
 
-                    {{-- Resumo do frete --}}
-                    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
-                        <div class="flex items-center justify-between mb-2">
-                            <h3 class="text-sm font-semibold text-gray-900">Frete</h3>
-                            <button type="button" wire:click="backTo(2)" class="text-xs text-indigo-600 hover:text-indigo-800">Alterar</button>
-                        </div>
-                        @if ($this->selectedShipping)
-                            <p class="text-sm text-gray-700">
-                                {{ trim(($this->selectedShipping['company'] ?? '') . ' ' . $this->selectedShipping['name']) }} —
-                                <span class="{{ $this->selectedShipping['price'] == 0 ? 'text-emerald-600 font-semibold' : 'text-gray-700' }}">
-                                    {{ $this->selectedShipping['price'] == 0 ? 'Grátis' : 'R$ ' . number_format($this->selectedShipping['price'], 2, ',', '.') }}
-                                </span>
-                            </p>
-                            <p class="text-xs text-gray-500 mt-0.5">Prazo: {{ $this->selectedShipping['days'] }} dias úteis</p>
-                        @endif
-                    </div>
+                    {{-- Frete + Pagamento lado a lado --}}
+                    <div class="grid grid-cols-2 gap-4">
 
-                    {{-- Resumo do pagamento --}}
-                    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
-                        <div class="flex items-center justify-between mb-2">
-                            <h3 class="text-sm font-semibold text-gray-900">Pagamento</h3>
-                            <button type="button" wire:click="backTo(3)" class="text-xs text-indigo-600 hover:text-indigo-800">Alterar</button>
-                        </div>
-                        <p class="text-sm text-gray-700">
-                            {{ $paymentMethod === 'pix' ? 'PIX' : 'Cartão de crédito' }}
-                            @if ($paymentMethod === 'credit_card' && $cardNumber)
-                                — **** {{ substr(preg_replace('/\D/', '', $cardNumber), -4) }}
-                                @if ($installments > 1)
-                                    em {{ $installments }}x sem juros
-                                @endif
+                        {{-- Resumo do frete --}}
+                        <div class="bg-white rounded-2xl border border-gray-200 p-5">
+                            <div class="flex items-center justify-between mb-2">
+                                <h3 class="text-sm font-semibold text-gray-900">Frete</h3>
+                                <button type="button" wire:click="backTo(2)" class="text-xs text-indigo-600 hover:text-indigo-800">Alterar</button>
+                            </div>
+                            @if ($this->selectedShipping)
+                                <p class="text-sm text-gray-700">
+                                    {{ trim(($this->selectedShipping['company'] ?? '') . ' ' . $this->selectedShipping['name']) }}
+                                </p>
+                                <p class="text-sm mt-0.5">
+                                    <span class="{{ $this->selectedShipping['price'] == 0 ? 'text-emerald-600 font-semibold' : 'text-gray-700' }}">
+                                        {{ $this->selectedShipping['price'] == 0 ? 'Grátis' : 'R$ ' . number_format($this->selectedShipping['price'], 2, ',', '.') }}
+                                    </span>
+                                </p>
+                                <p class="text-xs text-gray-400 mt-0.5">{{ $this->selectedShipping['days'] }} dias úteis</p>
                             @endif
-                        </p>
+                        </div>
+
+                        {{-- Resumo do pagamento --}}
+                        <div class="bg-white rounded-2xl border border-gray-200 p-5">
+                            <div class="flex items-center justify-between mb-2">
+                                <h3 class="text-sm font-semibold text-gray-900">Pagamento</h3>
+                                <button type="button" wire:click="backTo(3)" class="text-xs text-indigo-600 hover:text-indigo-800">Alterar</button>
+                            </div>
+                            <p class="text-sm text-gray-700">
+                                {{ $paymentMethod === 'pix' ? 'PIX' : 'Cartão de crédito' }}
+                            </p>
+                            @if ($paymentMethod === 'credit_card' && $cardNumber)
+                                @php
+                                    $chosenOpt      = collect($this->installmentOptions)->firstWhere('value', $installments);
+                                    $isInterestFree = $chosenOpt['interest_free'] ?? true;
+                                @endphp
+                                <p class="text-xs text-gray-500 mt-0.5">
+                                    **** {{ substr(preg_replace('/\D/', '', $cardNumber), -4) }}
+                                    @if ($installments > 1)
+                                        · {{ $installments }}x {{ $isInterestFree ? 'sem juros' : 'com juros' }}
+                                    @endif
+                                </p>
+                            @elseif ($paymentMethod === 'pix')
+                                <p class="text-xs text-gray-400 mt-0.5">Aprovação imediata</p>
+                            @endif
+                        </div>
+
                     </div>
 
-                    {{-- Observações --}}
-                    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
-                        <label class="block text-sm font-semibold text-gray-900 mb-2">Observações (opcional)</label>
-                        <textarea wire:model="notes" rows="2" placeholder="Instruções de entrega, etc."
-                                  class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:outline-none resize-none"></textarea>
+                    {{-- Observações (accordion) --}}
+                    <div x-data="{ open: @js((bool) $notes) }"
+                        class="bg-white rounded-2xl border transition-colors"
+                        :class="open ? 'border-gray-300' : 'border-gray-200'">
+                        <button type="button" @click="open = !open"
+                            class="w-full flex items-center gap-2.5 px-5 py-3 text-sm font-medium text-gray-700 text-left">
+                            <svg class="w-4 h-4 shrink-0 transition-colors" :class="open ? 'text-gray-900' : 'text-gray-400'" fill="none" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 0 1 .865-.501 48.172 48.172 0 0 0 3.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0 0 12 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018Z" />
+                            </svg>
+                            <span class="flex-1 truncate">Observações</span>
+                            @if ($notes)
+                                <span class="w-1.5 h-1.5 rounded-full bg-gray-400 shrink-0"></span>
+                            @endif
+                            <svg class="w-3.5 h-3.5 text-gray-300 shrink-0 transition-transform" :class="open ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+                            </svg>
+                        </button>
+                        <div x-show="open"
+                            x-transition:enter="transition ease-out duration-150"
+                            x-transition:enter-start="opacity-0"
+                            x-transition:enter-end="opacity-100"
+                            x-transition:leave="transition ease-in duration-100"
+                            x-transition:leave-start="opacity-100"
+                            x-transition:leave-end="opacity-0"
+                            class="px-5 pb-4 border-t border-gray-100 pt-3">
+                            <textarea wire:model="notes" rows="2" placeholder="Instruções de entrega, referências, etc."
+                                      class="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-gray-900 focus:border-transparent focus:outline-none resize-none transition"></textarea>
+                        </div>
                     </div>
 
                     {{-- Botão confirmar --}}
@@ -634,10 +740,10 @@
                         wire:click="placeOrder"
                         wire:loading.attr="disabled"
                         wire:target="placeOrder"
-                        class="w-full py-4 px-6 bg-indigo-600 text-white text-base font-bold rounded-2xl hover:bg-indigo-700 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                        class="w-full py-4 px-6 bg-green-700 text-white text-base font-bold rounded-2xl hover:bg-green-800 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
                     >
                         <span wire:loading.remove wire:target="placeOrder">
-                            Confirmar Pedido — R$ {{ number_format($this->total, 2, ',', '.') }}
+                            Confirmar Pedido — R$ {{ number_format($this->total, 2, ',', '.') }} no {{ $paymentMethod === 'pix' ? 'PIX' : 'Cartão de crédito' }}
                         </span>
                         <span wire:loading wire:target="placeOrder" class="flex items-center justify-center gap-2">
                             <svg class="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
@@ -656,10 +762,12 @@
              COLUNA DIREITA: resumo do pedido (sticky)
         ════════════════════════════════════════════════════════════════ --}}
         <div class="lg:sticky lg:top-24 space-y-4">
-            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
+            <div class="bg-white rounded-2xl border border-gray-200 p-5">
+                @php $itemCount = $this->cart->item_count; @endphp
+
                 <h3 class="text-sm font-semibold text-gray-900 mb-4">
                     Resumo do pedido
-                    <span class="text-gray-400 font-normal">({{ $this->cart->item_count }} {{ $this->cart->item_count === 1 ? 'item' : 'itens' }})</span>
+                    <span class="text-gray-400 font-normal">({{ $itemCount }} {{ $itemCount === 1 ? 'item' : 'itens' }})</span>
                 </h3>
 
                 <div class="space-y-3 mb-4">
@@ -707,16 +815,16 @@
                             <span class="text-gray-400">—</span>
                         @endif
                     </div>
+
                     <div class="flex justify-between font-bold text-gray-900 pt-2 border-t border-gray-100 text-base">
                         <span>Total</span>
                         <span>R$ {{ number_format($this->total, 2, ',', '.') }}</span>
                     </div>
 
-                    {{-- Hints PIX / Parcelamento --}}
                     @php
-                        $calc      = app(\App\Services\PaymentCalculator::class);
-                        $pixHint   = $calc->pixPrice($this->total);
-                        $instHint  = $calc->bestFreeInstallmentLabel($this->total);
+                        $calc     = app(\App\Services\PaymentCalculator::class);
+                        $pixHint  = $calc->pixPrice($this->total);
+                        $instHint = $calc->bestFreeInstallmentLabel($this->total);
                     @endphp
                     @if ($pixHint || $instHint)
                         <div class="pt-3 border-t border-gray-100 space-y-1">

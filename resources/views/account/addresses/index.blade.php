@@ -2,10 +2,10 @@
 
 @section('title', 'Meus Endereços')
 
-@section('content')
+@section('page-content')
     <div class="flex items-center justify-between mb-6">
         <div>
-            <h1 class="text-2xl font-semibold text-gray-900">Meus endereços</h1>
+            <h1 class="font-medium text-gray-900">Meus endereços</h1>
             <p class="text-sm text-gray-500 mt-1">Gerencie seus endereços de entrega</p>
         </div>
         <a

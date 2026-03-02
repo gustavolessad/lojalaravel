@@ -1,7 +1,7 @@
-@extends('layouts.shop')
+@extends('layouts.minimal')
 
 @section('title', 'Checkout')
 
 @section('content')
-    @livewire('shop.checkout-page')
+@livewire('shop.checkout-page')
 @endsection

@@ -2,6 +2,14 @@
 
 namespace App\Services\Payment;
 
+use App\Models\Setting;
+
+/**
+ * Gerenciador de gateways de pagamento.
+ *
+ * Registra implementações de PaymentGatewayInterface e expõe
+ * o gateway ativo conforme a configuração.
+ */
 class PaymentManager
 {
     protected array $gateways = [];
@@ -20,10 +28,30 @@ class PaymentManager
         return $this->gateways[$key];
     }
 
+    /**
+     * Retorna o gateway ativo (configurado via settings ou .env).
+     */
     public function active(): PaymentGatewayInterface
     {
-        $activeKey = config('payment.active_gateway', 'asaas');
+        $activeKey = Setting::get('payment_gateway', 'asaas');
 
         return $this->gateway($activeKey);
+    }
+
+    // ── Atalhos convenientes ──────────────────────────────────────────────
+
+    public function isConfigured(): bool
+    {
+        return $this->active()->isConfigured();
+    }
+
+    public function createCharge(PaymentPayload $payload): PaymentResult
+    {
+        return $this->active()->createCharge($payload);
+    }
+
+    public function getLastError(): ?array
+    {
+        return $this->active()->getLastError();
     }
 }

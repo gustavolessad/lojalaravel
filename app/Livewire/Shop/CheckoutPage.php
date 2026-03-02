@@ -7,7 +7,10 @@ use App\Models\Cart;
 use App\Models\Customer;
 use App\Models\CustomerAddress;
 use App\Models\Order;
-use App\Services\AsaasService;
+use App\Rules\ValidCpf;
+use App\Rules\ValidCnpj;
+use App\Services\Payment\PaymentManager;
+use App\Services\Payment\PaymentPayload;
 use App\Services\PaymentCalculator;
 use App\Services\CartService;
 use App\Services\OrderService;
@@ -237,37 +240,51 @@ class CheckoutPage extends Component
             'registerPasswordConfirmation.same'     => 'As senhas não conferem.',
         ];
 
+        // Strip máscaras antes de validar/salvar
+        $cpf    = preg_replace('/\D/', '', $this->registerCpf);
+        $cnpj   = preg_replace('/\D/', '', $this->registerCnpj);
+        $mobile = preg_replace('/\D/', '', $this->registerMobile);
+
         if ($this->registerType === 'pf') {
             $rules['registerName'] = 'required|string|min:3|max:120';
-            $rules['registerCpf']  = 'nullable|string|max:14';
-            $messages['registerName.required'] = 'Informe seu nome completo.';
+            $rules['registerCpf']  = ['nullable', 'digits:11', new ValidCpf(), 'unique:customers,cpf'];
+            $messages['registerName.required']   = 'Informe seu nome completo.';
+            $messages['registerCpf.digits']      = 'O CPF deve conter 11 dígitos.';
+            $messages['registerCpf.unique']      = 'Este CPF já está cadastrado.';
         } else {
             $rules['registerCompanyName']      = 'required|string|min:2|max:200';
             $rules['registerResponsibleName']  = 'required|string|min:3|max:120';
-            $rules['registerCnpj']             = 'nullable|string|max:18';
+            $rules['registerCnpj']             = ['nullable', 'digits:14', new ValidCnpj(), 'unique:customers,cnpj'];
             $messages['registerCompanyName.required']     = 'Informe a razão social.';
             $messages['registerResponsibleName.required'] = 'Informe o nome do responsável.';
+            $messages['registerCnpj.digits']              = 'O CNPJ deve conter 14 dígitos.';
+            $messages['registerCnpj.unique']              = 'Este CNPJ já está cadastrado.';
         }
+
+        // Substitui temporariamente os valores mascarados pelos limpos para validação
+        $this->registerCpf    = $cpf;
+        $this->registerCnpj   = $cnpj;
+        $this->registerMobile = $mobile;
 
         $this->validate($rules, $messages);
 
         $data = [
             'type'     => $this->registerType,
             'email'    => $this->registerEmail,
-            'mobile'   => $this->registerMobile ?: null,
+            'mobile'   => $mobile ?: null,
             'password' => Hash::make($this->registerPassword),
             'status'   => 'active',
         ];
 
         if ($this->registerType === 'pf') {
             $data['name']       = $this->registerName;
-            $data['cpf']        = $this->registerCpf ?: null;
+            $data['cpf']        = $cpf ?: null;
             $data['birth_date'] = $this->registerBirthDate ?: null;
         } else {
             $data['name']               = $this->registerResponsibleName;
             $data['company_name']       = $this->registerCompanyName;
             $data['responsible_name']   = $this->registerResponsibleName;
-            $data['cnpj']               = $this->registerCnpj ?: null;
+            $data['cnpj']               = $cnpj ?: null;
         }
 
         $customer = Customer::create($data);
@@ -296,8 +313,6 @@ class CheckoutPage extends Component
         app(CartService::class)->mergeSessionIntoCustomer($customer->id);
 
         // Redirect completo para renovar o CSRF token após autenticação.
-        // Sem isso, o token da página fica desincronizado com a sessão
-        // e qualquer requisição Livewire posterior retorna 419.
         $this->redirect(route('checkout.index'), navigate: false);
     }
 
@@ -406,7 +421,6 @@ class CheckoutPage extends Component
             ];
 
             if ($this->editingAddressId) {
-                // Atualiza endereço existente
                 CustomerAddress::where('id', $this->editingAddressId)
                     ->where('customer_id', $customer->id)
                     ->update($addrData);
@@ -416,7 +430,6 @@ class CheckoutPage extends Component
                 $this->useNewAddress     = false;
 
             } elseif ($this->useNewAddress) {
-                // Cria novo endereço
                 $isFirst    = $customer->addresses()->count() === 0;
                 $newAddress = $customer->addresses()->create(
                     array_merge($addrData, ['country' => 'BR', 'is_default' => $isFirst])
@@ -427,12 +440,11 @@ class CheckoutPage extends Component
             }
         }
 
-        // Reseta opções anteriores e sinaliza loading — o cálculo acontece
-        // via wire:init="loadShipping" após a tela do step 2 renderizar.
         $this->shippingOptions       = [];
         $this->selectedShippingIndex = null;
         $this->loadingShipping       = true;
         $this->step                  = 2;
+        $this->dispatch('checkout-step-changed', step: 2);
     }
 
     // ── Etapa 2: Frete ────────────────────────────────────────────────────
@@ -445,9 +457,16 @@ class CheckoutPage extends Component
         }
 
         $this->step = 3;
+        $this->dispatch('checkout-step-changed', step: 3);
     }
 
     // ── Etapa 3: Pagamento ────────────────────────────────────────────────
+
+    // Remove espaços da máscara do cartão ao sincronizar com Livewire
+    public function updatedCardNumber(): void
+    {
+        $this->cardNumber = preg_replace('/\D/', '', $this->cardNumber);
+    }
 
     public function goToReview(): void
     {
@@ -460,16 +479,17 @@ class CheckoutPage extends Component
                 'cardExpiry' => ['required', 'regex:/^\d{2}\/\d{2}$/'],
                 'cardCvv'    => 'required|digits_between:3,4',
             ], [
-                'cardHolder.required'      => 'Informe o nome no cartão.',
-                'cardNumber.required'      => 'Informe o número do cartão.',
+                'cardHolder.required'       => 'Informe o nome no cartão.',
+                'cardNumber.required'       => 'Informe o número do cartão.',
                 'cardNumber.digits_between' => 'Número de cartão inválido.',
-                'cardExpiry.required'      => 'Informe a validade (MM/AA).',
-                'cardExpiry.regex'         => 'Validade inválida. Use MM/AA.',
-                'cardCvv.required'         => 'Informe o código de segurança.',
+                'cardExpiry.required'       => 'Informe a validade (MM/AA).',
+                'cardExpiry.regex'          => 'Validade inválida. Use MM/AA.',
+                'cardCvv.required'          => 'Informe o código de segurança.',
             ]);
         }
 
         $this->step = 4;
+        $this->dispatch('checkout-step-changed', step: 4);
     }
 
     // ── Etapa 4: Confirmar pedido ─────────────────────────────────────────
@@ -480,25 +500,25 @@ class CheckoutPage extends Component
         $this->processing   = true;
 
         try {
-            $cart     = $this->cart;
             $customer = $this->customer;
-            $shipping = $this->selectedShipping;
 
             if (! $customer) {
                 $this->step = 0;
                 return;
             }
 
-            if (! $shipping) {
-                $this->errorMessage = 'Selecione uma opção de frete.';
+            $paymentManager = app(PaymentManager::class);
+
+            if (! $paymentManager->isConfigured()) {
+                $this->errorMessage = 'O gateway de pagamento não está configurado. Entre em contato com a loja.';
+                Log::error('Checkout: tentativa de finalizar pedido sem token de pagamento configurado');
                 return;
             }
 
-            // 0. Verifica se o gateway está configurado ANTES de criar o pedido
-            $asaas = app(AsaasService::class);
-            if (! $asaas->isConfigured()) {
-                $this->errorMessage = 'O gateway de pagamento não está configurado. Entre em contato com a loja.';
-                Log::error('Checkout: tentativa de finalizar pedido sem token Asaas configurado');
+            $shipping = $this->selectedShipping;
+
+            if (! $shipping) {
+                $this->errorMessage = 'Selecione uma opção de frete.';
                 return;
             }
 
@@ -514,94 +534,143 @@ class CheckoutPage extends Component
                 'state'      => strtoupper($this->addrState),
             ];
 
-            // Calcula descontos/acréscimos de pagamento
-            $calc = app(PaymentCalculator::class);
-            $pixDiscount = 0.0;
-            if ($this->paymentMethod === 'pix') {
-                $pixDiscount = $calc->pixSavings($this->total);
-            }
+            $calc        = app(PaymentCalculator::class);
+            $orderService = app(OrderService::class);
 
-            // 1. Cria o pedido no banco
-            $order = app(OrderService::class)->createFromCart(
-                cart:          $cart,
-                address:       $address,
-                shipping:      $shipping,
-                paymentMethod: $this->paymentMethod,
-                customer:      $customer,
-                guest:         [],
-                notes:         $this->notes ?: null,
-                pixDiscount:   $pixDiscount,
-            );
+            // ─────────────────────────────────────────────────────────────
+            // CARTÃO: cobrar ANTES de criar o pedido.
+            // O carrinho permanece intacto até a aprovação.
+            // ─────────────────────────────────────────────────────────────
+            if ($this->paymentMethod === 'credit_card') {
 
-            // 2. Processa o pagamento no Asaas
-            $asaasCustomerId = $asaas->findOrCreateCustomer($order);
-
-            if (! $asaasCustomerId) {
-                // Falha ao criar/localizar cliente no Asaas (ex: timeout, API fora do ar)
-                Log::error('Checkout: falha ao obter asaasCustomerId', ['order' => $order->order_number]);
-                $this->errorMessage = "Falha ao conectar com o gateway de pagamento. "
-                    . "Seu pedido #{$order->order_number} foi registrado — entre em contato com a loja para efetuar o pagamento.";
-                return;
-            }
-
-            if ($this->paymentMethod === 'pix') {
-                $paymentData = $asaas->createPixPayment($order, $asaasCustomerId);
-            } else {
-                [$month, $year] = explode('/', $this->cardExpiry);
-
-                $installmentOpts   = $calc->installmentOptions($this->total);
+                $orderTotal        = $this->total;
+                $installmentOpts   = $calc->installmentOptions($orderTotal);
                 $chosenInstallment = collect($installmentOpts)->firstWhere('value', $this->installments);
-                $installmentValue  = $chosenInstallment['installment_value'] ?? round($this->total / $this->installments, 2);
+                $installmentValue  = $chosenInstallment['installment_value'] ?? round($orderTotal / $this->installments, 2);
                 $interestFree      = $chosenInstallment['interest_free'] ?? true;
 
-                $paymentData = $asaas->createCreditCardPayment(
-                    order:           $order,
-                    asaasCustomerId: $asaasCustomerId,
-                    card: [
-                        'holderName'  => $this->cardHolder,
-                        'number'      => $this->cardNumber,
-                        'expiryMonth' => $month,
-                        'expiryYear'  => '20' . $year,
-                        'ccv'         => $this->cardCvv,
-                    ],
-                    installments: $this->installments,
+                // Valor real cobrado no cartão: sem juros = total original;
+                // com juros = installmentValue × parcelas (juros calculados na loja,
+                // Asaas usa installmentValue×n como total — não aplica juros próprios).
+                $actualAmount = $interestFree
+                    ? $orderTotal
+                    : round($installmentValue * $this->installments, 2);
+                $cardInterest = round($actualAmount - $orderTotal, 2);
+
+                // Pré-gera o número do pedido para usar na descrição da cobrança.
+                // Asaas não permite editar cobranças já aprovadas (CONFIRMED), então
+                // precisamos do número antes de criar a charge.
+                $preOrderNumber = Order::generateOrderNumber();
+
+                $expiryParts = explode('/', $this->cardExpiry);
+                $month = $expiryParts[0] ?? '';
+                $year  = $expiryParts[1] ?? '';
+
+                $payload = new PaymentPayload(
+                    method:               'credit_card',
+                    amount:               $actualAmount,
+                    description:          "Pedido #{$preOrderNumber}",
+                    reference:            $preOrderNumber,
+                    customerName:         $customer->display_name,
+                    customerEmail:        $customer->email,
+                    customerCpfCnpj:      $customer->cpf ?? $customer->cnpj,
+                    customerPhone:        preg_replace('/\D/', '', $this->addrPhone),
+                    cardHolder:           $this->cardHolder,
+                    cardNumber:           $this->cardNumber,
+                    cardExpiryMonth:      $month,
+                    cardExpiryYear:       '20' . $year,
+                    cardCvv:              $this->cardCvv,
+                    billingPostalCode:    preg_replace('/\D/', '', $this->addrZip),
+                    billingAddressNumber: $this->addrNumber,
+                    installments:         $this->installments,
+                    installmentValue:     $installmentValue,
+                    interestFree:         $interestFree,
                 );
 
-                if ($paymentData) {
-                    $paymentData['installments']        = $this->installments;
-                    $paymentData['installment_value']   = $installmentValue;
-                    $paymentData['interest_free']       = $interestFree;
-                    $paymentData['total_with_interest'] = round($installmentValue * $this->installments, 2);
+                $result = $paymentManager->createCharge($payload);
+
+                if (! $result->isApproved()) {
+                    $lastError  = $paymentManager->getLastError();
+                    $errorDesc  = $lastError['errors'][0]['description'] ?? null;
+                    $this->errorMessage = $errorDesc ?? 'Verifique os dados do cartão e tente novamente.';
+                    $this->step = 3;
+                    $this->dispatch('checkout-step-changed', step: 3);
+                    return;
                 }
-            }
 
-            if (! $paymentData) {
-                // Asaas retornou erro ao criar o pagamento
-                Log::error('Checkout: Asaas não retornou payment_data', ['order' => $order->order_number]);
-                $this->errorMessage = "Falha ao gerar o pagamento. "
-                    . "Seu pedido #{$order->order_number} foi registrado — entre em contato com a loja.";
-                return;
-            }
+                // Pagamento aprovado → criar pedido, limpar carrinho, decrementar estoque
+                $order = $orderService->createFromCart(
+                    cart:         $this->cart,
+                    address:      $address,
+                    shipping:     $shipping,
+                    paymentMethod: 'credit_card',
+                    customer:     $customer,
+                    notes:        $this->notes ?: null,
+                    pixDiscount:  0.0,
+                    cardInterest: $cardInterest,
+                    orderNumber:  $preOrderNumber,
+                );
 
-            app(OrderService::class)->attachPaymentData(
-                order:     $order,
-                paymentId: $paymentData['payment_id'],
-                data:      $paymentData,
-            );
+                $storageData = $result->toStorageArray($this->installments, $installmentValue, $interestFree);
+                if ($cardInterest > 0) {
+                    $storageData['card_interest'] = $cardInterest;
+                }
 
-            if (
-                $this->paymentMethod === 'credit_card'
-                && in_array($paymentData['status'] ?? '', ['CONFIRMED', 'RECEIVED'])
-            ) {
-                app(OrderService::class)->markAsPaid(
+                $orderService->attachPaymentData(
                     order:     $order,
-                    paymentId: $paymentData['payment_id'],
+                    paymentId: $result->transactionId,
+                    data:      $storageData,
+                );
+
+                $orderService->markAsPaid(
+                    order:     $order,
+                    paymentId: $result->transactionId,
+                );
+
+            // ─────────────────────────────────────────────────────────────
+            // PIX: criar pedido primeiro, depois gerar QR Code.
+            // Pedido expira em 24h se não pago (cancelado por comando artisan).
+            // ─────────────────────────────────────────────────────────────
+            } else {
+
+                $pixDiscount = $calc->pixSavings($this->total);
+
+                $order = $orderService->createFromCart(
+                    cart:          $this->cart,
+                    address:       $address,
+                    shipping:      $shipping,
+                    paymentMethod: 'pix',
+                    customer:      $customer,
+                    notes:         $this->notes ?: null,
+                    pixDiscount:   $pixDiscount,
+                );
+
+                $payload = new PaymentPayload(
+                    method:          'pix',
+                    amount:          (float) $order->total,
+                    description:     "Pedido #{$order->order_number}",
+                    reference:       (string) $order->id,
+                    customerName:    $order->buyer_name,
+                    customerEmail:   $order->buyer_email,
+                    customerCpfCnpj: $customer->cpf ?? $customer->cnpj,
+                    customerPhone:   preg_replace('/\D/', '', $order->shipping_phone ?? ''),
+                );
+
+                $result = $paymentManager->createCharge($payload);
+
+                $orderService->attachPaymentData(
+                    order:     $order,
+                    paymentId: $result->transactionId,
+                    data:      $result->toStorageArray(),
                 );
             }
 
-            // 3. Redireciona para a confirmação
             $this->redirect(route('order.confirmation', $order->order_number), navigate: false);
 
+        } catch (\App\Exceptions\CheckoutException $e) {
+            $this->errorMessage = $e->getMessage();
+        } catch (\RuntimeException $e) {
+            $this->errorMessage = $e->getMessage();
         } catch (\Throwable $e) {
             Log::error('Checkout error', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
             $this->errorMessage = 'Ocorreu um erro inesperado ao processar seu pedido. Por favor, tente novamente.';
@@ -615,6 +684,7 @@ class CheckoutPage extends Component
     public function backTo(int $step): void
     {
         $this->step = max(1, $step);
+        $this->dispatch('checkout-step-changed', step: $this->step);
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────

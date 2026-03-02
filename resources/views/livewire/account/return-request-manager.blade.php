@@ -16,7 +16,7 @@
 
     <div class="flex items-center justify-between mb-5">
         <div>
-            <h1 class="text-xl font-semibold text-gray-900">Trocas e Devoluções</h1>
+            <h1 class="font-medium text-gray-900">Trocas e Devoluções</h1>
             <p class="text-sm text-gray-500 mt-0.5">Gerencie suas solicitações de troca e devolução</p>
         </div>
         <button wire:click="startNew"

@@ -32,15 +32,13 @@ class PaymentSettings extends Page implements HasForms
     public function mount(): void
     {
         $this->form->fill([
+            'payment_gateway'                => Setting::get('payment_gateway', 'asaas'),
             'payment_card_display'           => Setting::get('payment_card_display', 'both'),
             'payment_pix_discount'           => (float) Setting::get('payment_pix_discount', 0),
             'payment_installments_max'       => (int) Setting::get('payment_installments_max', 12),
             'payment_installments_free'      => (int) Setting::get('payment_installments_free', 1),
             'payment_installment_min_value'  => (float) Setting::get('payment_installment_min_value', 10.00),
             'payment_interest_rate'          => (float) Setting::get('payment_interest_rate', 0),
-            'payment_asaas_sandbox'          => (bool) Setting::get('payment_asaas_sandbox', true),
-            'payment_asaas_token'            => Setting::get('payment_asaas_token', ''),
-            'payment_asaas_webhook_token'    => Setting::get('payment_asaas_webhook_token', ''),
         ]);
     }
 
@@ -48,6 +46,20 @@ class PaymentSettings extends Page implements HasForms
     {
         return $form
             ->schema([
+                Forms\Components\Section::make('Gateway ativo')
+                    ->description('Selecione o gateway de pagamento que será utilizado para processar as cobranças.')
+                    ->schema([
+                        Forms\Components\Select::make('payment_gateway')
+                            ->label('Gateway de pagamento')
+                            ->options([
+                                'asaas' => 'Asaas',
+                            ])
+                            ->default('asaas')
+                            ->selectablePlaceholder(false)
+                            ->helperText('Configure as credenciais de cada gateway no menu lateral correspondente.')
+                            ->columnSpanFull(),
+                    ]),
+
                 Forms\Components\Section::make('Exibição nos produtos')
                     ->description('Defina o que será exibido abaixo do preço nos cards e na página do produto.')
                     ->schema([
@@ -109,29 +121,6 @@ class PaymentSettings extends Page implements HasForms
                             ->helperText('Aplica-se nas parcelas acima do limite sem juros (Tabela Price). 0 = sem juros em todas as parcelas.'),
                     ])
                     ->columns(2),
-
-                Forms\Components\Section::make('Asaas — Gateway de Pagamento')
-                    ->description('Configure a integração com o gateway Asaas para processar PIX e cartão de crédito.')
-                    ->schema([
-                        Forms\Components\Toggle::make('payment_asaas_sandbox')
-                            ->label('Modo Sandbox (ambiente de testes)')
-                            ->helperText('Desative para usar o ambiente de produção e cobranças reais.')
-                            ->columnSpanFull(),
-
-                        Forms\Components\TextInput::make('payment_asaas_token')
-                            ->label('Token de API')
-                            ->password()
-                            ->revealable()
-                            ->helperText('Encontrado em Asaas → Minha Conta → Integrações → Chave de API.')
-                            ->columnSpanFull(),
-
-                        Forms\Components\TextInput::make('payment_asaas_webhook_token')
-                            ->label('Token de Webhook')
-                            ->password()
-                            ->revealable()
-                            ->helperText('Gere um token no Asaas (Configurações → Webhooks) e cole aqui. A URL do webhook é: ' . url('/webhook/asaas'))
-                            ->columnSpanFull(),
-                    ]),
             ])
             ->statePath('data');
     }
@@ -141,15 +130,13 @@ class PaymentSettings extends Page implements HasForms
         $state = $this->form->getState();
 
         Setting::setMany([
+            'payment_gateway'               => $state['payment_gateway'] ?? 'asaas',
             'payment_card_display'          => $state['payment_card_display'] ?? 'both',
             'payment_pix_discount'          => (float) ($state['payment_pix_discount'] ?? 0),
             'payment_installments_max'      => (int) ($state['payment_installments_max'] ?? 12),
             'payment_installments_free'     => (int) ($state['payment_installments_free'] ?? 1),
             'payment_installment_min_value' => (float) ($state['payment_installment_min_value'] ?? 10.00),
             'payment_interest_rate'         => (float) ($state['payment_interest_rate'] ?? 0),
-            'payment_asaas_sandbox'         => $state['payment_asaas_sandbox'] ? '1' : '0',
-            'payment_asaas_token'           => trim($state['payment_asaas_token'] ?? ''),
-            'payment_asaas_webhook_token'   => trim($state['payment_asaas_webhook_token'] ?? ''),
         ]);
 
         Notification::make()

@@ -3,7 +3,7 @@
 @section('title', 'Entrar')
 @section('heading', 'Acesse sua conta')
 
-@section('content')
+@section('form')
     <form method="POST" action="{{ route('account.login') }}" class="space-y-5">
         @csrf
 

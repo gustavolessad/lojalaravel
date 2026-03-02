@@ -3,6 +3,7 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\OrderResource\Pages;
+use App\Filament\Resources\OrderResource\RelationManagers;
 use App\Mail\OrderShipped;
 use App\Models\Order;
 use Filament\Forms;
@@ -306,90 +307,9 @@ class OrderResource extends Resource
 
                 // ── Valores ───────────────────────────────────────────────
                 Infolists\Components\Section::make('Valores')
-                    ->columns(4)
                     ->schema([
-                        Infolists\Components\TextEntry::make('subtotal')
-                            ->label('Subtotal')
-                            ->money('BRL'),
-
-                        Infolists\Components\TextEntry::make('shipping_cost')
-                            ->label('Frete')
-                            ->money('BRL'),
-
-                        Infolists\Components\TextEntry::make('discount')
-                            ->label('Desconto Cupom')
-                            ->formatStateUsing(fn (Order $record): string =>
-                                'R$ ' . number_format((float) $record->discount, 2, ',', '.') .
-                                ($record->coupon_code
-                                    ? ' <span style="--c-50:var(--success-50);--c-400:var(--success-400);--c-600:var(--success-600);" class="fi-badge inline-flex items-center justify-center gap-x-1 rounded-md text-xs font-medium ring-1 ring-inset px-2 py-1 fi-color-custom bg-custom-50 text-custom-600 ring-custom-600/10 dark:bg-custom-400/10 dark:text-custom-400 dark:ring-custom-400/30 ml-2">' . e($record->coupon_code) . '</span>'
-                                    : '')
-                            )
-                            ->html(),
-
-                        Infolists\Components\TextEntry::make('pix_discount')
-                            ->label('Desconto PIX')
-                            ->formatStateUsing(fn (Order $record): string =>
-                                $record->pix_discount > 0
-                                    ? '− R$ ' . number_format((float) $record->pix_discount, 2, ',', '.')
-                                    : '—'
-                            )
-                            ->color(fn (Order $record): string => $record->pix_discount > 0 ? 'success' : 'gray'),
-
-                        Infolists\Components\TextEntry::make('total')
-                            ->label('Total')
-                            ->money('BRL')
-                            ->weight('bold')
-                            ->size(Infolists\Components\TextEntry\TextEntrySize::Large),
-
-                        Infolists\Components\TextEntry::make('payment_summary')
-                            ->label('Detalhe Pgto.')
-                            ->columnSpanFull()
-                            ->formatStateUsing(function (Order $record): string {
-                                if ($record->payment_method === 'pix' && $record->pix_discount > 0) {
-                                    $pct = $record->subtotal + (float) $record->shipping_cost > 0
-                                        ? round((float) $record->pix_discount / ($record->subtotal + (float) $record->shipping_cost - (float) $record->discount) * 100, 1)
-                                        : 0;
-                                    return 'Desconto PIX de ' . $pct . '% — economia de R$ ' . number_format((float) $record->pix_discount, 2, ',', '.');
-                                }
-                                if ($record->payment_method === 'credit_card') {
-                                    $inst    = $record->payment_data['installments'] ?? 1;
-                                    $instVal = $record->payment_data['installment_value'] ?? 0;
-                                    $noJuros = $record->payment_data['interest_free'] ?? true;
-                                    $totalWI = $record->payment_data['total_with_interest'] ?? 0;
-                                    if ($inst <= 1) {
-                                        return 'À vista';
-                                    }
-                                    $label = $inst . '× de R$ ' . number_format((float) $instVal, 2, ',', '.') . ($noJuros ? ' sem juros' : ' com juros');
-                                    if (! $noJuros && $totalWI > $record->total) {
-                                        $surcharge = round($totalWI - (float) $record->total, 2);
-                                        $label .= ' (acréscimo de R$ ' . number_format($surcharge, 2, ',', '.') . ')';
-                                    }
-                                    return $label;
-                                }
-                                return '—';
-                            })
-                            ->visible(fn (Order $record): bool =>
-                                ($record->payment_method === 'pix' && $record->pix_discount > 0) ||
-                                ($record->payment_method === 'credit_card' && ! empty($record->payment_data['installments']))
-                            ),
-                    ]),
-
-                // ── Pagamento ─────────────────────────────────────────────
-                Infolists\Components\Section::make('Pagamento')
-                    ->columns(3)
-                    ->schema([
-                        Infolists\Components\TextEntry::make('payment_method_label')
-                            ->label('Método'),
-
-                        Infolists\Components\TextEntry::make('payment_id')
-                            ->label('ID Asaas')
-                            ->default('—')
-                            ->copyable(),
-
-                        Infolists\Components\TextEntry::make('paid_at')
-                            ->label('Pago em')
-                            ->dateTime('d/m/Y H:i')
-                            ->placeholder('—'),
+                        Infolists\Components\View::make('filament.infolists.order-values')
+                            ->columnSpanFull(),
                     ]),
 
                 // ── Entrega ───────────────────────────────────────────────
@@ -544,6 +464,14 @@ class OrderResource extends Resource
                         Forms\Components\TextInput::make('total')->label('Total')->prefix('R$')->disabled(),
                     ]),
             ]);
+    }
+
+    public static function getRelations(): array
+    {
+        return [
+            RelationManagers\PaymentsRelationManager::class,
+            RelationManagers\OrderEventsRelationManager::class,
+        ];
     }
 
     public static function getPages(): array

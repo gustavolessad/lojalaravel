@@ -50,9 +50,14 @@ $principalMenu = Menu::location('principal');
     @livewireStyles
     @livewireScriptConfig
     <style>
-        [x-cloak] { display: none !important; }
+        [x-cloak] {
+            display: none !important;
+        }
+
         @media (max-width: 1023px) {
-            .drawer-init-hidden { display: none !important; }
+            .drawer-init-hidden {
+                display: none !important;
+            }
         }
     </style>
 </head>
@@ -87,57 +92,57 @@ $principalMenu = Menu::location('principal');
 
     {{-- ═══ Header ═══ --}}
     <header class="bg-white" x-data="{ menuOpen: false }"
-            x-init="$watch('menuOpen', v => document.body.classList.toggle('overflow-hidden', v))">
+        x-init="$watch('menuOpen', v => document.body.classList.toggle('overflow-hidden', v))">
 
         {{-- Overlay mobile --}}
         <div x-show="menuOpen"
-             @click="menuOpen = false"
-             x-transition:enter="transition ease-out duration-200"
-             x-transition:enter-start="opacity-0"
-             x-transition:enter-end="opacity-100"
-             x-transition:leave="transition ease-in duration-150"
-             x-transition:leave-start="opacity-100"
-             x-transition:leave-end="opacity-0"
-             class="fixed inset-0 bg-black/40 z-40 lg:hidden"
-             style="display:none"></div>
+            @click="menuOpen = false"
+            x-transition:enter="transition ease-out duration-200"
+            x-transition:enter-start="opacity-0"
+            x-transition:enter-end="opacity-100"
+            x-transition:leave="transition ease-in duration-150"
+            x-transition:leave-start="opacity-100"
+            x-transition:leave-end="opacity-0"
+            class="fixed inset-0 bg-black/40 z-40 lg:hidden"
+            style="display:none"></div>
 
         {{-- Drawer de menu mobile --}}
         <div x-cloak
-             class="fixed top-0 left-0 bottom-0 w-72 bg-white z-50 flex flex-col lg:hidden
+            class="fixed top-0 left-0 bottom-0 w-72 bg-white z-50 flex flex-col lg:hidden
                     transition-transform duration-300 ease-in-out overflow-hidden"
-             :class="menuOpen ? 'translate-x-0 shadow-xl' : '-translate-x-full'">
+            :class="menuOpen ? 'translate-x-0 shadow-xl' : '-translate-x-full'">
 
             {{-- Cabeçalho do drawer: boas-vindas --}}
             <div class="flex items-center justify-between px-4 py-3 shrink-0 mb-2">
                 <div class="flex items-center gap-2.5">
                     <div class="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center shrink-0">
                         <svg class="w-5 h-5 text-gray-900" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
                         </svg>
                     </div>
                     <div>
                         @auth('customer')
-                            <p class="text-xs text-gray-400">Minha conta</p>
-                            <a href="{{ route('account.dashboard') }}" @click="menuOpen = false"
-                               class="text-sm font-semibold text-gray-900 hover:text-gray-600 transition-colors leading-none">
-                                Olá, {{ explode(' ', auth('customer')->user()->name)[0] }}
-                            </a>
+                        <p class="text-xs text-gray-400">Minha conta</p>
+                        <a href="{{ route('account.dashboard') }}" @click="menuOpen = false"
+                            class="text-sm font-semibold text-gray-900 hover:text-gray-600 transition-colors leading-none">
+                            Olá, {{ explode(' ', auth('customer')->user()->name)[0] }}
+                        </a>
                         @else
-                            <p class="text-xs text-gray-400 leading-none mb-1">Bem-vindo(a)</p>
-                            <div class="flex items-center gap-1.5 leading-none">
-                                <a href="{{ route('account.login') }}" @click="menuOpen = false"
-                                   class="text-sm font-semibold text-gray-900 hover:text-gray-600 transition-colors">Entrar</a>
-                                <span class="text-gray-300 text-sm font-normal">·</span>
-                                <a href="{{ route('account.register') }}" @click="menuOpen = false"
-                                   class="text-sm font-semibold text-gray-900 hover:text-gray-600 transition-colors">Cadastrar</a>
-                            </div>
+                        <p class="text-xs text-gray-400 leading-none mb-1">Bem-vindo(a)</p>
+                        <div class="flex items-center gap-1.5 leading-none">
+                            <a href="{{ route('account.login') }}" @click="menuOpen = false"
+                                class="text-sm font-semibold text-gray-900 hover:text-gray-600 transition-colors">Entrar</a>
+                            <span class="text-gray-300 text-sm font-normal">·</span>
+                            <a href="{{ route('account.register') }}" @click="menuOpen = false"
+                                class="text-sm font-semibold text-gray-900 hover:text-gray-600 transition-colors">Cadastrar</a>
+                        </div>
                         @endauth
                     </div>
                 </div>
                 <button @click="menuOpen = false"
-                        class="p-1.5 text-gray-400 hover:text-gray-900 transition-colors rounded-lg hover:bg-gray-100">
+                    class="p-1.5 text-gray-400 hover:text-gray-900 transition-colors rounded-lg hover:bg-gray-100">
                     <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
                     </svg>
                 </button>
             </div>
@@ -150,58 +155,58 @@ $principalMenu = Menu::location('principal');
             {{-- Itens de menu --}}
             <nav class="flex-1 overflow-y-auto py-2">
                 @if ($principalMenu && $principalMenu->menuItems->isNotEmpty())
-                    @foreach ($principalMenu->menuItems as $item)
-                        @php
-                            $hasChildren = $item->children->isNotEmpty();
-                            $itemUrl = $item->url;
-                            $itemTarget = ($item->target && $item->target->value !== '_self') ? $item->target->value : null;
-                            $itemTitle = $item->linkable
-                                ? ($item->linkable->name ?? $item->linkable->title ?? $item->title)
-                                : $item->title;
-                        @endphp
+                @foreach ($principalMenu->menuItems as $item)
+                @php
+                $hasChildren = $item->children->isNotEmpty();
+                $itemUrl = $item->url;
+                $itemTarget = ($item->target && $item->target->value !== '_self') ? $item->target->value : null;
+                $itemTitle = $item->linkable
+                ? ($item->linkable->name ?? $item->linkable->title ?? $item->title)
+                : $item->title;
+                @endphp
 
-                        @if ($hasChildren)
-                            <div x-data="{ open: false }">
-                                <button @click="open = !open"
-                                        class="flex items-center justify-between w-full px-5 py-3 text-sm font-semibold text-gray-800 hover:text-black hover:bg-gray-50 transition-colors">
-                                    <span>{{ $itemTitle }}</span>
-                                    <svg class="w-3.5 h-3.5 transition-transform duration-150" :class="open && 'rotate-180'"
-                                         fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5"/>
-                                    </svg>
-                                </button>
-                                <div x-show="open"
-                                     x-transition:enter="transition ease-out duration-150"
-                                     x-transition:enter-start="opacity-0"
-                                     x-transition:enter-end="opacity-100"
-                                     class="bg-gray-50 border-y border-gray-100">
-                                    @foreach ($item->children as $child)
-                                        @php
-                                            $childTarget = ($child->target && $child->target->value !== '_self') ? $child->target->value : null;
-                                            $childTitle = $child->linkable
-                                                ? ($child->linkable->name ?? $child->linkable->title ?? $child->title)
-                                                : $child->title;
-                                        @endphp
-                                        <a href="{{ $child->url ?? '#' }}"
-                                           @if ($childTarget) target="{{ $childTarget }}" @endif
-                                           @click="menuOpen = false"
-                                           class="block pl-8 pr-5 py-2.5 text-sm text-gray-600 hover:text-black hover:bg-gray-100 transition-colors">
-                                            {{ $childTitle }}
-                                        </a>
-                                    @endforeach
-                                </div>
-                            </div>
-                        @elseif ($itemUrl)
-                            <a href="{{ $itemUrl }}"
-                               @if ($itemTarget) target="{{ $itemTarget }}" @endif
-                               @click="menuOpen = false"
-                               class="block px-5 py-3 text-sm font-semibold text-gray-800 hover:text-black hover:bg-gray-50 transition-colors">
-                                {{ $itemTitle }}
-                            </a>
-                        @else
-                            <span class="block px-5 py-3 text-sm font-semibold text-gray-400 select-none">{{ $itemTitle }}</span>
-                        @endif
-                    @endforeach
+                @if ($hasChildren)
+                <div x-data="{ open: false }">
+                    <button @click="open = !open"
+                        class="flex items-center justify-between w-full px-5 py-3 text-sm font-semibold text-gray-800 hover:text-black hover:bg-gray-50 transition-colors">
+                        <span>{{ $itemTitle }}</span>
+                        <svg class="w-3.5 h-3.5 transition-transform duration-150" :class="open && 'rotate-180'"
+                            fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+                        </svg>
+                    </button>
+                    <div x-show="open"
+                        x-transition:enter="transition ease-out duration-150"
+                        x-transition:enter-start="opacity-0"
+                        x-transition:enter-end="opacity-100"
+                        class="bg-gray-50 border-y border-gray-100">
+                        @foreach ($item->children as $child)
+                        @php
+                        $childTarget = ($child->target && $child->target->value !== '_self') ? $child->target->value : null;
+                        $childTitle = $child->linkable
+                        ? ($child->linkable->name ?? $child->linkable->title ?? $child->title)
+                        : $child->title;
+                        @endphp
+                        <a href="{{ $child->url ?? '#' }}"
+                            @if ($childTarget) target="{{ $childTarget }}" @endif
+                            @click="menuOpen = false"
+                            class="block pl-8 pr-5 py-2.5 text-sm text-gray-600 hover:text-black hover:bg-gray-100 transition-colors">
+                            {{ $childTitle }}
+                        </a>
+                        @endforeach
+                    </div>
+                </div>
+                @elseif ($itemUrl)
+                <a href="{{ $itemUrl }}"
+                    @if ($itemTarget) target="{{ $itemTarget }}" @endif
+                    @click="menuOpen = false"
+                    class="block px-5 py-3 text-sm font-semibold text-gray-800 hover:text-black hover:bg-gray-50 transition-colors">
+                    {{ $itemTitle }}
+                </a>
+                @else
+                <span class="block px-5 py-3 text-sm font-semibold text-gray-400 select-none">{{ $itemTitle }}</span>
+                @endif
+                @endforeach
                 @endif
             </nav>
         </div>
@@ -214,17 +219,17 @@ $principalMenu = Menu::location('principal');
                 <div class="flex items-center">
                     {{-- Botão hamburguer (mobile only) --}}
                     <button @click="menuOpen = true"
-                            class="lg:hidden p-2 -ml-2 text-gray-700 hover:text-black transition-colors rounded-lg hover:bg-gray-100">
+                        class="lg:hidden p-2 -ml-2 text-gray-700 hover:text-black transition-colors rounded-lg hover:bg-gray-100">
                         <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
                         </svg>
                     </button>
                     {{-- Logo (desktop, alinhado à esquerda) --}}
                     <a href="/" class="hidden lg:block shrink-0">
                         @if ($logoUrl)
-                            <img src="{{ $logoUrl }}" alt="{{ $storeName }}" class="h-10 w-auto">
+                        <img src="{{ $logoUrl }}" alt="{{ $storeName }}" class="h-10 w-auto">
                         @else
-                            <span class="text-xl font-bold text-gray-900">{{ $storeName }}</span>
+                        <span class="text-xl font-bold text-gray-900">{{ $storeName }}</span>
                         @endif
                     </a>
                 </div>
@@ -232,9 +237,9 @@ $principalMenu = Menu::location('principal');
                 {{-- Centro: Logo centralizado (mobile) + Busca (desktop) --}}
                 <a href="/" class="lg:hidden absolute left-1/2 -translate-x-1/2 shrink-0">
                     @if ($logoUrl)
-                        <img src="{{ $logoUrl }}" alt="{{ $storeName }}" class="h-10 w-auto">
+                    <img src="{{ $logoUrl }}" alt="{{ $storeName }}" class="h-10 w-auto">
                     @else
-                        <span class="text-xl font-bold text-gray-900">{{ $storeName }}</span>
+                    <span class="text-xl font-bold text-gray-900">{{ $storeName }}</span>
                     @endif
                 </a>
                 <div class="hidden flex-1 justify-center lg:flex">
@@ -259,7 +264,7 @@ $principalMenu = Menu::location('principal');
 
                     {{-- Minha Conta --}}
                     <a href="{{ auth('customer')->check() ? route('account.dashboard') : route('account.login') }}"
-                       class="hidden lg:flex items-center gap-1.5 text-sm transition-colors group">
+                        class="hidden lg:flex items-center gap-1.5 text-sm transition-colors group">
                         <div class="flex items-center justify-center text-gray-900 w-10 h-10 bg-gray-100 rounded-full">
                             <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
@@ -269,9 +274,9 @@ $principalMenu = Menu::location('principal');
                             <p class="text-xs text-gray-400 leading-none mb-1">Minha conta</p>
                             <p class="text-sm font-semibold text-gray-900 leading-none group-hover:text-gray-600 transition-colors">
                                 @auth('customer')
-                                    Olá, {{ explode(' ', auth('customer')->user()->name)[0] }}
+                                Olá, {{ explode(' ', auth('customer')->user()->name)[0] }}
                                 @else
-                                    Entre ou Cadastre-se
+                                Entre ou Cadastre-se
                                 @endauth
                             </p>
                         </div>
@@ -291,18 +296,18 @@ $principalMenu = Menu::location('principal');
 
                     @foreach ($principalMenu->menuItems as $item)
                     @php
-                        $hasChildren = $item->children->isNotEmpty();
-                        $itemUrl = $item->url;
-                        $itemTarget = ($item->target && $item->target->value !== '_self') ? $item->target->value : null;
-                        $itemTitle = $item->linkable
-                            ? ($item->linkable->name ?? $item->linkable->title ?? $item->title)
-                            : $item->title;
+                    $hasChildren = $item->children->isNotEmpty();
+                    $itemUrl = $item->url;
+                    $itemTarget = ($item->target && $item->target->value !== '_self') ? $item->target->value : null;
+                    $itemTitle = $item->linkable
+                    ? ($item->linkable->name ?? $item->linkable->title ?? $item->title)
+                    : $item->title;
                     @endphp
 
                     @if ($hasChildren)
                     <div class="relative"
-                         @mouseenter="open = {{ $item->id }}"
-                         @mouseleave="open = null">
+                        @mouseenter="open = {{ $item->id }}"
+                        @mouseleave="open = null">
 
                         @if ($itemUrl)
                         <a href="{{ $itemUrl }}" @if ($itemTarget) target="{{ $itemTarget }}" @endif
@@ -310,8 +315,8 @@ $principalMenu = Menu::location('principal');
                             :class="{ 'text-black': open === {{ $item->id }} }">
                             {{ $itemTitle }}
                             <svg class="w-3 h-3 mt-px shrink-0 transition-transform duration-150"
-                                 :class="{ 'rotate-180': open === {{ $item->id }} }"
-                                 fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                                :class="{ 'rotate-180': open === {{ $item->id }} }"
+                                fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
                             </svg>
                         </a>
@@ -321,32 +326,32 @@ $principalMenu = Menu::location('principal');
                             :class="{ 'text-black': open === {{ $item->id }} }">
                             {{ $itemTitle }}
                             <svg class="w-3 h-3 mt-px shrink-0 transition-transform duration-150"
-                                 :class="{ 'rotate-180': open === {{ $item->id }} }"
-                                 fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                                :class="{ 'rotate-180': open === {{ $item->id }} }"
+                                fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
                             </svg>
                         </button>
                         @endif
 
                         <div x-show="open === {{ $item->id }}"
-                             x-transition:enter="transition ease-out duration-100"
-                             x-transition:enter-start="opacity-0 -translate-y-1"
-                             x-transition:enter-end="opacity-100 translate-y-0"
-                             x-transition:leave="transition ease-in duration-75"
-                             x-transition:leave-start="opacity-100 translate-y-0"
-                             x-transition:leave-end="opacity-0 -translate-y-1"
-                             class="absolute left-0 top-full z-50 min-w-48 bg-white rounded-b-lg shadow-lg border overflow-hidden border-gray-100"
-                             style="display:none">
+                            x-transition:enter="transition ease-out duration-100"
+                            x-transition:enter-start="opacity-0 -translate-y-1"
+                            x-transition:enter-end="opacity-100 translate-y-0"
+                            x-transition:leave="transition ease-in duration-75"
+                            x-transition:leave-start="opacity-100 translate-y-0"
+                            x-transition:leave-end="opacity-0 -translate-y-1"
+                            class="absolute left-0 top-full z-50 min-w-48 bg-white rounded-b-lg shadow-lg border overflow-hidden border-gray-100"
+                            style="display:none">
                             @foreach ($item->children as $child)
                             @php
-                                $childTarget = ($child->target && $child->target->value !== '_self') ? $child->target->value : null;
-                                $childTitle = $child->linkable
-                                    ? ($child->linkable->name ?? $child->linkable->title ?? $child->title)
-                                    : $child->title;
+                            $childTarget = ($child->target && $child->target->value !== '_self') ? $child->target->value : null;
+                            $childTitle = $child->linkable
+                            ? ($child->linkable->name ?? $child->linkable->title ?? $child->title)
+                            : $child->title;
                             @endphp
                             <a href="{{ $child->url ?? '#' }}"
-                               @if ($childTarget) target="{{ $childTarget }}" @endif
-                               class="block px-4 py-2.5 text-sm font-medium text-gray-800 hover:bg-gray-100 hover:text-black transition-colors whitespace-nowrap">
+                                @if ($childTarget) target="{{ $childTarget }}" @endif
+                                class="block px-4 py-2.5 text-sm font-medium text-gray-800 hover:bg-gray-100 hover:text-black transition-colors whitespace-nowrap">
                                 {{ $childTitle }}
                             </a>
                             @endforeach
@@ -355,8 +360,8 @@ $principalMenu = Menu::location('principal');
 
                     @elseif ($itemUrl)
                     <a href="{{ $itemUrl }}"
-                       @if ($itemTarget) target="{{ $itemTarget }}" @endif
-                       class="px-3 py-3 font-medium text-gray-800 hover:text-black whitespace-nowrap transition-colors">
+                        @if ($itemTarget) target="{{ $itemTarget }}" @endif
+                        class="px-3 py-3 font-medium text-gray-800 hover:text-black whitespace-nowrap transition-colors">
                         {{ $itemTitle }}
                     </a>
 
@@ -663,6 +668,9 @@ $principalMenu = Menu::location('principal');
             </p>
             @endif
             <p>© {{ date('Y') }} {{ $storeName }}. Todos os direitos reservados.</p>
+            <p class="text-center text-xs text-gray-600 flex flex-col items-center gap-1 mt-6"><span>Desenvolvido por</span>
+                <a href="https://targos.com.br"  target="_blank"><img class="h-4 w-auto" src="{{ asset('images/logo-targos.svg') }}" alt="Desenvolvido por Targos"></a>
+            </p>
         </div>
 
     </footer>

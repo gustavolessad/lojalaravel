@@ -45,7 +45,7 @@
         @if ($this->subcategories->isNotEmpty())
         <div x-data="{ open: true }" class="border border-gray-200 rounded-xl mb-3">
             <button @click="open = !open"
-                    class="flex items-center justify-between w-full text-sm py-4 px-4 font-semibold text-gray-800 hover:text-black transition-colors">
+                    class="flex items-center justify-between w-full text-sm p-3 font-semibold text-gray-800 hover:text-black transition-colors">
                 <span>Categorias</span>
                 <svg class="w-3.5 h-3.5 transition-transform duration-200" :class="open && 'rotate-180'"
                      fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
@@ -59,7 +59,7 @@
                  x-transition:leave="transition ease-in duration-100"
                  x-transition:leave-start="opacity-100"
                  x-transition:leave-end="opacity-0"
-                 class="pb-3 px-4">
+                 class="pb-3 px-3">
                 <ul class="space-y-0.5">
                     @foreach ($this->subcategories as $sub)
                     <li>
@@ -79,7 +79,7 @@
         @php $brandOpen = !empty($brandIds); @endphp
         <div x-data="{ open: @js($brandOpen) }" class="border border-gray-200 rounded-xl mb-3">
             <button @click="open = !open"
-                    class="flex items-center justify-between w-full py-4 px-4 text-sm font-semibold text-gray-800 hover:text-black transition-colors">
+                    class="flex items-center justify-between w-full p-3 text-sm font-semibold text-gray-800 hover:text-black transition-colors">
                 <span>Marca</span>
                 <div class="flex items-center gap-1.5">
                     @if ($brandOpen)
@@ -98,7 +98,7 @@
                  x-transition:leave="transition ease-in duration-100"
                  x-transition:leave-start="opacity-100"
                  x-transition:leave-end="opacity-0"
-                 class="pb-4 px-4">
+                 class="pb-3 px-3">
                 <div class="flex flex-wrap gap-1.5">
                     @foreach ($this->availableBrands as $brand)
                     @php $isActive = in_array($brand->slug, $brandIds); @endphp
@@ -154,7 +154,7 @@
              class="border border-gray-200 rounded-xl mb-3">
 
             <button @click="open = !open"
-                    class="flex items-center justify-between w-full py-4 px-4 text-sm font-semibold text-gray-700 hover:text-black transition-colors">
+                    class="flex items-center justify-between w-full p-3 text-sm font-semibold text-gray-700 hover:text-black transition-colors">
                 <span>Preço</span>
                 <div class="flex items-center gap-1.5">
                     @if ($priceOpen)
@@ -174,7 +174,7 @@
                  x-transition:leave="transition ease-in duration-100"
                  x-transition:leave-start="opacity-100"
                  x-transition:leave-end="opacity-0"
-                 class="px-4 pb-5">
+                 class="px-3 pb-3">
 
                 {{-- Valores selecionados --}}
                 <div class="flex justify-between text-xs font-semibold text-gray-700 mb-4">
@@ -223,7 +223,7 @@
         @php $attrOpen = !empty($attrs[$attribute->slug] ?? []); @endphp
         <div x-data="{ open: @js($attrOpen) }" class="border border-gray-200 rounded-xl mb-3">
             <button @click="open = !open"
-                    class="flex items-center justify-between w-full py-4 px-4 text-sm font-semibold text-gray-700 hover:text-black transition-colors">
+                    class="flex items-center justify-between w-full p-3 text-sm font-semibold text-gray-700 hover:text-black transition-colors">
                 <span>{{ $attribute->name }}</span>
                 <div class="flex items-center gap-1.5">
                     @if ($attrOpen)
@@ -242,7 +242,7 @@
                  x-transition:leave="transition ease-in duration-100"
                  x-transition:leave-start="opacity-100"
                  x-transition:leave-end="opacity-0"
-                 class="pb-4 px-4">
+                 class="pb-3 px-3">
                 <div class="flex flex-wrap gap-1.5">
                     @foreach ($attribute->values as $value)
                     @php $isActive = in_array($value->slug, $attrs[$attribute->slug] ?? []); @endphp
@@ -270,7 +270,7 @@
         @php $attrOpen = !empty($attrs[$attribute->slug] ?? []); @endphp
         <div x-data="{ open: @js($attrOpen) }" class="border border-gray-200 rounded-xl mb-3">
             <button @click="open = !open"
-                    class="flex items-center justify-between w-full py-4 px-4 text-sm font-semibold text-gray-700 hover:text-black transition-colors">
+                    class="flex items-center justify-between w-full p-3 text-sm font-semibold text-gray-700 hover:text-black transition-colors">
                 <span>{{ $attribute->name }}</span>
                 <div class="flex items-center gap-1.5">
                     @if ($attrOpen)
@@ -289,7 +289,7 @@
                  x-transition:leave="transition ease-in duration-100"
                  x-transition:leave-start="opacity-100"
                  x-transition:leave-end="opacity-0"
-                 class="pb-4 px-4">
+                 class="pb-3 px-3">
                 <div class="flex flex-wrap gap-1.5">
                     @foreach ($attribute->values as $value)
                     @php $isActive = in_array($value->slug, $attrs[$attribute->slug] ?? []); @endphp
@@ -308,11 +308,11 @@
         @endforeach
 
         {{-- Em estoque --}}
-        <div class="py-3">
+        <div class="mb-3">
             <button
                 wire:click="$toggle('inStock')"
                 @class([
-                    'w-full flex items-center justify-between px-4 py-2.5 text-sm font-medium rounded-xl border transition-all duration-150',
+                    'w-full flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-xl border transition-all duration-150',
                     'bg-gray-900 border-gray-900 text-white shadow-sm' => $inStock,
                     'bg-white border-gray-200 text-gray-700 hover:border-gray-400 hover:bg-gray-50' => ! $inStock,
                 ])

@@ -2,7 +2,7 @@
     x-data
     x-on:update-url.window="history.replaceState(null, '', $event.detail.url)">
 
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-12">
 
         {{-- ═══════════════════════════════════════════════════════════════
              GALERIA DE IMAGENS (Alpine.js — reinicializa via wire:key)

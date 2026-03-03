@@ -215,32 +215,38 @@
                  ou variável com variante selecionada oos). Mostrado enquanto o usuário
                  ainda está escolhendo (produto variável sem variante resolvida). --}}
             @if ($this->inStock || ($this->product->isVariable() && $this->currentVariant === null))
-            <div>
-                @if ($this->originalPrice)
-                <span class="block text-sm text-gray-400 line-through">
-                    R$ {{ number_format($this->originalPrice, 2, ',', '.') }}
-                </span>
-                @endif
-                <span class="text-3xl font-bold {{ $this->originalPrice ? 'text-green-700' : 'text-green-700' }}">
-                    R$ {{ number_format($this->currentPrice, 2, ',', '.') }}
-                </span>
-            </div>
+            {{-- Bloco de preço com overlay de loading durante troca de variante --}}
+            <div class="relative">
+                <div wire:loading wire:target="selectValue"
+                     class="absolute inset-0 z-11 rounded-lg m-0 bg-white/70 backdrop-blur-[1px]"></div>
 
-            @php
-            $calc = app(\App\Services\PaymentCalculator::class);
-            $cardMode = $calc->cardDisplayMode();
-            $pixP = $calc->pixPrice($this->currentPrice);
-            $instLabel = $calc->bestFreeInstallmentLabel($this->currentPrice);
-            @endphp
-            @if (($cardMode === 'pix' || $cardMode === 'both') && $pixP)
-            <p class="text-sm text-green-600 font-medium -mt-3">
-                <span class="font-bold">R$ {{ number_format($pixP, 2, ',', '.') }}</span> no PIX
-                <span class="ml-2 text-xs text-white bg-green-600 py-[2px] px-[8px] rounded-full">economize R$ {{ number_format($calc->pixSavings($this->currentPrice), 2, ',', '.') }}</span>
-            </p>
-            @endif
-            @if (($cardMode === 'installments' || $cardMode === 'both') && $instLabel)
-            <p class="text-sm text-gray-700 font-medium -mt-3">ou {{ $instLabel }}</p>
-            @endif
+                <div>
+                    @if ($this->originalPrice)
+                    <span class="block text-sm text-gray-400 line-through">
+                        R$ {{ number_format($this->originalPrice, 2, ',', '.') }}
+                    </span>
+                    @endif
+                    <span class="text-3xl font-bold {{ $this->originalPrice ? 'text-green-700' : 'text-green-700' }}">
+                        R$ {{ number_format($this->currentPrice, 2, ',', '.') }}
+                    </span>
+                </div>
+
+                @php
+                $calc = app(\App\Services\PaymentCalculator::class);
+                $cardMode = $calc->cardDisplayMode();
+                $pixP = $calc->pixPrice($this->currentPrice);
+                $instLabel = $calc->bestFreeInstallmentLabel($this->currentPrice);
+                @endphp
+                @if (($cardMode === 'pix' || $cardMode === 'both') && $pixP)
+                <p class="text-sm text-green-600 font-medium">
+                    <span class="font-bold">R$ {{ number_format($pixP, 2, ',', '.') }}</span> no PIX
+                    <span class="ml-2 text-xs text-white bg-green-600 py-[2px] px-[8px] rounded-full">economize R$ {{ number_format($calc->pixSavings($this->currentPrice), 2, ',', '.') }}</span>
+                </p>
+                @endif
+                @if (($cardMode === 'installments' || $cardMode === 'both') && $instLabel)
+                <p class="text-sm text-gray-700 font-medium">ou {{ $instLabel }}</p>
+                @endif
+            </div>
             @endif
 
             {{-- Descrição curta --}}
@@ -252,7 +258,9 @@
 
             {{-- ─── Seletores de variante ──────────────────────────── --}}
             @if ($this->product->isVariable() && $this->product->attributes->isNotEmpty())
-            <div class="space-y-4 pt-1">
+            <div class="relative space-y-4 pt-1">
+                <div wire:loading wire:target="selectValue"
+                     class="absolute inset-0 z-11 m-0 rounded-lg bg-white/70 backdrop-blur-[1px]"></div>
                 @foreach ($this->product->attributes as $attribute)
                 <div>
                     <p class="text-sm font-semibold text-gray-800 mb-2">
@@ -363,21 +371,24 @@
                 <button
                     wire:click="addToCart"
                     wire:loading.attr="disabled"
-                    wire:target="addToCart"
+                    wire:target="addToCart, selectValue"
                     class="w-full lg:w-sm py-3 px-6 rounded-xl font-bold
                                bg-green-700 text-white hover:bg-green-800
-                               transition-colors flex items-center justify-center
+                               transition-colors flex items-center justify-center gap-2
                                disabled:opacity-60 disabled:cursor-not-allowed">
-                    <span wire:loading.remove wire:target="addToCart">
+                    <span wire:loading.remove wire:target="addToCart, selectValue">
                         Adicionar ao Carrinho
                     </span>
-                    <span wire:loading wire:target="addToCart" class="flex items-center gap-2">
-                        <svg class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
-                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
-                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                        </svg>
-                        Adicionando...
-                    </span>
+                    <svg wire:loading wire:target="addToCart" class="animate-spin h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                    </svg>
+                    <span wire:loading wire:target="addToCart">Adicionando...</span>
+                    <svg wire:loading wire:target="selectValue" class="animate-spin h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                    </svg>
+                    <span wire:loading wire:target="selectValue">Carregando...</span>
                 </button>
             </div>
 
@@ -467,7 +478,7 @@
                     </svg>
                 </button>
 
-                <div x-show="open"
+                <div x-show="open" x-cloak
                     x-transition:enter="transition ease-out duration-150"
                     x-transition:enter-start="opacity-0"
                     x-transition:enter-end="opacity-100"

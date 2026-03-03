@@ -7,7 +7,7 @@
     {{-- Breadcrumb --}}
     @if ($product->categories->isNotEmpty())
         @php $firstCategory = $product->categories->first(); @endphp
-        <nav class="flex items-center gap-1.5 text-xs text-gray-500 mb-6 flex-wrap">
+        <nav class="flex items-center gap-1.5 text-xs text-gray-500 mb-3 flex-wrap">
             <a href="/" class="hover:text-gray-900 transition-colors">Início</a>
             @foreach ($firstCategory->breadcrumb as $crumb)
                 <span class="text-gray-300">/</span>

@@ -127,6 +127,7 @@ class ProductDetail extends Component
             'categories',
             'brand',
             'compraJunto',
+            'characteristicValues.attribute',
         ])->findOrFail($this->productId);
     }
 

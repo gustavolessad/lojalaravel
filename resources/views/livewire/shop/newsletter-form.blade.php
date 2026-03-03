@@ -15,7 +15,7 @@
                 <input
                     type="text"
                     wire:model="name"
-                    placeholder="Seu nome"
+                    placeholder="Nome"
                     class="w-full px-4 py-3 rounded-xl text-sm text-gray-900 bg-white border-0
                            focus:ring-0 focus:outline-none placeholder-gray-400
                            @error('name') ring-2 ring-red-400 @enderror"
@@ -28,7 +28,7 @@
                 <input
                     type="email"
                     wire:model="email"
-                    placeholder="Seu e-mail"
+                    placeholder="E-mail"
                     class="w-full px-4 py-3 rounded-xl text-sm text-gray-900 bg-white border-0
                            focus:ring-0 focus:outline-none placeholder-gray-400
                            @error('email') ring-2 ring-red-400 @enderror"
@@ -42,7 +42,7 @@
                     type="tel"
                     wire:model="phone"
                     x-mask="(99) 99999-9999"
-                    placeholder="Seu telefone (opcional)"
+                    placeholder="Telefone"
                     class="w-full px-4 py-3 rounded-xl text-sm text-gray-900 bg-white border-0
                            focus:ring-0 focus:outline-none placeholder-gray-400
                            @error('phone') ring-2 ring-red-400 @enderror"

@@ -13,11 +13,11 @@
                 type="search"
                 placeholder="Buscar produtos..."
                 autocomplete="off"
-                class="w-full pl-4 pr-10 py-2 text-sm border border-gray-300 rounded-full bg-gray-50 focus:outline-none focus:ring-1 focus:ring-black focus:border-transparent transition-all"
+                class="w-full pl-4 pr-10 py-3 text-sm rounded-xl bg-gray-100 focus:outline-none focus:ring-1 focus:ring-gray-300 focus:border-transparent transition-all"
             >
             <button
                 type="submit"
-                class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition"
+                class="absolute right-2 top-1/2 -translate-y-1/2 bg-green-600 h-8 w-8 flex items-center justify-center rounded-lg text-white hover:bg-green-700 transition"
                 aria-label="Buscar"
             >
                 <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">

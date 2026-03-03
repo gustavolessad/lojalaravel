@@ -31,8 +31,17 @@ class AttributeResource extends Resource
                 Forms\Components\TextInput::make('name')
                     ->label('Nome')
                     ->required()
-                    ->maxLength(255),
-            ]),
+                    ->maxLength(255)
+                    ->columnSpan(2),
+
+                Forms\Components\TextInput::make('order')
+                    ->label('Ordem')
+                    ->numeric()
+                    ->default(0)
+                    ->minValue(0)
+                    ->helperText('Menor número aparece primeiro.')
+                    ->columnSpan(1),
+            ])->columns(3),
 
             Forms\Components\Section::make('Valores')->schema([
                 Forms\Components\Repeater::make('values')
@@ -48,10 +57,15 @@ class AttributeResource extends Resource
                             ->label('Exibição')
                             ->maxLength(100)
                             ->placeholder('Igual ao valor'),
+
+                        Forms\Components\TextInput::make('order')
+                            ->label('Ordem')
+                            ->numeric()
+                            ->default(0)
+                            ->minValue(0),
                     ])
-                    ->columns(2)
+                    ->columns(3)
                     ->addActionLabel('Adicionar valor')
-                    ->reorderable('order')
                     ->cloneable()
                     ->collapsible(),
             ]),
@@ -61,7 +75,14 @@ class AttributeResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->reorderable('order')
+            ->defaultSort('order')
             ->columns([
+                Tables\Columns\TextColumn::make('order')
+                    ->label('Ordem')
+                    ->sortable()
+                    ->width('80px'),
+
                 Tables\Columns\TextColumn::make('name')
                     ->label('Nome')
                     ->searchable()

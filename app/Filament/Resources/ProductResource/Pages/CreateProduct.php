@@ -12,6 +12,20 @@ class CreateProduct extends CreateRecord
     protected function afterCreate(): void
     {
         $this->syncExpandAttributes();
+        $this->syncCharacteristics();
+    }
+
+    private function syncCharacteristics(): void
+    {
+        $valueIds = collect($this->data)
+            ->filter(fn ($v, $k) => str_starts_with((string) $k, 'char_') && is_array($v))
+            ->flatMap(fn ($ids) => $ids)
+            ->map(fn ($id) => (int) $id)
+            ->filter()
+            ->unique()
+            ->toArray();
+
+        $this->record->characteristicValues()->sync($valueIds);
     }
 
     private function syncExpandAttributes(): void

@@ -405,6 +405,44 @@ class ProductResource extends Resource
                     ])
                     ->visible(fn (Forms\Get $get) => $get('type') === 'variable'),
 
+                // Características do Produto
+                Forms\Components\Section::make('Características do Produto')
+                    ->description('Informações descritivas exibidas na página do produto e disponíveis como filtros no catálogo. Não criam variantes.')
+                    ->schema(function () {
+                        $attributes = Attribute::with('values')->orderBy('order')->get();
+
+                        if ($attributes->isEmpty()) {
+                            return [
+                                Forms\Components\Placeholder::make('char_hint')
+                                    ->label('')
+                                    ->content('Nenhum atributo cadastrado. Crie em Catálogo → Atributos.'),
+                            ];
+                        }
+
+                        return $attributes->map(function ($attribute) {
+                            return Forms\Components\CheckboxList::make("char_{$attribute->id}")
+                                ->label($attribute->name)
+                                ->options($attribute->values->pluck('value', 'id'))
+                                ->columns(3)
+                                ->dehydrated(true)
+                                ->visible(fn (Forms\Get $get) => ! in_array(
+                                    $attribute->id,
+                                    array_map('intval', $get('attributes') ?? [])
+                                ))
+                                ->afterStateHydrated(function ($component, $record) use ($attribute) {
+                                    if ($record?->exists) {
+                                        $ids = $record->characteristicValues()
+                                            ->where('attribute_values.attribute_id', $attribute->id)
+                                            ->pluck('attribute_values.id')
+                                            ->toArray();
+                                        $component->state($ids);
+                                    }
+                                });
+                        })->toArray();
+                    })
+                    ->collapsed()
+                    ->collapsible(),
+
                 // SEO
                 Forms\Components\Section::make('SEO')->schema([
                     Forms\Components\TextInput::make('seo_title')

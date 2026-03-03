@@ -9,17 +9,25 @@ return new class extends Migration
 {
     public function up(): void
     {
-        // Apaga fisicamente os registros soft-deleted antes de remover a coluna
-        DB::table('orders')->whereNotNull('deleted_at')->delete();
-        DB::table('customers')->whereNotNull('deleted_at')->delete();
+        if (Schema::hasTable('orders')) {
+            DB::table('orders')->whereNotNull('deleted_at')->delete();
 
-        Schema::table('customers', function (Blueprint $table) {
-            $table->dropColumn('deleted_at');
-        });
+            if (Schema::hasColumn('orders', 'deleted_at')) {
+                Schema::table('orders', function (Blueprint $table) {
+                    $table->dropColumn('deleted_at');
+                });
+            }
+        }
 
-        Schema::table('orders', function (Blueprint $table) {
-            $table->dropColumn('deleted_at');
-        });
+        if (Schema::hasTable('customers')) {
+            DB::table('customers')->whereNotNull('deleted_at')->delete();
+
+            if (Schema::hasColumn('customers', 'deleted_at')) {
+                Schema::table('customers', function (Blueprint $table) {
+                    $table->dropColumn('deleted_at');
+                });
+            }
+        }
     }
 
     public function down(): void

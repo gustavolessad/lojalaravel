@@ -675,7 +675,6 @@ $principalMenu = Menu::location('principal');
 
     </footer>
 
-    @livewireScripts
     @stack('scripts')
     <script>
         document.addEventListener('livewire:init', () => {

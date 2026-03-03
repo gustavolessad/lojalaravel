@@ -301,7 +301,7 @@
                                 >
                                 <img src="{{ $variantThumb }}"
                                     alt="{{ $value->getLabel() }}"
-                                    class="w-8 h-8 rounded-lg object-cover shrink-0 {{ ($isAvailable && $isOutOfStock) || (! $isAvailable && $isOutOfStock) ? 'opacity-50' : '' }}">
+                                    class="w-20 h-20 rounded-lg object-cover shrink-0 {{ ($isAvailable && $isOutOfStock) || (! $isAvailable && $isOutOfStock) ? 'opacity-50' : '' }}">
                                 <span>{{ $value->getLabel() }}</span>
                             </button>
                             @if ($isOutOfStock) {!! $xBadge !!} @endif

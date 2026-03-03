@@ -186,7 +186,7 @@
                     {{-- Track de fundo --}}
                     <div class="absolute inset-x-0 h-1.5 bg-gray-200 rounded-full pointer-events-none">
                         {{-- Preenchimento entre os dois thumbs --}}
-                        <div class="absolute h-full bg-indigo-500 rounded-full"
+                        <div class="absolute h-full bg-black rounded-full"
                              :style="`left: ${fromPct}%; right: ${100 - toPct}%`"></div>
                     </div>
 
@@ -369,7 +369,7 @@
             <div class="flex items-center gap-2 flex-shrink-0">
                 <label class="text-xs text-gray-500 hidden sm:inline">Ordenar:</label>
                 <select wire:model.live="sort"
-                        class="text-sm border border-gray-200 rounded-lg px-3 py-1.5 bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                        class="text-sm border border-gray-200 rounded-lg px-3 py-1.5 bg-white focus:ring-1 focus:ring-black focus:outline-none">
                     <option value="newest">Mais recentes</option>
                     <option value="price_asc">Menor preço</option>
                     <option value="price_desc">Maior preço</option>
@@ -444,7 +444,7 @@
         {{-- Loading bar --}}
         <div wire:loading.delay class="mb-4">
             <div class="h-0.5 bg-indigo-100 rounded-full overflow-hidden">
-                <div class="h-full bg-indigo-500 rounded-full animate-pulse w-3/4"></div>
+                <div class="h-full bg-black rounded-full animate-pulse w-3/4"></div>
             </div>
         </div>
 
@@ -456,7 +456,7 @@
                 </svg>
                 <p class="text-gray-500 text-lg mb-2">Nenhum produto encontrado</p>
                 @if ($this->hasActiveFilters)
-                    <button wire:click="resetFilters" class="text-indigo-600 hover:underline text-sm">
+                    <button wire:click="resetFilters" class="text-danger-600 hover:underline text-sm">
                         Limpar filtros
                     </button>
                 @endif

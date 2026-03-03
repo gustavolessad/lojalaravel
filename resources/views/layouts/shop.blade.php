@@ -49,6 +49,12 @@ $principalMenu = Menu::location('principal');
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @livewireStyles
     @livewireScriptConfig
+    <style>
+        [x-cloak] { display: none !important; }
+        @media (max-width: 1023px) {
+            .drawer-init-hidden { display: none !important; }
+        }
+    </style>
 </head>
 
 <body class="text-gray-900 antialiased">
@@ -96,7 +102,8 @@ $principalMenu = Menu::location('principal');
              style="display:none"></div>
 
         {{-- Drawer de menu mobile --}}
-        <div class="fixed top-0 left-0 bottom-0 w-72 bg-white z-50 flex flex-col lg:hidden
+        <div x-cloak
+             class="fixed top-0 left-0 bottom-0 w-72 bg-white z-50 flex flex-col lg:hidden
                     transition-transform duration-300 ease-in-out overflow-hidden"
              :class="menuOpen ? 'translate-x-0 shadow-xl' : '-translate-x-full'">
 

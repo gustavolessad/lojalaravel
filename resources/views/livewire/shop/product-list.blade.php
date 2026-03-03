@@ -22,7 +22,8 @@
     {{-- ═══════════════════════════════════════════════════════════════════
          SIDEBAR DE FILTROS (sidebar no desktop / drawer no mobile)
     ════════════════════════════════════════════════════════════════════ --}}
-    <aside class="fixed top-0 left-0 bottom-0 w-72 bg-white z-50 overflow-y-auto flex-shrink-0
+    <aside x-init="$el.classList.remove('drawer-init-hidden')"
+           class="drawer-init-hidden fixed top-0 left-0 bottom-0 w-72 bg-white z-50 overflow-y-auto flex-shrink-0
                   transition-transform duration-300 ease-in-out
                   lg:static lg:w-60 lg:h-auto lg:z-auto lg:overflow-visible lg:bg-transparent lg:shadow-none lg:transition-none"
            :class="filtersOpen ? 'translate-x-0 shadow-xl' : '-translate-x-full lg:translate-x-0'">

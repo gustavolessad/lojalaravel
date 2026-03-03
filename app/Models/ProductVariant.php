@@ -16,6 +16,7 @@ class ProductVariant extends Model implements HasMedia
 
     protected $fillable = [
         'product_id',
+        'variant_group_id',
         'sku',
         'price',
         'sale_price',
@@ -70,6 +71,11 @@ class ProductVariant extends Model implements HasMedia
     public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);
+    }
+
+    public function variantGroup(): BelongsTo
+    {
+        return $this->belongsTo(ProductVariantGroup::class);
     }
 
     public function attributeValues(): BelongsToMany

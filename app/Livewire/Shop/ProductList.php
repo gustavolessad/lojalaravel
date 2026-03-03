@@ -406,10 +406,10 @@ class ProductList extends Component
 
                 $inStock = $matchingVariants->where('stock', '>', 0)->isNotEmpty();
 
-                $imageUrl = $variant->getFirstMediaUrl('variant-cover', 'thumb') ?: null;
-                if (! $imageUrl) {
-                    $imageUrl = $product->getFirstMediaUrl('cover', 'thumb') ?: null;
-                }
+                $imageUrl = $variant->variantGroup?->getFirstMediaUrl('group-cover', 'thumb')
+                    ?: $variant->getFirstMediaUrl('variant-cover', 'thumb')
+                    ?: $product->getFirstMediaUrl('cover', 'thumb')
+                    ?: null;
 
                 if ($variant->price !== null) {
                     $price         = $variant->getEffectivePrice();

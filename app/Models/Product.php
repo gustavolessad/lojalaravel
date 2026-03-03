@@ -125,6 +125,11 @@ class Product extends Model implements HasMedia
             ->orderBy('attributes.order');
     }
 
+    public function variantGroups(): HasMany
+    {
+        return $this->hasMany(ProductVariantGroup::class)->orderBy('order');
+    }
+
     public function variants(): HasMany
     {
         return $this->hasMany(ProductVariant::class)->orderBy('order');

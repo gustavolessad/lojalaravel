@@ -8,6 +8,7 @@ use App\Catalog\SearchScope;
 use App\Contracts\ProductScopeInterface;
 use App\Data\CatalogEntry;
 use App\Models\Attribute;
+use App\Models\AttributeValue;
 use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Product;
@@ -266,13 +267,19 @@ class ProductList extends Component
             $query->whereHas('brand', fn ($q) => $q->whereIn('slug', $this->brandIds));
         }
 
-        // Filtro de atributos: OR dentro do mesmo atributo, AND entre atributos diferentes
+        // Filtro de atributos: OR dentro do mesmo atributo (variante OU característica), AND entre atributos
         foreach ($this->attrs as $attrSlug => $valueSlugs) {
             if (! empty($valueSlugs)) {
-                $query->whereHas('variants.attributeValues', fn ($q) =>
-                    $q->whereIn('attribute_values.slug', $valueSlugs)
-                      ->whereHas('attribute', fn ($q) => $q->where('slug', $attrSlug))
-                );
+                $query->where(function ($q) use ($attrSlug, $valueSlugs) {
+                    $q->whereHas('variants.attributeValues', fn ($q) =>
+                        $q->whereIn('attribute_values.slug', $valueSlugs)
+                          ->whereHas('attribute', fn ($q) => $q->where('slug', $attrSlug))
+                    )
+                    ->orWhereHas('characteristicValues', fn ($q) =>
+                        $q->whereIn('attribute_values.slug', $valueSlugs)
+                          ->whereHas('attribute', fn ($q) => $q->where('slug', $attrSlug))
+                    );
+                });
             }
         }
 
@@ -321,9 +328,12 @@ class ProductList extends Component
         // Filtros de atributo com seleção única são carregados na URL do produto,
         // para que o ProductDetail pré-selecione a variante correspondente ao filtro ativo.
         // Multi-seleção é ignorada (não dá para pré-selecionar múltiplos valores).
+        // Apenas atributos de VARIANTE são carregados — características não se mapeiam
+        // para valores de variante e causariam matchingVariants vazio se incluídas.
+        $variantAttrSlugs = $this->availableAttributes->pluck('slug')->flip()->toArray();
         $carryParams = [];
         foreach ($this->attrs as $attrSlug => $valueSlugs) {
-            if (count($valueSlugs) === 1) {
+            if (count($valueSlugs) === 1 && isset($variantAttrSlugs[$attrSlug])) {
                 $carryParams[$attrSlug] = $valueSlugs[0];
             }
         }
@@ -396,10 +406,10 @@ class ProductList extends Component
 
                 $inStock = $matchingVariants->where('stock', '>', 0)->isNotEmpty();
 
-                $imageUrl = $variant->getFirstMediaUrl('variant-cover', 'thumb') ?: null;
-                if (! $imageUrl) {
-                    $imageUrl = $product->getFirstMediaUrl('cover', 'thumb') ?: null;
-                }
+                $imageUrl = $variant->variantGroup?->getFirstMediaUrl('group-cover', 'thumb')
+                    ?: $variant->getFirstMediaUrl('variant-cover', 'thumb')
+                    ?: $product->getFirstMediaUrl('cover', 'thumb')
+                    ?: null;
 
                 if ($variant->price !== null) {
                     $price         = $variant->getEffectivePrice();
@@ -477,9 +487,42 @@ class ProductList extends Component
             ->unique();
 
         return Attribute::whereIn('id', $attributeIds)
+            ->orderBy('order')
             ->with(['values' => function ($q) use ($productIds) {
                 $q->whereHas('variants', fn ($q) => $q->whereIn('product_id', $productIds))
                   ->orderBy('order');
+            }])
+            ->get()
+            ->filter(fn ($attr) => $attr->values->isNotEmpty())
+            ->values();
+    }
+
+    #[Computed]
+    public function availableCharacteristics(): Collection
+    {
+        $productIds = $this->scope->baseProductIds();
+
+        if ($productIds->isEmpty()) {
+            return collect();
+        }
+
+        $valueIds = DB::table('product_characteristic_values')
+            ->whereIn('product_id', $productIds)
+            ->pluck('attribute_value_id')
+            ->unique();
+
+        if ($valueIds->isEmpty()) {
+            return collect();
+        }
+
+        $attributeIds = AttributeValue::whereIn('id', $valueIds)
+            ->pluck('attribute_id')
+            ->unique();
+
+        return Attribute::whereIn('id', $attributeIds)
+            ->orderBy('order')
+            ->with(['values' => function ($q) use ($valueIds) {
+                $q->whereIn('id', $valueIds)->orderBy('order');
             }])
             ->get()
             ->filter(fn ($attr) => $attr->values->isNotEmpty())

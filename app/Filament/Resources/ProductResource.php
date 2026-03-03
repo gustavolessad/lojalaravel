@@ -9,6 +9,7 @@ use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\ProductTag;
+use App\Models\ProductVariantGroup;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -152,6 +153,56 @@ class ProductResource extends Resource
                         ->numeric()
                         ->suffix('cm'),
                 ])->columns(4)->collapsed(),
+
+                // Grupos de imagens (apenas para produto variável)
+                Forms\Components\Section::make('Grupos de Imagens')
+                    ->description('Crie um grupo por visual (ex: "Preto", "Madeira Clara") e suba as fotos uma única vez. As variantes referenciam o grupo pelo select abaixo.')
+                    ->schema([
+                        Forms\Components\Repeater::make('variantGroups')
+                            ->label('')
+                            ->relationship()
+                            ->schema([
+                                Forms\Components\TextInput::make('name')
+                                    ->label('Nome do grupo')
+                                    ->required()
+                                    ->maxLength(100)
+                                    ->placeholder('Ex: Preto, Madeira Clara...')
+                                    ->columnSpan(2),
+
+                                Forms\Components\SpatieMediaLibraryFileUpload::make('group-cover')
+                                    ->label('Foto principal')
+                                    ->collection('group-cover')
+                                    ->image()
+                                    ->imageEditor()
+                                    ->getUploadedFileNameForStorageUsing(function (TemporaryUploadedFile $file, $record): string {
+                                        $ext  = strtolower($file->getClientOriginalExtension() ?: 'jpg');
+                                        $name = Str::slug($record?->name ?? $record?->product?->name ?? 'grupo');
+                                        return "{$name}-cover.{$ext}";
+                                    })
+                                    ->columnSpan(1),
+
+                                Forms\Components\SpatieMediaLibraryFileUpload::make('group-gallery')
+                                    ->label('Galeria')
+                                    ->collection('group-gallery')
+                                    ->multiple()
+                                    ->image()
+                                    ->reorderable()
+                                    ->panelLayout('grid')
+                                    ->imagePreviewHeight('80')
+                                    ->getUploadedFileNameForStorageUsing(function (TemporaryUploadedFile $file, $record): string {
+                                        $ext  = strtolower($file->getClientOriginalExtension() ?: 'jpg');
+                                        $name = Str::slug($record?->name ?? $record?->product?->name ?? 'grupo');
+                                        return "{$name}-" . substr(uniqid(), -5) . ".{$ext}";
+                                    })
+                                    ->columnSpan(1),
+                            ])
+                            ->columns(4)
+                            ->addActionLabel('Adicionar grupo de imagens')
+                            ->cloneable()
+                            ->collapsible()
+                            ->itemLabel(fn (array $state): string => filled($state['name'] ?? '') ? $state['name'] : 'Novo grupo'),
+                    ])
+                    ->visible(fn (Forms\Get $get) => $get('type') === 'variable'),
 
                 // Variantes (apenas para produto variável)
                 Forms\Components\Section::make('Variantes')
@@ -319,34 +370,18 @@ class ProductResource extends Resource
                                         ->placeholder(fn (Forms\Get $get) =>
                                             ($v = $get('../../height')) ? "{$v} cm" : '—'),
 
-                                    // Imagens
-                                    Forms\Components\SpatieMediaLibraryFileUpload::make('variant-cover')
-                                        ->label('Foto da variante')
-                                        ->collection('variant-cover')
-                                        ->image()
-                                        ->imageEditor()
-                                        ->getUploadedFileNameForStorageUsing(function (TemporaryUploadedFile $file, $record): string {
-                                            $ext         = strtolower($file->getClientOriginalExtension() ?: 'jpg');
-                                            $productSlug = Str::slug($record?->product?->name ?? $record?->name ?? 'variante');
-                                            $sku         = Str::slug($record?->sku ?? substr(uniqid(), -5));
-                                            return "{$productSlug}-{$sku}.{$ext}";
+                                    // Grupo de imagens
+                                    Forms\Components\Select::make('variant_group_id')
+                                        ->label('Grupo de imagens')
+                                        ->placeholder('Nenhum (usa imagem do produto)')
+                                        ->options(function ($livewire) {
+                                            return ProductVariantGroup::where('product_id', $livewire->record?->id)
+                                                ->orderBy('order')
+                                                ->pluck('name', 'id');
                                         })
-                                        ->columnSpan(2),
-
-                                    Forms\Components\SpatieMediaLibraryFileUpload::make('variant-gallery')
-                                        ->label('Galeria da variante')
-                                        ->collection('variant-gallery')
-                                        ->multiple()
-                                        ->image()
-                                        ->reorderable()
-                                        ->panelLayout('grid')
-                                        ->imagePreviewHeight('80')
-                                        ->getUploadedFileNameForStorageUsing(function (TemporaryUploadedFile $file, $record): string {
-                                            $ext         = strtolower($file->getClientOriginalExtension() ?: 'jpg');
-                                            $productSlug = Str::slug($record?->product?->name ?? $record?->name ?? 'variante');
-                                            return "{$productSlug}-" . substr(uniqid(), -5) . ".{$ext}";
-                                        })
-                                        ->columnSpan(2),
+                                        ->helperText('Crie os grupos na seção acima e salve o produto para associar.')
+                                        ->nullable()
+                                        ->columnSpan(4),
                                 ];
                             })
                             ->columns(4)
@@ -404,6 +439,44 @@ class ProductResource extends Resource
                             ->columnSpanFull(),
                     ])
                     ->visible(fn (Forms\Get $get) => $get('type') === 'variable'),
+
+                // Características do Produto
+                Forms\Components\Section::make('Características do Produto')
+                    ->description('Informações descritivas exibidas na página do produto e disponíveis como filtros no catálogo. Não criam variantes.')
+                    ->schema(function () {
+                        $attributes = Attribute::with('values')->orderBy('order')->get();
+
+                        if ($attributes->isEmpty()) {
+                            return [
+                                Forms\Components\Placeholder::make('char_hint')
+                                    ->label('')
+                                    ->content('Nenhum atributo cadastrado. Crie em Catálogo → Atributos.'),
+                            ];
+                        }
+
+                        return $attributes->map(function ($attribute) {
+                            return Forms\Components\CheckboxList::make("char_{$attribute->id}")
+                                ->label($attribute->name)
+                                ->options($attribute->values->pluck('value', 'id'))
+                                ->columns(3)
+                                ->dehydrated(true)
+                                ->visible(fn (Forms\Get $get) => ! in_array(
+                                    $attribute->id,
+                                    array_map('intval', $get('attributes') ?? [])
+                                ))
+                                ->afterStateHydrated(function ($component, $record) use ($attribute) {
+                                    if ($record?->exists) {
+                                        $ids = $record->characteristicValues()
+                                            ->where('attribute_values.attribute_id', $attribute->id)
+                                            ->pluck('attribute_values.id')
+                                            ->toArray();
+                                        $component->state($ids);
+                                    }
+                                });
+                        })->toArray();
+                    })
+                    ->collapsed()
+                    ->collapsible(),
 
                 // SEO
                 Forms\Components\Section::make('SEO')->schema([

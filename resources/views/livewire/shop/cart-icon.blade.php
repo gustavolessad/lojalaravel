@@ -5,7 +5,7 @@
     </svg>
 
     @if ($count > 0)
-        <span class="absolute -top-1 -right-1 inline-flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-green-800 rounded-full">
+        <span class="absolute -top-1 -right-1 inline-flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-green-600 hover:bg-green-700 rounded-full">
             {{ $count > 99 ? '99+' : $count }}
         </span>
     @endif

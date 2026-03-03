@@ -113,7 +113,7 @@ class ProductDetail extends Component
     {
         return Product::with([
             'variants' => fn ($q) => $q->where('active', true)
-                ->with(['attributeValues.attribute', 'media'])
+                ->with(['attributeValues.attribute', 'media', 'variantGroup.media'])
                 ->orderBy('order'),
             'attributes' => fn ($q) => $q->withPivot('expand_in_catalog')->with([
                 'values' => fn ($vq) => $vq
@@ -127,6 +127,7 @@ class ProductDetail extends Component
             'categories',
             'brand',
             'compraJunto',
+            'characteristicValues.attribute',
         ])->findOrFail($this->productId);
     }
 
@@ -216,6 +217,20 @@ class ProductDetail extends Component
     public function currentImages(): Collection
     {
         if ($this->currentVariant) {
+            // 1. Usa o grupo de imagens da variante (se tiver)
+            $group = $this->currentVariant->variantGroup;
+            if ($group) {
+                $cover = $group->getFirstMediaUrl('group-cover', 'webp');
+                if ($cover !== '') {
+                    $images = collect([$cover]);
+                    foreach ($group->getMedia('group-gallery') as $media) {
+                        $images->push($media->getUrl('webp') ?: $media->getUrl());
+                    }
+                    return $images;
+                }
+            }
+
+            // 2. Backward compat: imagens próprias da variante
             $cover = $this->currentVariant->getFirstMediaUrl('variant-cover', 'webp');
             if ($cover !== '') {
                 $images = collect([$cover]);
@@ -359,7 +374,8 @@ class ProductDetail extends Component
                     ->first();
 
                 if ($variant) {
-                    $url = $variant->getFirstMediaUrl('variant-cover', 'thumb');
+                    $url = $variant->variantGroup?->getFirstMediaUrl('group-cover', 'thumb')
+                        ?: $variant->getFirstMediaUrl('variant-cover', 'thumb');
                     if ($url) {
                         $map[$attribute->slug][$value->slug] = $url;
                     }

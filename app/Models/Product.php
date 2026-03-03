@@ -121,12 +121,23 @@ class Product extends Model implements HasMedia
     public function attributes(): BelongsToMany
     {
         return $this->belongsToMany(Attribute::class, 'product_attributes')
-            ->withPivot('expand_in_catalog');
+            ->withPivot('expand_in_catalog')
+            ->orderBy('attributes.order');
+    }
+
+    public function variantGroups(): HasMany
+    {
+        return $this->hasMany(ProductVariantGroup::class)->orderBy('order');
     }
 
     public function variants(): HasMany
     {
         return $this->hasMany(ProductVariant::class)->orderBy('order');
+    }
+
+    public function characteristicValues(): BelongsToMany
+    {
+        return $this->belongsToMany(AttributeValue::class, 'product_characteristic_values');
     }
 
     public function compraJunto(): BelongsToMany

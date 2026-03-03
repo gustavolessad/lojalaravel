@@ -275,7 +275,7 @@
                                 <input wire:model="couponCode"
                                     type="text"
                                     placeholder="Código"
-                                    class="flex-1 min-w-0 text-sm border border-gray-200 rounded-xl px-3 py-2 uppercase tracking-wider focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent transition">
+                                    class="flex-1 min-w-0 text-sm border border-gray-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent transition">
                                 <button type="submit"
                                     wire:loading.attr="disabled"
                                     class="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium rounded-xl transition-colors disabled:opacity-50 shrink-0">

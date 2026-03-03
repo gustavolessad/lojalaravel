@@ -9,7 +9,7 @@ use Illuminate\Support\Str;
 
 class Attribute extends Model
 {
-    protected $fillable = ['name', 'slug'];
+    protected $fillable = ['name', 'slug', 'order'];
 
     protected static function boot(): void
     {

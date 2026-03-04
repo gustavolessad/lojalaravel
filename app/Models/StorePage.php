@@ -16,6 +16,7 @@ class StorePage extends Model implements MenuPanelable
         'content',
         'meta_title',
         'meta_description',
+        'meta_keywords',
         'is_system',
     ];
 

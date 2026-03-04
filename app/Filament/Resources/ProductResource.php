@@ -16,6 +16,7 @@ use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\HtmlString;
 use Illuminate\Support\Str;
 use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 
@@ -475,14 +476,39 @@ class ProductResource extends Resource
                 Forms\Components\Section::make('SEO')->schema([
                     Forms\Components\TextInput::make('seo_title')
                         ->label('Título SEO')
-                        ->maxLength(255),
-                    Forms\Components\TextInput::make('seo_description')
+                        ->maxLength(60)
+                        ->live(debounce: '500ms')
+                        ->hint(fn (?string $state): string => mb_strlen($state ?? '') . '/60')
+                        ->hintColor(fn (?string $state) => mb_strlen($state ?? '') > 60 ? 'danger' : (mb_strlen($state ?? '') > 50 ? 'warning' : null)),
+                    Forms\Components\Textarea::make('seo_description')
                         ->label('Descrição SEO')
-                        ->maxLength(255),
+                        ->rows(2)
+                        ->maxLength(160)
+                        ->live(debounce: '500ms')
+                        ->hint(fn (?string $state): string => mb_strlen($state ?? '') . '/160')
+                        ->hintColor(fn (?string $state) => mb_strlen($state ?? '') > 160 ? 'danger' : (mb_strlen($state ?? '') > 150 ? 'warning' : null)),
                     Forms\Components\TextInput::make('seo_keywords')
                         ->label('Palavras-chave SEO')
                         ->maxLength(255)
                         ->placeholder('palavra1, palavra2, palavra3')
+                        ->columnSpanFull(),
+                    Forms\Components\Placeholder::make('serp_preview')
+                        ->label('')
+                        ->content(function (Forms\Get $get): HtmlString {
+                            $title = $get('seo_title') ?: $get('name') ?: 'Título do produto';
+                            $desc = $get('seo_description') ?: 'Adicione uma descrição SEO para visualizar...';
+                            $slug = $get('slug') ?: 'produto';
+                            $url = url("/{$slug}/p");
+
+                            return new HtmlString(
+                                '<div class="rounded-lg border border-gray-200 bg-white p-4 dark:border-white/10 dark:bg-white/5">'
+                                . '<p class="text-xs font-medium text-gray-400 mb-2">Preview do Google</p>'
+                                . '<cite class="text-sm text-[#202124] dark:text-gray-300 not-italic">' . e($url) . '</cite>'
+                                . '<h3 class="text-xl text-[#1a0dab] dark:text-blue-400 leading-snug truncate mt-0.5">' . e(mb_substr($title, 0, 60)) . '</h3>'
+                                . '<p class="text-sm text-[#4d5156] dark:text-gray-400 mt-0.5 line-clamp-2">' . e(mb_substr($desc, 0, 160)) . '</p>'
+                                . '</div>'
+                            );
+                        })
                         ->columnSpanFull(),
                 ])->columns(2)->collapsed(),
 

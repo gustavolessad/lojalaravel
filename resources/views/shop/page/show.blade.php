@@ -1,6 +1,72 @@
 @extends('layouts.shop')
 
-@section('title', ($page->meta_title ?: $page->title) . ' — ' . config('app.name'))
+@section('title', $page->meta_title ?: $page->title)
+
+@if ($page->meta_description)
+    @section('meta_description', $page->meta_description)
+@endif
+
+@if ($page->meta_keywords)
+    @section('meta_keywords', $page->meta_keywords)
+@endif
+
+@section('canonical', route('page.show', $page->slug))
+
+@section('og_tags')
+    <meta property="og:type"        content="article">
+    <meta property="og:site_name"   content="{{ config('app.name') }}">
+    <meta property="og:title"       content="{{ $page->meta_title ?: $page->title }}">
+    @if ($page->meta_description)
+        <meta property="og:description" content="{{ $page->meta_description }}">
+    @endif
+    <meta property="og:url"         content="{{ route('page.show', $page->slug) }}">
+    @php
+        $ogImage = \App\Models\Setting::get('seo_og_image', '');
+        $ogImageUrl = $ogImage ? \Illuminate\Support\Facades\Storage::disk('public')->url($ogImage) : null;
+        if (! $ogImageUrl) {
+            $storeLogo = \App\Models\Setting::get('store_logo', '');
+            $ogImageUrl = $storeLogo ? \Illuminate\Support\Facades\Storage::disk('public')->url($storeLogo) : null;
+        }
+    @endphp
+    @if ($ogImageUrl)
+        <meta property="og:image" content="{{ $ogImageUrl }}">
+    @endif
+    <meta name="twitter:card"        content="summary">
+    <meta name="twitter:title"       content="{{ $page->meta_title ?: $page->title }}">
+    @if ($page->meta_description)
+        <meta name="twitter:description" content="{{ $page->meta_description }}">
+    @endif
+@endsection
+
+@push('head')
+    {{-- JSON-LD: BreadcrumbList --}}
+    @php
+        $breadcrumbLd = [
+            '@context' => 'https://schema.org',
+            '@type'    => 'BreadcrumbList',
+            'itemListElement' => [
+                ['@type' => 'ListItem', 'position' => 1, 'name' => 'Início', 'item' => url('/')],
+                ['@type' => 'ListItem', 'position' => 2, 'name' => $page->title],
+            ],
+        ];
+    @endphp
+    <script type="application/ld+json">{!! json_encode($breadcrumbLd, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) !!}</script>
+
+    {{-- JSON-LD: WebPage --}}
+    @php
+        $webPageLd = [
+            '@context'    => 'https://schema.org',
+            '@type'       => 'WebPage',
+            'name'        => $page->meta_title ?: $page->title,
+            'url'         => route('page.show', $page->slug),
+            'dateModified' => $page->updated_at->toIso8601String(),
+        ];
+        if ($page->meta_description) {
+            $webPageLd['description'] = $page->meta_description;
+        }
+    @endphp
+    <script type="application/ld+json">{!! json_encode($webPageLd, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) !!}</script>
+@endpush
 
 @section('content')
     {{-- Breadcrumb --}}

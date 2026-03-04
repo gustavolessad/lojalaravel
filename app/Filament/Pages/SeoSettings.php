@@ -29,6 +29,8 @@ class SeoSettings extends Page implements HasForms
         $this->form->fill([
             'seo_meta_title'        => Setting::get('seo_meta_title', ''),
             'seo_meta_description'  => Setting::get('seo_meta_description', ''),
+            'seo_meta_keywords'     => Setting::get('seo_meta_keywords', ''),
+            'seo_og_image'          => Setting::get('seo_og_image', ''),
             'seo_google_analytics'  => Setting::get('seo_google_analytics', ''),
             'seo_google_tag_manager'=> Setting::get('seo_google_tag_manager', ''),
             'seo_facebook_pixel'    => Setting::get('seo_facebook_pixel', ''),
@@ -44,15 +46,40 @@ class SeoSettings extends Page implements HasForms
                     ->schema([
                         Forms\Components\TextInput::make('seo_meta_title')
                             ->label('Título Padrão (meta title)')
-                            ->maxLength(70)
-                            ->helperText('Recomendado: até 60 caracteres. Aparece na aba do navegador e nos resultados do Google.')
+                            ->maxLength(60)
+                            ->live(debounce: '500ms')
+                            ->hint(fn (?string $state): string => mb_strlen($state ?? '') . '/60')
+                            ->hintColor(fn (?string $state) => mb_strlen($state ?? '') > 60 ? 'danger' : (mb_strlen($state ?? '') > 50 ? 'warning' : null))
+                            ->helperText('Aparece na aba do navegador e nos resultados do Google.')
                             ->columnSpanFull(),
 
                         Forms\Components\Textarea::make('seo_meta_description')
                             ->label('Descrição Padrão (meta description)')
                             ->rows(3)
                             ->maxLength(160)
-                            ->helperText('Recomendado: até 155 caracteres. Aparece como resumo nos resultados de busca.')
+                            ->live(debounce: '500ms')
+                            ->hint(fn (?string $state): string => mb_strlen($state ?? '') . '/160')
+                            ->hintColor(fn (?string $state) => mb_strlen($state ?? '') > 160 ? 'danger' : (mb_strlen($state ?? '') > 150 ? 'warning' : null))
+                            ->helperText('Aparece como resumo nos resultados de busca.')
+                            ->columnSpanFull(),
+
+                        Forms\Components\TextInput::make('seo_meta_keywords')
+                            ->label('Palavras-chave Padrão')
+                            ->maxLength(255)
+                            ->placeholder('palavra1, palavra2, palavra3')
+                            ->helperText('Separadas por vírgula. Usadas quando a página não tem palavras-chave próprias.')
+                            ->columnSpanFull(),
+
+                        Forms\Components\FileUpload::make('seo_og_image')
+                            ->label('Imagem de compartilhamento (OG Image)')
+                            ->image()
+                            ->disk('public')
+                            ->directory('seo')
+                            ->imageResizeMode('cover')
+                            ->imageCropAspectRatio('1.91:1')
+                            ->imageResizeTargetWidth('1200')
+                            ->imageResizeTargetHeight('630')
+                            ->helperText('Imagem padrão ao compartilhar links da loja nas redes sociais. Recomendado: 1200×630px.')
                             ->columnSpanFull(),
                     ]),
 
@@ -89,6 +116,8 @@ class SeoSettings extends Page implements HasForms
         Setting::setMany([
             'seo_meta_title'         => trim($state['seo_meta_title'] ?? ''),
             'seo_meta_description'   => trim($state['seo_meta_description'] ?? ''),
+            'seo_meta_keywords'      => trim($state['seo_meta_keywords'] ?? ''),
+            'seo_og_image'           => $state['seo_og_image'] ?? '',
             'seo_google_analytics'   => trim($state['seo_google_analytics'] ?? ''),
             'seo_google_tag_manager' => trim($state['seo_google_tag_manager'] ?? ''),
             'seo_facebook_pixel'     => trim($state['seo_facebook_pixel'] ?? ''),

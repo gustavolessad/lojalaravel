@@ -10,6 +10,8 @@ $storeSlogan = Setting::get('store_slogan', '');
 // SEO global
 $seoDefaultTitle       = Setting::get('seo_meta_title', $storeName);
 $seoDefaultDescription = Setting::get('seo_meta_description', '');
+$seoDefaultKeywords    = Setting::get('seo_meta_keywords', '');
+$seoOgImage            = Setting::get('seo_og_image', '');
 $seoGoogleAnalytics    = Setting::get('seo_google_analytics', '');
 $seoGoogleTagManager   = Setting::get('seo_google_tag_manager', '');
 $storeLogo = Setting::get('store_logo', '');
@@ -36,6 +38,7 @@ $sealTransport = Setting::get('seal_transport', '');
 
 $logoUrl = $storeLogo ? Storage::disk('public')->url($storeLogo) : null;
 $logoFooterUrl = $storeLogoFooter ? Storage::disk('public')->url($storeLogoFooter) : $logoUrl;
+$seoOgImageUrl = $seoOgImage ? Storage::disk('public')->url($seoOgImage) : $logoUrl;
 
 $sealPaymentUrl = $sealPayment ? Storage::disk('public')->url($sealPayment) : null;
 $sealSecurityUrl = $sealSecurity ? Storage::disk('public')->url($sealSecurity) : null;
@@ -73,8 +76,8 @@ $principalMenu = Menu::location('principal');
     @if ($seoDefaultDescription || View::hasSection('meta_description'))
         <meta name="description" content="@yield('meta_description', $seoDefaultDescription)">
     @endif
-    @hasSection('meta_keywords')
-        <meta name="keywords" content="@yield('meta_keywords')">
+    @if ($seoDefaultKeywords || View::hasSection('meta_keywords'))
+        <meta name="keywords" content="@yield('meta_keywords', $seoDefaultKeywords)">
     @endif
 
     {{-- ── Canonical ──────────────────────────────────────────────────────── --}}
@@ -89,8 +92,8 @@ $principalMenu = Menu::location('principal');
         <meta property="og:title"       content="{{ $seoDefaultTitle ?: $storeName }}">
         <meta property="og:description" content="{{ $seoDefaultDescription }}">
         <meta property="og:url"         content="{{ request()->url() }}">
-        @if ($logoUrl)
-            <meta property="og:image" content="{{ $logoUrl }}">
+        @if ($seoOgImageUrl)
+            <meta property="og:image" content="{{ $seoOgImageUrl }}">
         @endif
         <meta name="twitter:card"        content="summary">
         <meta name="twitter:site"        content="{{ $storeName }}">

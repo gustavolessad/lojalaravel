@@ -182,7 +182,9 @@ class CartService
         $sessionId = Session::get('cart_session_id')
             ?? request()->cookie('cart_id');
 
-        if (! $sessionId) {
+        // Se o cookie veio criptografado (sessão expirada/middleware não descriptografou),
+        // ou é inválido, gera um novo UUID
+        if (! $sessionId || mb_strlen($sessionId) > 100) {
             $sessionId = (string) Str::uuid();
         }
 

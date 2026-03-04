@@ -155,6 +155,7 @@ class ProductResource extends Resource
                         Forms\Components\Repeater::make('variantGroups')
                             ->label('')
                             ->relationship()
+                            ->minItems(0)
                             ->schema([
                                 Forms\Components\TextInput::make('name')
                                     ->label('Nome do grupo')
@@ -169,7 +170,7 @@ class ProductResource extends Resource
                                     ->image()
                                     ->imageEditor()
                                     ->getUploadedFileNameForStorageUsing(function (TemporaryUploadedFile $file, $record): string {
-                                        $slug = Str::slug($record?->name ?? $record?->product?->name ?? 'grupo');
+                                        $slug = Str::slug($record?->product?->name ?? 'produto');
                                         return $slug . '-' . date('Ymd-His') . '-' . substr(md5(uniqid()), 0, 5) . '.jpg';
                                     })
                                     ->columnSpan(1),
@@ -183,7 +184,7 @@ class ProductResource extends Resource
                                     ->panelLayout('grid')
                                     ->imagePreviewHeight('80')
                                     ->getUploadedFileNameForStorageUsing(function (TemporaryUploadedFile $file, $record): string {
-                                        $slug = Str::slug($record?->name ?? $record?->product?->name ?? 'grupo');
+                                        $slug = Str::slug($record?->product?->name ?? 'produto');
                                         return $slug . '-' . date('Ymd-His') . '-' . substr(md5(uniqid()), 0, 5) . '.jpg';
                                     })
                                     ->columnSpan(1),

@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Listeners\OptimizeOriginalImage;
 use App\Services\Payment\Drivers\AsaasGateway;
 use App\Services\Payment\PaymentManager;
 use Illuminate\Mail\Events\MessageSending;
@@ -10,6 +11,7 @@ use Illuminate\Queue\Events\JobFailed;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\ServiceProvider;
+use Spatie\MediaLibrary\MediaCollections\Events\MediaHasBeenAddedEvent;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -24,6 +26,9 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        // Otimiza original das imagens no upload (reduz peso no disco)
+        Event::listen(MediaHasBeenAddedEvent::class, OptimizeOriginalImage::class);
+
         $addresses = fn (array $list) => array_map(fn ($a) => $a->getAddress(), $list);
 
         // Loga tentativa de envio

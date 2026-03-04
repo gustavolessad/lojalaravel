@@ -1,6 +1,71 @@
 @extends('layouts.shop')
 
-@section('title', $category->seo_title ?: $category->name)
+@php
+    $metaTitle       = $category->seo_title ?: $category->name;
+    $metaDescription = $category->seo_description ?: ($category->description ?: '');
+    $metaDescription = $metaDescription ? Str::limit(strip_tags($metaDescription), 160) : '';
+    $canonicalUrl    = url($category->path . '/c');
+@endphp
+
+@section('title', $metaTitle)
+
+@if ($metaDescription)
+    @section('meta_description', $metaDescription)
+@endif
+
+@section('canonical', $canonicalUrl)
+
+{{-- ── BreadcrumbList JSON-LD ─────────────────────────────────────────── --}}
+@push('head')
+@php
+    $breadcrumbItems = [['@type' => 'ListItem', 'position' => 1, 'name' => 'Início', 'item' => url('/')]];
+    $pos = 2;
+    foreach ($category->breadcrumb as $crumb) {
+        if ($crumb->id === $category->id) {
+            $breadcrumbItems[] = ['@type' => 'ListItem', 'position' => $pos++, 'name' => $crumb->name];
+        } else {
+            $breadcrumbItems[] = ['@type' => 'ListItem', 'position' => $pos++, 'name' => $crumb->name, 'item' => url($crumb->url)];
+        }
+    }
+@endphp
+<script type="application/ld+json">{!! json_encode(['@context' => 'https://schema.org', '@type' => 'BreadcrumbList', 'itemListElement' => $breadcrumbItems], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) !!}</script>
+
+{{-- ── ItemList JSON-LD ───────────────────────────────────────────────── --}}
+@if ($itemListProducts->isNotEmpty())
+@php
+    $listItems = $itemListProducts->map(function ($p, $i) {
+        $item = [
+            '@type'    => 'ListItem',
+            'position' => $i + 1,
+            'item'     => [
+                '@type' => 'Product',
+                'name'  => $p->name,
+                'url'   => url($p->slug . '/p'),
+            ],
+        ];
+        $img = $p->getFirstMediaUrl('cover', 'webp') ?: $p->getFirstMediaUrl('cover');
+        if ($img) $item['item']['image'] = $img;
+        $price = $p->getCurrentPrice();
+        if ($price > 0) {
+            $item['item']['offers'] = [
+                '@type'         => 'Offer',
+                'priceCurrency' => 'BRL',
+                'price'         => number_format($price, 2, '.', ''),
+                'availability'  => 'https://schema.org/InStock',
+            ];
+        }
+        return $item;
+    })->toArray();
+@endphp
+<script type="application/ld+json">{!! json_encode([
+    '@context'        => 'https://schema.org',
+    '@type'           => 'ItemList',
+    'name'            => $category->name,
+    'numberOfItems'   => count($listItems),
+    'itemListElement' => $listItems,
+], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) !!}</script>
+@endif
+@endpush
 
 @section('content')
 

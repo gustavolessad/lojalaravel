@@ -89,6 +89,21 @@
 
 {{-- ── JSON-LD — Schema.org Product ─────────────────────────────────────── --}}
 @push('head')
+{{-- ── BreadcrumbList JSON-LD ─────────────────────────────────────────── --}}
+@if ($product->categories->isNotEmpty())
+@php
+    $firstCategory = $product->categories->first();
+    $breadcrumbItems = [['@type' => 'ListItem', 'position' => 1, 'name' => 'Início', 'item' => url('/')]];
+    $pos = 2;
+    foreach ($firstCategory->breadcrumb as $crumb) {
+        $breadcrumbItems[] = ['@type' => 'ListItem', 'position' => $pos++, 'name' => $crumb->name, 'item' => url($crumb->url)];
+    }
+    $breadcrumbItems[] = ['@type' => 'ListItem', 'position' => $pos, 'name' => $product->name];
+@endphp
+<script type="application/ld+json">{!! json_encode(['@context' => 'https://schema.org', '@type' => 'BreadcrumbList', 'itemListElement' => $breadcrumbItems], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) !!}</script>
+@endif
+
+{{-- ── Product JSON-LD ────────────────────────────────────────────────── --}}
 <script type="application/ld+json">
 {
     "@@context": "https://schema.org",

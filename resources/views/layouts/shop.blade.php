@@ -108,6 +108,39 @@ $principalMenu = Menu::location('principal');
         <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','{{ $seoGoogleAnalytics }}');</script>
     @endif
 
+    {{-- ── JSON-LD global: Organization + WebSite ─────────────────────────── --}}
+    @php
+        $sameAs = array_values(array_filter([
+            $socialInstagram, $socialFacebook, $socialYoutube,
+            $socialTiktok, $socialPinterest, $socialLinkedin, $socialTwitter,
+        ]));
+        $orgData = [
+            '@context' => 'https://schema.org',
+            '@type'    => 'Organization',
+            'name'     => $storeName,
+            'url'      => url('/'),
+        ];
+        if ($logoUrl) $orgData['logo'] = $logoUrl;
+        if ($storeEmail) $orgData['email'] = $storeEmail;
+        if ($storePhone) $orgData['telephone'] = $storePhone;
+        if ($storeAddress) $orgData['address'] = ['@type' => 'PostalAddress', 'streetAddress' => $storeAddress];
+        if (! empty($sameAs)) $orgData['sameAs'] = $sameAs;
+
+        $siteData = [
+            '@context'        => 'https://schema.org',
+            '@type'           => 'WebSite',
+            'name'            => $storeName,
+            'url'             => url('/'),
+            'potentialAction' => [
+                '@type'       => 'SearchAction',
+                'target'      => url('/busca') . '?q={search_term_string}',
+                'query-input' => 'required name=search_term_string',
+            ],
+        ];
+    @endphp
+    <script type="application/ld+json">{!! json_encode($orgData, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) !!}</script>
+    <script type="application/ld+json">{!! json_encode($siteData, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) !!}</script>
+
     {{-- ── Dados estruturados e head extras (JSON-LD, etc.) ───────────────── --}}
     @stack('head')
 

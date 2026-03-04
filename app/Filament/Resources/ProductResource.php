@@ -169,9 +169,8 @@ class ProductResource extends Resource
                                     ->image()
                                     ->imageEditor()
                                     ->getUploadedFileNameForStorageUsing(function (TemporaryUploadedFile $file, $record): string {
-                                        $ext  = strtolower($file->getClientOriginalExtension() ?: 'jpg');
-                                        $name = Str::slug($record?->name ?? $record?->product?->name ?? 'grupo');
-                                        return "{$name}-cover.{$ext}";
+                                        $slug = Str::slug($record?->name ?? $record?->product?->name ?? 'grupo');
+                                        return $slug . '-' . date('Ymd-His') . '-' . substr(md5(uniqid()), 0, 5) . '.jpg';
                                     })
                                     ->columnSpan(1),
 
@@ -184,9 +183,8 @@ class ProductResource extends Resource
                                     ->panelLayout('grid')
                                     ->imagePreviewHeight('80')
                                     ->getUploadedFileNameForStorageUsing(function (TemporaryUploadedFile $file, $record): string {
-                                        $ext  = strtolower($file->getClientOriginalExtension() ?: 'jpg');
-                                        $name = Str::slug($record?->name ?? $record?->product?->name ?? 'grupo');
-                                        return "{$name}-" . substr(uniqid(), -5) . ".{$ext}";
+                                        $slug = Str::slug($record?->name ?? $record?->product?->name ?? 'grupo');
+                                        return $slug . '-' . date('Ymd-His') . '-' . substr(md5(uniqid()), 0, 5) . '.jpg';
                                     })
                                     ->columnSpan(1),
                             ])
@@ -607,9 +605,8 @@ class ProductResource extends Resource
                         ->imageResizeMode('cover')
                         ->imageEditor()
                         ->getUploadedFileNameForStorageUsing(function (TemporaryUploadedFile $file, ?Product $record): string {
-                            $ext  = strtolower($file->getClientOriginalExtension() ?: 'jpg');
                             $slug = Str::slug($record?->name ?? 'produto');
-                            return "{$slug}.{$ext}";
+                            return $slug . '-' . date('Ymd-His') . '-' . substr(md5(uniqid()), 0, 5) . '.jpg';
                         }),
 
                     Forms\Components\SpatieMediaLibraryFileUpload::make('gallery')
@@ -621,9 +618,8 @@ class ProductResource extends Resource
                         ->panelLayout('grid')
                         ->imagePreviewHeight('80')
                         ->getUploadedFileNameForStorageUsing(function (TemporaryUploadedFile $file, ?Product $record): string {
-                            $ext  = strtolower($file->getClientOriginalExtension() ?: 'jpg');
                             $slug = Str::slug($record?->name ?? 'produto');
-                            return "{$slug}-" . substr(uniqid(), -5) . ".{$ext}";
+                            return $slug . '-' . date('Ymd-His') . '-' . substr(md5(uniqid()), 0, 5) . '.jpg';
                         }),
                 ]),
 

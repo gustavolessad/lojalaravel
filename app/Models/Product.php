@@ -6,7 +6,6 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
 use Spatie\Image\Enums\Fit;
 use Spatie\MediaLibrary\HasMedia;
@@ -15,7 +14,7 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 class Product extends Model implements HasMedia
 {
-    use SoftDeletes, InteractsWithMedia;
+    use InteractsWithMedia;
 
     protected $fillable = [
         'brand_id',
@@ -65,6 +64,12 @@ class Product extends Model implements HasMedia
             if (empty($product->slug)) {
                 $product->slug = Str::slug($product->name);
             }
+        });
+
+        // Limpa mídia de variantes e grupos via Eloquent (antes do cascade SQL)
+        static::deleting(function (Product $product) {
+            $product->variantGroups->each(fn ($g) => $g->delete());
+            $product->variants->each(fn ($v) => $v->delete());
         });
     }
 

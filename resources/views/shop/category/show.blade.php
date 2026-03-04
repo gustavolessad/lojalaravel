@@ -1,19 +1,48 @@
 @extends('layouts.shop')
 
 @php
+    use App\Models\Setting;
+
     $metaTitle       = $category->seo_title ?: $category->name;
     $metaDescription = $category->seo_description ?: ($category->description ?: '');
     $metaDescription = $metaDescription ? Str::limit(strip_tags($metaDescription), 160) : '';
-    $canonicalUrl    = url($category->path . '/c');
+    $metaKeywords    = $category->seo_keywords ?: '';
+    $storeName       = Setting::get('store_name', config('app.name'));
+    $currentPage     = (int) request()->get('page', 1);
+    $canonicalUrl    = url($category->path . '/c') . ($currentPage > 1 ? '?page=' . $currentPage : '');
 @endphp
 
-@section('title', $metaTitle)
+@section('title', $metaTitle . ($currentPage > 1 ? ' - Página ' . $currentPage : ''))
 
 @if ($metaDescription)
     @section('meta_description', $metaDescription)
 @endif
+@if ($metaKeywords)
+    @section('meta_keywords', $metaKeywords)
+@endif
+
+{{-- Páginas 2+ não devem ser indexadas (conteúdo duplicado) --}}
+@if ($currentPage > 1)
+    @section('meta_robots', 'noindex, follow')
+@endif
 
 @section('canonical', $canonicalUrl)
+
+{{-- ── Open Graph + Twitter Card ─────────────────────────────────────── --}}
+@section('og_tags')
+    <meta property="og:type"        content="website">
+    <meta property="og:site_name"   content="{{ $storeName }}">
+    <meta property="og:title"       content="{{ $metaTitle }}">
+    @if ($metaDescription)
+    <meta property="og:description" content="{{ $metaDescription }}">
+    @endif
+    <meta property="og:url"         content="{{ $canonicalUrl }}">
+    <meta name="twitter:card"        content="summary">
+    <meta name="twitter:title"       content="{{ $metaTitle }}">
+    @if ($metaDescription)
+    <meta name="twitter:description" content="{{ $metaDescription }}">
+    @endif
+@endsection
 
 {{-- ── BreadcrumbList JSON-LD ─────────────────────────────────────────── --}}
 @push('head')

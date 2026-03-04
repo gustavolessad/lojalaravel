@@ -11,7 +11,11 @@ class ProductController extends Controller
     {
         $product = Product::where('slug', $slug)
             ->where('active', true)
-            ->with(['categories'])
+            ->with([
+                'categories',
+                'variants' => fn ($q) => $q->where('active', true)
+                    ->with(['attributeValues.attribute', 'variantGroup.media', 'media']),
+            ])
             ->firstOrFail();
 
         return view('shop.product.show', compact('product'));

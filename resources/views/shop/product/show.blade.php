@@ -8,8 +8,34 @@
     $metaDescription = Str::limit(strip_tags($metaDescription), 160);
     $metaKeywords    = $product->seo_keywords ?: '';
     $canonicalUrl    = route('product.show', $product->slug);
-    $ogImage         = $product->getFirstMediaUrl('cover', 'webp')
-                    ?: $product->getFirstMediaUrl('cover');
+    // Resolve variant image from URL query params (e.g. ?cor=preta&tamanho=30x40)
+    $ogImage = null;
+    if ($product->type === 'variable' && request()->query()) {
+        $queryParams = request()->query();
+        $variant = $product->variants->first(function ($v) use ($queryParams) {
+            $map = $v->attributeValues->mapWithKeys(fn ($av) => [$av->attribute->slug => $av->slug]);
+            foreach ($queryParams as $key => $value) {
+                if (! is_string($value) || ! isset($map[$key]) || $map[$key] !== $value) {
+                    return false;
+                }
+            }
+            return $map->count() === count(array_filter($queryParams, 'is_string'));
+        });
+
+        if ($variant) {
+            $ogImage = $variant->variantGroup?->getFirstMediaUrl('group-cover', 'webp')
+                    ?: $variant->variantGroup?->getFirstMediaUrl('group-cover')
+                    ?: $variant->getFirstMediaUrl('variant-cover', 'webp')
+                    ?: $variant->getFirstMediaUrl('variant-cover')
+                    ?: null;
+        }
+    }
+
+    // Fallback: product cover
+    if (! $ogImage) {
+        $ogImage = $product->getFirstMediaUrl('cover', 'webp')
+                ?: $product->getFirstMediaUrl('cover');
+    }
     $productPrice    = $product->getCurrentPrice();
     $storeName       = Setting::get('store_name', config('app.name'));
     $inStock         = $product->isSimple()

@@ -59,6 +59,11 @@ $principalMenu = Menu::location('principal');
         <title>{{ $seoDefaultTitle ?: $storeName }}</title>
     @endif
 
+    {{-- ── Meta robots (noindex para páginas privadas) ─────────────────────── --}}
+    @hasSection('meta_robots')
+        <meta name="robots" content="@yield('meta_robots')">
+    @endif
+
     {{-- ── Meta descrição e keywords ──────────────────────────────────────── --}}
     @if ($seoDefaultDescription || View::hasSection('meta_description'))
         <meta name="description" content="@yield('meta_description', $seoDefaultDescription)">

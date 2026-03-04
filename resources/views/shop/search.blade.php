@@ -1,6 +1,7 @@
 @extends('layouts.shop')
 
 @section('title', request('q') ? 'Busca: ' . request('q') . ' — ' . config('app.name') : 'Busca — ' . config('app.name'))
+@section('meta_robots', 'noindex, follow')
 
 @section('content')
 

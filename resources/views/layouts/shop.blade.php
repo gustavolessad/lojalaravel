@@ -6,6 +6,12 @@ use Illuminate\Support\Facades\Storage;
 
 $storeName = Setting::get('store_name', config('app.name'));
 $storeSlogan = Setting::get('store_slogan', '');
+
+// SEO global
+$seoDefaultTitle       = Setting::get('seo_meta_title', $storeName);
+$seoDefaultDescription = Setting::get('seo_meta_description', '');
+$seoGoogleAnalytics    = Setting::get('seo_google_analytics', '');
+$seoGoogleTagManager   = Setting::get('seo_google_tag_manager', '');
 $storeLogo = Setting::get('store_logo', '');
 $storeLogoFooter = Setting::get('store_logo_footer', '');
 $storePhone = Setting::get('store_phone', '');
@@ -45,7 +51,61 @@ $principalMenu = Menu::location('principal');
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', $storeName)</title>
+
+    {{-- ── Título ─────────────────────────────────────────────────────────── --}}
+    @hasSection('title')
+        <title>@yield('title') — {{ $storeName }}</title>
+    @else
+        <title>{{ $seoDefaultTitle ?: $storeName }}</title>
+    @endif
+
+    {{-- ── Meta descrição e keywords ──────────────────────────────────────── --}}
+    @if ($seoDefaultDescription || View::hasSection('meta_description'))
+        <meta name="description" content="@yield('meta_description', $seoDefaultDescription)">
+    @endif
+    @hasSection('meta_keywords')
+        <meta name="keywords" content="@yield('meta_keywords')">
+    @endif
+
+    {{-- ── Canonical ──────────────────────────────────────────────────────── --}}
+    <link rel="canonical" href="@yield('canonical', request()->url())">
+
+    {{-- ── Open Graph (padrão da loja, páginas substituem com @section) ───── --}}
+    @hasSection('og_tags')
+        @yield('og_tags')
+    @else
+        <meta property="og:type"        content="website">
+        <meta property="og:site_name"   content="{{ $storeName }}">
+        <meta property="og:title"       content="{{ $seoDefaultTitle ?: $storeName }}">
+        <meta property="og:description" content="{{ $seoDefaultDescription }}">
+        <meta property="og:url"         content="{{ request()->url() }}">
+        @if ($logoUrl)
+            <meta property="og:image" content="{{ $logoUrl }}">
+        @endif
+        <meta name="twitter:card"        content="summary">
+        <meta name="twitter:site"        content="{{ $storeName }}">
+        <meta name="twitter:title"       content="{{ $seoDefaultTitle ?: $storeName }}">
+        <meta name="twitter:description" content="{{ $seoDefaultDescription }}">
+    @endif
+
+    {{-- ── Google Tag Manager ─────────────────────────────────────────────── --}}
+    @if ($seoGoogleTagManager)
+        <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+        new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+        j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+        'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+        })(window,document,'script','dataLayer','{{ $seoGoogleTagManager }}');</script>
+    @endif
+
+    {{-- ── Google Analytics (GA4 sem GTM) ───────────────────────────────── --}}
+    @if ($seoGoogleAnalytics && !$seoGoogleTagManager)
+        <script async src="https://www.googletagmanager.com/gtag/js?id={{ $seoGoogleAnalytics }}"></script>
+        <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','{{ $seoGoogleAnalytics }}');</script>
+    @endif
+
+    {{-- ── Dados estruturados e head extras (JSON-LD, etc.) ───────────────── --}}
+    @stack('head')
+
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @livewireStyles
     @livewireScriptConfig
@@ -63,6 +123,12 @@ $principalMenu = Menu::location('principal');
 </head>
 
 <body class="text-gray-900 antialiased">
+
+    {{-- Google Tag Manager (noscript) --}}
+    @if ($seoGoogleTagManager)
+        <noscript><iframe src="https://www.googletagmanager.com/ns.html?id={{ $seoGoogleTagManager }}"
+        height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+    @endif
 
     <div id="headerTop" class="bg-black">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2 text-xs text-white font-medium flex justify-between items-center">

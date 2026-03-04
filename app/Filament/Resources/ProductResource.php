@@ -54,12 +54,6 @@ class ProductResource extends Resource
                         ->unique(ignoreRecord: true)
                         ->maxLength(255),
 
-                    Forms\Components\Textarea::make('short_description')
-                        ->label('Descrição curta')
-                        ->rows(2)
-                        ->maxLength(500)
-                        ->columnSpanFull(),
-
                     Forms\Components\RichEditor::make('description')
                         ->label('Descrição completa')
                         ->columnSpanFull(),

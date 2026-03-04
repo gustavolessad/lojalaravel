@@ -354,7 +354,6 @@ class ProductCsvImporter
         $product->length           = ! empty($row['length']) ? (float) $row['length'] : null;
         $product->width            = ! empty($row['width'])  ? (float) $row['width']  : null;
         $product->height           = ! empty($row['height']) ? (float) $row['height'] : null;
-        $product->short_description = $row['short_description'] ?: null;
         $product->description      = $row['description']       ?: null;
         $product->featured         = $this->parseBool($row['featured'] ?? '0');
         $product->is_new           = $this->parseBool($row['is_new']   ?? '0');
@@ -735,7 +734,7 @@ class ProductCsvImporter
             'price', 'sale_price', 'sale_start', 'sale_end',
             'stock', 'weight', 'length', 'width', 'height',
             'brand', 'categories', 'tags',
-            'short_description', 'description',
+            'description',
             'featured', 'is_new', 'active',
             'seo_title', 'seo_description', 'seo_keywords',
             'cover_image', 'gallery_images',
@@ -797,7 +796,6 @@ class ProductCsvImporter
                 'Nike',                         // brand (criada automaticamente se não existir)
                 'Roupas > Masculino|Camisetas', // categories (| separa múltiplas; > cria hierarquia)
                 'novo|destaque',                // tags
-                'Camiseta básica de algodão premium', // short_description
                 'Descrição completa do produto.',     // description (aceita HTML)
                 '0',                            // featured (1=sim)
                 '1',                            // is_new (1=sim)
@@ -835,7 +833,6 @@ class ProductCsvImporter
                 'Adidas',                       // brand
                 'Calçados > Masculino',         // categories
                 '',                             // tags
-                'Tênis esportivo profissional', // short_description
                 'Descrição completa do tênis.', // description
                 '0',                            // featured
                 '0',                            // is_new
@@ -864,7 +861,7 @@ class ProductCsvImporter
                 '5',                         // stock desta variação
                 '',      '', '', '',         // weight/length/width/height (herda do pai se vazio)
                 '', '', '',                  // brand, categories, tags (ignorados em variation)
-                '', '',                      // short_description, description (ignorados)
+                '',                          // description (ignorada em variation)
                 '', '', '1',                 // featured, is_new, active
                 '', '', '',                  // seo
                 'tenis-preto.jpg',           // cover_image → group-cover do grupo "Preto"
@@ -880,7 +877,7 @@ class ProductCsvImporter
                 '3',
                 '', '', '', '',
                 '', '', '',
-                '', '',
+                '',
                 '', '', '1',
                 '', '', '',
                 '',                          // cover_image VAZIO — grupo "Preto" já tem imagem
@@ -896,7 +893,7 @@ class ProductCsvImporter
                 '4',
                 '', '', '', '',
                 '', '', '',
-                '', '',
+                '',
                 '', '', '1',
                 '', '', '',
                 '',
@@ -913,7 +910,7 @@ class ProductCsvImporter
                 '7',
                 '', '', '', '',
                 '', '', '',
-                '', '',
+                '',
                 '', '', '1',
                 '', '', '',
                 'tenis-branco.jpg',          // cover_image → group-cover do grupo "Branco"
@@ -929,7 +926,7 @@ class ProductCsvImporter
                 '5',
                 '', '', '', '',
                 '', '', '',
-                '', '',
+                '',
                 '', '', '1',
                 '', '', '',
                 '',

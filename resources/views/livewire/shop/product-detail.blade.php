@@ -249,13 +249,6 @@
             </div>
             @endif
 
-            {{-- Descrição curta --}}
-            @if ($this->product->short_description)
-            <p class="text-sm text-gray-600 leading-relaxed">
-                {{ $this->product->short_description }}
-            </p>
-            @endif
-
             {{-- ─── Seletores de variante ──────────────────────────── --}}
             @if ($this->product->isVariable() && $this->product->attributes->isNotEmpty())
             <div class="relative space-y-4 pt-1">

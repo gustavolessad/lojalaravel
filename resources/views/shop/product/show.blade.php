@@ -1,6 +1,105 @@
 @extends('layouts.shop')
 
-@section('title', $product->seo_title ?: $product->name)
+@php
+    use App\Models\Setting;
+
+    $metaTitle       = $product->seo_title       ?: $product->name;
+    $metaDescription = $product->seo_description ?: ($product->description ?: Setting::get('seo_meta_description', ''));
+    $metaDescription = Str::limit(strip_tags($metaDescription), 160);
+    $metaKeywords    = $product->seo_keywords ?: '';
+    $canonicalUrl    = route('product.show', $product->slug);
+    $ogImage         = $product->getFirstMediaUrl('cover', 'webp')
+                    ?: $product->getFirstMediaUrl('cover');
+    $productPrice    = $product->getCurrentPrice();
+    $storeName       = Setting::get('store_name', config('app.name'));
+    $inStock         = $product->isSimple()
+                         ? $product->stock > 0
+                         : $product->variants()->where('active', true)->where('stock', '>', 0)->exists();
+@endphp
+
+{{-- ── Title ─────────────────────────────────────────────────────────────── --}}
+@section('title', $metaTitle)
+
+{{-- ── Meta descrição e keywords ──────────────────────────────────────────── --}}
+@section('meta_description', $metaDescription)
+@if ($metaKeywords)
+    @section('meta_keywords', $metaKeywords)
+@endif
+
+{{-- ── Canonical ───────────────────────────────────────────────────────────── --}}
+@section('canonical', $canonicalUrl)
+
+{{-- ── Open Graph + Twitter Card ─────────────────────────────────────────── --}}
+@section('og_tags')
+    {{-- Open Graph --}}
+    <meta property="og:type"                   content="product">
+    <meta property="og:site_name"              content="{{ $storeName }}">
+    <meta property="og:title"                  content="{{ $metaTitle }}">
+    <meta property="og:description"            content="{{ $metaDescription }}">
+    <meta property="og:url"                    content="{{ $canonicalUrl }}">
+    @if ($ogImage)
+        <meta property="og:image"              content="{{ $ogImage }}">
+        <meta property="og:image:alt"          content="{{ $metaTitle }}">
+    @endif
+    @if ($product->brand)
+        <meta property="product:brand"         content="{{ $product->brand->name }}">
+    @endif
+    <meta property="product:price:amount"      content="{{ number_format($productPrice, 2, '.', '') }}">
+    <meta property="product:price:currency"    content="BRL">
+    <meta property="product:availability"      content="{{ $inStock ? 'in stock' : 'out of stock' }}">
+    @if ($product->sku)
+        <meta property="product:retailer_item_id" content="{{ $product->sku }}">
+    @endif
+
+    {{-- Twitter Card --}}
+    <meta name="twitter:card"        content="summary_large_image">
+    <meta name="twitter:title"       content="{{ $metaTitle }}">
+    <meta name="twitter:description" content="{{ $metaDescription }}">
+    @if ($ogImage)
+        <meta name="twitter:image"   content="{{ $ogImage }}">
+        <meta name="twitter:image:alt" content="{{ $metaTitle }}">
+    @endif
+@endsection
+
+{{-- ── JSON-LD — Schema.org Product ─────────────────────────────────────── --}}
+@push('head')
+<script type="application/ld+json">
+{
+    "@@context": "https://schema.org",
+    "@type": "Product",
+    "name": "{{ addslashes($product->name) }}",
+    @if ($metaDescription)
+    "description": "{{ addslashes($metaDescription) }}",
+    @endif
+    @if ($ogImage)
+    "image": ["{{ $ogImage }}"],
+    @endif
+    @if ($product->sku)
+    "sku": "{{ $product->sku }}",
+    @endif
+    @if ($product->barcode)
+    "gtin": "{{ $product->barcode }}",
+    @endif
+    @if ($product->brand)
+    "brand": {
+        "@type": "Brand",
+        "name": "{{ addslashes($product->brand->name) }}"
+    },
+    @endif
+    "offers": {
+        "@type": "Offer",
+        "url": "{{ $canonicalUrl }}",
+        "priceCurrency": "BRL",
+        "price": "{{ number_format($productPrice, 2, '.', '') }}",
+        "availability": "https://schema.org/{{ $inStock ? 'InStock' : 'OutOfStock' }}",
+        "seller": {
+            "@type": "Organization",
+            "name": "{{ addslashes($storeName) }}"
+        }
+    }
+}
+</script>
+@endpush
 
 @section('content')
 

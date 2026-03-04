@@ -112,7 +112,8 @@
                     >
                         @if ($brand->getFirstMediaUrl('logo', 'thumb'))
                         <img src="{{ $brand->getFirstMediaUrl('logo', 'thumb') }}"
-                             alt=""
+                             alt="{{ $brand->name }}"
+                             loading="lazy"
                              class="h-3 w-auto object-contain {{ $isActive ? 'brightness-0 invert' : '' }}">
                         @endif
                         {{ $brand->name }}

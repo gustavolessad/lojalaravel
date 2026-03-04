@@ -25,6 +25,7 @@
                     @if ($brand->getFirstMediaUrl('logo', 'thumb'))
                         <img src="{{ $brand->getFirstMediaUrl('logo', 'thumb') }}"
                              alt="{{ $brand->name }}"
+                             loading="lazy"
                              class="h-12 w-auto object-contain grayscale group-hover:grayscale-0 transition-all duration-300">
                     @else
                         <div class="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center text-xl font-bold text-gray-400 group-hover:bg-gray-50 group-hover:text-gray-700 transition-colors">

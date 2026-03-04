@@ -220,36 +220,36 @@ class ProductDetail extends Component
             // 1. Usa o grupo de imagens da variante (se tiver)
             $group = $this->currentVariant->variantGroup;
             if ($group) {
-                $cover = $group->getFirstMediaUrl('group-cover', 'webp');
+                $cover = $group->getFirstMediaUrl('group-cover', 'optimized');
                 if ($cover !== '') {
                     $images = collect([$cover]);
                     foreach ($group->getMedia('group-gallery') as $media) {
-                        $images->push($media->getUrl('webp') ?: $media->getUrl());
+                        $images->push($media->getUrl('optimized') ?: $media->getUrl());
                     }
                     return $images;
                 }
             }
 
             // 2. Backward compat: imagens próprias da variante
-            $cover = $this->currentVariant->getFirstMediaUrl('variant-cover', 'webp');
+            $cover = $this->currentVariant->getFirstMediaUrl('variant-cover', 'optimized');
             if ($cover !== '') {
                 $images = collect([$cover]);
                 foreach ($this->currentVariant->getMedia('variant-gallery') as $media) {
-                    $images->push($media->getUrl('webp') ?: $media->getUrl());
+                    $images->push($media->getUrl('optimized') ?: $media->getUrl());
                 }
                 return $images;
             }
         }
 
         $images = collect();
-        $cover  = $this->product->getFirstMediaUrl('cover', 'webp');
+        $cover  = $this->product->getFirstMediaUrl('cover', 'optimized');
 
         if ($cover !== '') {
             $images->push($cover);
         }
 
         foreach ($this->product->getMedia('gallery') as $media) {
-            $url = $media->getUrl('webp') ?: $media->getUrl();
+            $url = $media->getUrl('optimized') ?: $media->getUrl();
             if ($url !== $cover) {
                 $images->push($url);
             }

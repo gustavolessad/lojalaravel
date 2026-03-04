@@ -12,7 +12,7 @@
     {{-- Produtos + variações --}}
     @foreach ($products as $product)
     @php
-        $productImage = $product->getFirstMediaUrl('cover', 'webp') ?: $product->getFirstMediaUrl('cover');
+        $productImage = $product->getFirstMediaUrl('cover', 'optimized') ?: $product->getFirstMediaUrl('cover');
     @endphp
     <url>
         <loc>{{ url($product->slug . '/p') }}</loc>
@@ -31,9 +31,9 @@
     @php
         $params = $variant->attributeValues->mapWithKeys(fn ($av) => [$av->attribute->slug => $av->slug])->toArray();
         $qs = http_build_query($params);
-        $variantImage = $variant->variantGroup?->getFirstMediaUrl('group-cover', 'webp')
+        $variantImage = $variant->variantGroup?->getFirstMediaUrl('group-cover', 'optimized')
                      ?: $variant->variantGroup?->getFirstMediaUrl('group-cover')
-                     ?: $variant->getFirstMediaUrl('variant-cover', 'webp')
+                     ?: $variant->getFirstMediaUrl('variant-cover', 'optimized')
                      ?: $variant->getFirstMediaUrl('variant-cover')
                      ?: $productImage;
     @endphp

@@ -85,7 +85,7 @@ class Brand extends Model implements HasMedia, MenuPanelable
     public function registerMediaConversions(Media $media = null): void
     {
         // Versão WebP otimizada para exibição normal
-        $this->addMediaConversion('webp')
+        $this->addMediaConversion('optimized')
             ->format('webp')
             ->quality(85)
             ->width(400)

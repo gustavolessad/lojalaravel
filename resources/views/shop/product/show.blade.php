@@ -23,9 +23,9 @@
         });
 
         if ($variant) {
-            $ogImage = $variant->variantGroup?->getFirstMediaUrl('group-cover', 'webp')
+            $ogImage = $variant->variantGroup?->getFirstMediaUrl('group-cover', 'optimized')
                     ?: $variant->variantGroup?->getFirstMediaUrl('group-cover')
-                    ?: $variant->getFirstMediaUrl('variant-cover', 'webp')
+                    ?: $variant->getFirstMediaUrl('variant-cover', 'optimized')
                     ?: $variant->getFirstMediaUrl('variant-cover')
                     ?: null;
         }
@@ -33,7 +33,7 @@
 
     // Fallback: product cover
     if (! $ogImage) {
-        $ogImage = $product->getFirstMediaUrl('cover', 'webp')
+        $ogImage = $product->getFirstMediaUrl('cover', 'optimized')
                 ?: $product->getFirstMediaUrl('cover');
     }
     $productPrice    = $product->getCurrentPrice();

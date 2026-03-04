@@ -72,7 +72,7 @@
                 'url'   => url($p->slug . '/p'),
             ],
         ];
-        $img = $p->getFirstMediaUrl('cover', 'webp') ?: $p->getFirstMediaUrl('cover');
+        $img = $p->getFirstMediaUrl('cover', 'optimized') ?: $p->getFirstMediaUrl('cover');
         if ($img) $item['item']['image'] = $img;
         $price = $p->getCurrentPrice();
         if ($price > 0) {

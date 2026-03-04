@@ -78,7 +78,7 @@
                         <div class="w-20 h-20 sm:w-24 sm:h-24 flex-shrink-0 rounded-xl overflow-hidden bg-gray-100 border border-gray-100">
                             @if ($item->image_url)
                                 <img src="{{ $item->image_url }}" alt="{{ $item->product->name }}"
-                                    class="w-full h-full object-cover">
+                                    loading="lazy" class="w-full h-full object-cover">
                             @else
                                 <div class="w-full h-full flex items-center justify-center">
                                     <svg class="w-7 h-7 text-gray-300" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">

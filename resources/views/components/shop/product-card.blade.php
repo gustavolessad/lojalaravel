@@ -18,6 +18,7 @@
         @if ($entry->imageUrl)
             <img src="{{ $entry->imageUrl }}"
                  alt="{{ $entry->displayName }}"
+                 loading="lazy"
                  @class([
                      'w-full h-full object-cover rounded-xl transition-transform duration-300',
                      'group-hover:scale-105' => $entry->inStock,

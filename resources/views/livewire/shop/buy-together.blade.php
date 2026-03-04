@@ -44,7 +44,7 @@
                 <div class="aspect-square bg-gray-50">
                     @if ($mainCover)
                     <img src="{{ $mainCover }}" alt="{{ $this->mainProduct->name }}"
-                        class="w-full h-full object-cover">
+                        loading="lazy" class="w-full h-full object-cover">
                     @else
                     <div class="w-full h-full flex items-center justify-center">
                         <svg class="w-10 h-10 text-gray-300" fill="none" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor">
@@ -170,7 +170,7 @@
                     <div class="w-16 h-16 shrink-0 bg-gray-100 rounded-xl">
                         @if ($relCover)
                         <img src="{{ $relCover }}" alt="{{ $relProduct->name }}"
-                            class="w-full h-full object-cover rounded-xl">
+                            loading="lazy" class="w-full h-full object-cover rounded-xl">
                         @else
                         <div class="w-full h-full  flex items-center justify-center">
                             <svg class="w-8 h-8 text-gray-300" fill="none" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor">

@@ -158,7 +158,7 @@ class Product extends Model implements HasMedia
     public function registerMediaConversions(Media $media = null): void
     {
         // Versão otimizada WebP — máximo 1200px, qualidade 85%
-        $this->addMediaConversion('webp')
+        $this->addMediaConversion('optimized')
             ->format('webp')
             ->quality(85)
             ->width(1200)

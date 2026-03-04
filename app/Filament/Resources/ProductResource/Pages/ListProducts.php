@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\ProductResource\Pages;
 
+use App\Filament\Pages\ImportProducts;
 use App\Filament\Resources\ProductResource;
 use Filament\Actions;
 use Filament\Resources\Pages\ListRecords;
@@ -13,6 +14,11 @@ class ListProducts extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
+            Actions\Action::make('import')
+                ->label('Importar CSV')
+                ->icon('heroicon-o-arrow-up-tray')
+                ->color('gray')
+                ->url(ImportProducts::getUrl()),
             Actions\CreateAction::make(),
         ];
     }

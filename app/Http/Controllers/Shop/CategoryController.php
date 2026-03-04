@@ -13,7 +13,7 @@ class CategoryController extends Controller
     {
         $category = Category::findByPath($categoryPath);
 
-        if (! $category || ! $category->active) {
+        if (! $category) {
             abort(404);
         }
 

@@ -626,7 +626,6 @@ class ProductCsvImporter
                     'name'      => $part,
                     'slug'      => $this->uniqueCategorySlug(Str::slug($part)),
                     'parent_id' => $parent?->id,
-                    'active'    => true,
                 ]);
 
                 $this->categoryCache[$cacheKey] = $found;

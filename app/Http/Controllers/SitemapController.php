@@ -24,8 +24,7 @@ class SitemapController extends Controller
             ->orderBy('updated_at', 'desc')
             ->get();
 
-        $categories = Category::where('active', true)
-            ->with('parent.parent.parent')
+        $categories = Category::with('parent.parent.parent')
             ->select('id', 'slug', 'parent_id', 'updated_at')
             ->get();
 

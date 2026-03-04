@@ -11,6 +11,7 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Support\HtmlString;
 use Illuminate\Support\Str;
+use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 
 class CategoryResource extends Resource
 {
@@ -56,9 +57,17 @@ class CategoryResource extends Resource
                     ->rows(3)
                     ->columnSpanFull(),
 
-                Forms\Components\Toggle::make('active')
-                    ->label('Ativa')
-                    ->default(true),
+                Forms\Components\SpatieMediaLibraryFileUpload::make('icon')
+                    ->label('Imagem / Ícone')
+                    ->collection('icon')
+                    ->image()
+                    ->imageEditor()
+                    ->helperText('Usada como ícone da categoria na home. Recomendado: 400×400px.')
+                    ->getUploadedFileNameForStorageUsing(function (TemporaryUploadedFile $file, ?Category $record): string {
+                        $slug = Str::slug($record?->name ?? 'categoria');
+                        return $slug . '-' . date('Ymd-His') . '-' . substr(md5(uniqid()), 0, 5) . '.jpg';
+                    })
+                    ->columnSpanFull(),
             ])->columns(2),
 
             Forms\Components\Section::make('SEO')->schema([
@@ -106,6 +115,13 @@ class CategoryResource extends Resource
     {
         return $table
             ->columns([
+                Tables\Columns\SpatieMediaLibraryImageColumn::make('icon')
+                    ->label('')
+                    ->collection('icon')
+                    ->conversion('optimized')
+                    ->width(40)
+                    ->height(40),
+
                 Tables\Columns\TextColumn::make('name')
                     ->label('Nome')
                     ->searchable()
@@ -121,9 +137,6 @@ class CategoryResource extends Resource
                     ->counts('products')
                     ->sortable(),
 
-                Tables\Columns\ToggleColumn::make('active')
-                    ->label('Ativa'),
-
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Criada em')
                     ->dateTime('d/m/Y')
@@ -132,7 +145,6 @@ class CategoryResource extends Resource
             ])
             ->defaultSort('name')
             ->filters([
-                Tables\Filters\TernaryFilter::make('active')->label('Ativa'),
                 Tables\Filters\SelectFilter::make('parent_id')
                     ->label('Categoria pai')
                     ->relationship('parent', 'name'),

@@ -9,12 +9,17 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Support\Str;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
+use Spatie\Image\Enums\Fit;
+use Spatie\MediaLibrary\HasMedia;
+use Spatie\MediaLibrary\InteractsWithMedia;
+use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
-class Category extends Model implements MenuPanelable
+class Category extends Model implements HasMedia, MenuPanelable
 {
-    use HasMenuPanel;
+    use HasMenuPanel, InteractsWithMedia;
+
     protected $fillable = [
         'parent_id',
         'name',
@@ -24,15 +29,7 @@ class Category extends Model implements MenuPanelable
         'seo_description',
         'seo_keywords',
         'order',
-        'active',
     ];
-
-    protected function casts(): array
-    {
-        return [
-            'active' => 'boolean',
-        ];
-    }
 
     protected static function booted(): void
     {
@@ -41,6 +38,21 @@ class Category extends Model implements MenuPanelable
                 $category->slug = Str::slug($category->name);
             }
         });
+    }
+
+    public function registerMediaCollections(): void
+    {
+        $this->addMediaCollection('icon')->singleFile();
+    }
+
+    public function registerMediaConversions(Media $media = null): void
+    {
+        $this->addMediaConversion('optimized')
+            ->format('webp')
+            ->quality(85)
+            ->fit(Fit::Contain, 400, 400)
+            ->performOnCollections('icon')
+            ->nonQueued();
     }
 
     public function parent(): BelongsTo
@@ -146,7 +158,6 @@ class Category extends Model implements MenuPanelable
     public function getMenuPanelModifyQueryUsing(): callable
     {
         return fn (Builder $query) => $query
-            ->where('active', true)
             ->with('parent.parent.parent')
             ->orderByRaw('COALESCE(parent_id, id), parent_id IS NOT NULL, name');
     }

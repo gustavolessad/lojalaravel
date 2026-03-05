@@ -177,42 +177,41 @@
 
                     <h2 class="text-base font-semibold text-gray-900">Identificação</h2>
 
-                    {{-- Abas Login / Cadastro --}}
-                    <div class="flex border border-gray-200 rounded-xl overflow-hidden">
-                        <button
-                            type="button"
-                            wire:click="switchAuthMode('login')"
-                            class="flex-1 py-2 text-sm font-medium transition-colors
-                                {{ $authMode === 'login'
-                                    ? 'bg-gray-900 text-white'
-                                    : 'bg-white text-gray-600 hover:bg-gray-50' }}"
-                        >
-                            Entrar na conta
-                        </button>
-                        <button
-                            type="button"
-                            wire:click="switchAuthMode('register')"
-                            class="flex-1 py-2 text-sm font-medium transition-colors
-                                {{ $authMode === 'register'
-                                    ? 'bg-gray-900 text-white'
-                                    : 'bg-white text-gray-600 hover:bg-gray-50' }}"
-                        >
-                            Criar conta
-                        </button>
-                    </div>
+                    {{-- ── TELA 1: Digitar e-mail ── --}}
+                    @if ($authStep === 'email')
+                        <p class="text-sm text-gray-500">Informe seu e-mail para continuar. Se já tiver uma conta, pediremos sua senha. Caso contrário, criaremos uma para você.</p>
 
-                    {{-- ── LOGIN ── --}}
-                    @if ($authMode === 'login')
-                        <form wire:submit.prevent="attemptLogin" class="space-y-3">
+                        <form wire:submit.prevent="checkEmail" class="space-y-3">
                             <div>
                                 <label class="block text-xs font-medium text-gray-700 mb-1">E-mail *</label>
-                                <input wire:model="loginEmail" type="email" placeholder="seu@email.com" autocomplete="email"
-                                       class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-0 focus:border-black focus:outline-none @error('loginEmail') border-red-400 @enderror">
-                                @error('loginEmail') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
+                                <input wire:model="authEmail" type="email" placeholder="seu@email.com" autocomplete="email" autofocus
+                                       class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-0 focus:border-black focus:outline-none @error('authEmail') border-red-400 @enderror">
+                                @error('authEmail') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
                             </div>
+                            <button type="submit" wire:loading.attr="disabled"
+                                    class="w-full py-3 px-6 bg-green-700 text-white font-semibold rounded-xl hover:bg-green-800 transition-colors disabled:opacity-60">
+                                <span wire:loading.remove wire:target="checkEmail" class="flex items-center justify-center gap-2">
+                                    Continuar
+                                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"/></svg>
+                                </span>
+                                <span wire:loading wire:target="checkEmail">Verificando...</span>
+                            </button>
+                        </form>
+
+                    {{-- ── TELA 2: Login (e-mail já cadastrado) ── --}}
+                    @elseif ($authStep === 'login')
+                        <div class="flex items-center gap-2 p-3 bg-gray-50 border border-gray-200 rounded-xl">
+                            <svg class="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75"/>
+                            </svg>
+                            <span class="text-sm text-gray-700 flex-1">{{ $authEmail }}</span>
+                            <button type="button" wire:click="backToEmailCheck" class="text-xs text-gray-500 hover:text-black underline flex-shrink-0">Alterar</button>
+                        </div>
+
+                        <form wire:submit.prevent="attemptLogin" class="space-y-3">
                             <div>
                                 <label class="block text-xs font-medium text-gray-700 mb-1">Senha *</label>
-                                <input wire:model="loginPassword" type="password" placeholder="••••••••" autocomplete="current-password"
+                                <input wire:model="loginPassword" type="password" placeholder="••••••••" autocomplete="current-password" autofocus
                                        class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-0 focus:border-black focus:outline-none @error('loginPassword') border-red-400 @enderror">
                                 @error('loginPassword') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
                             </div>
@@ -224,117 +223,143 @@
                                 </span>
                                 <span wire:loading wire:target="attemptLogin">Verificando...</span>
                             </button>
-                            <p class="text-center text-xs text-gray-500">
-                                Ainda não tem uma conta?
-                                <button type="button" wire:click="switchAuthMode('register')" class="text-gray-900 font-medium hover:underline">Crie a sua</button>
-                            </p>
                         </form>
 
-                    {{-- ── CADASTRO ── --}}
-                    @else
+                    {{-- ── TELA 3: Cadastro (e-mail novo) ── --}}
+                    @elseif ($authStep === 'register')
+                        <div class="flex items-center gap-2 p-3 bg-gray-50 border border-gray-200 rounded-xl">
+                            <svg class="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75"/>
+                            </svg>
+                            <span class="text-sm text-gray-700 flex-1">{{ $authEmail }}</span>
+                            <button type="button" wire:click="backToEmailCheck" class="text-xs text-gray-500 hover:text-black underline flex-shrink-0">Alterar</button>
+                        </div>
+
                         <form wire:submit.prevent="attemptRegister" class="space-y-3">
 
-                            {{-- Tipo de cadastro — controlado pelo Livewire (sem Alpine) --}}
-                            <div class="grid grid-cols-2 gap-3">
-                                <label class="flex items-center justify-center gap-2 py-2 px-4 rounded-xl border cursor-pointer transition-colors
-                                    {{ $registerType === 'pf' ? 'border-gray-900 bg-gray-50 text-gray-900' : 'border-gray-200 text-gray-500 hover:border-gray-300' }}">
-                                    <input type="radio" wire:model.live="registerType" value="pf" class="sr-only">
-                                    <svg class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"/>
-                                    </svg>
-                                    <span class="text-sm font-medium">Pessoa Física</span>
+                            {{-- Tipo de cadastro --}}
+                            <div class="flex items-center gap-5">
+                                <label class="flex items-center gap-2 cursor-pointer">
+                                    <input type="radio" wire:model.live="registerType" value="pf"
+                                           class="w-4 h-4 text-gray-900 border-gray-300 focus:ring-0 focus:ring-offset-0">
+                                    <span class="text-sm text-gray-700">Pessoa Física</span>
                                 </label>
-                                <label class="flex items-center justify-center gap-2 py-2 px-4 rounded-xl border cursor-pointer transition-colors
-                                    {{ $registerType === 'pj' ? 'border-gray-900 bg-gray-50 text-gray-900' : 'border-gray-200 text-gray-500 hover:border-gray-300' }}">
-                                    <input type="radio" wire:model.live="registerType" value="pj" class="sr-only">
-                                    <svg class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 21h16.5M4.5 3h15M5.25 3v18m13.5-18v18M9 6.75h1.5m-1.5 3h1.5m-1.5 3h1.5m3-6h1.5m-1.5 3h1.5m-1.5 3h1.5M9 21v-3.375c0-.621.504-1.125 1.125-1.125h3.75c.621 0 1.125.504 1.125 1.125V21"/>
-                                    </svg>
-                                    <span class="text-sm font-medium">Pessoa Jurídica</span>
+                                <label class="flex items-center gap-2 cursor-pointer">
+                                    <input type="radio" wire:model.live="registerType" value="pj"
+                                           class="w-4 h-4 text-gray-900 border-gray-300 focus:ring-0 focus:ring-offset-0">
+                                    <span class="text-sm text-gray-700">Pessoa Jurídica</span>
                                 </label>
                             </div>
 
                             {{-- Campos Pessoa Física --}}
                             @if ($registerType === 'pf')
                                 <div class="space-y-3">
-                                    <div>
-                                        <label class="block text-xs font-medium text-gray-700 mb-1">Nome completo *</label>
-                                        <input wire:model="registerName" type="text" placeholder="Seu nome completo" autocomplete="name"
-                                               class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-0 focus:border-black focus:outline-none @error('registerName') border-red-400 @enderror">
-                                        @error('registerName') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
-                                    </div>
                                     <div class="grid grid-cols-2 gap-3">
+                                        <div>
+                                            <label class="block text-xs font-medium text-gray-700 mb-1">Nome completo *</label>
+                                            <input wire:model="registerName" type="text" placeholder="Seu nome completo" autocomplete="name"
+                                                   class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-0 focus:border-black focus:outline-none @error('registerName') border-red-400 @enderror">
+                                            @error('registerName') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
+                                        </div>
                                         <div>
                                             <label class="block text-xs font-medium text-gray-700 mb-1">CPF</label>
                                             <input wire:model="registerCpf" type="text" placeholder="000.000.000-00"
                                                    x-mask="999.999.999-99"
                                                    class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-0 focus:border-black focus:outline-none @error('registerCpf') border-red-400 @enderror">
-                                            @error('registerCpf') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
+                                            @error('registerCpf')
+                                                <p class="text-xs text-red-600 mt-1">
+                                                    {{ $message }}
+                                                    @if(str_contains($message, 'já está cadastrado'))
+                                                        <button type="button" wire:click="backToEmailCheck" class="text-gray-900 font-medium underline hover:no-underline">Acesse sua conta</button>
+                                                    @endif
+                                                </p>
+                                            @enderror
                                         </div>
+                                    </div>
+                                    <div class="grid grid-cols-2 gap-3">
                                         <div>
                                             <label class="block text-xs font-medium text-gray-700 mb-1">Data de nascimento</label>
                                             <input wire:model="registerBirthDate" type="tel"
                                                    placeholder="DD/MM/AAAA" x-mask="99/99/9999"
                                                    class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-0 focus:border-black focus:outline-none">
                                         </div>
+                                        <div>
+                                            <label class="block text-xs font-medium text-gray-700 mb-1">Celular</label>
+                                            <input wire:model="registerMobile" type="tel" placeholder="(11) 99999-9999" autocomplete="tel"
+                                                   x-mask="(99) 99999-9999"
+                                                   class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-0 focus:border-black focus:outline-none">
+                                        </div>
+                                    </div>
+                                    <div class="grid grid-cols-2 gap-3">
+                                        <div>
+                                            <label class="block text-xs font-medium text-gray-700 mb-1">Senha *</label>
+                                            <input wire:model="registerPassword" type="password" placeholder="Mín. 8 caracteres" autocomplete="new-password"
+                                                   class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-0 focus:border-black focus:outline-none @error('registerPassword') border-red-400 @enderror">
+                                            @error('registerPassword') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
+                                        </div>
+                                        <div>
+                                            <label class="block text-xs font-medium text-gray-700 mb-1">Confirmar senha *</label>
+                                            <input wire:model="registerPasswordConfirmation" type="password" placeholder="Repita a senha" autocomplete="new-password"
+                                                   class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-0 focus:border-black focus:outline-none @error('registerPasswordConfirmation') border-red-400 @enderror">
+                                            @error('registerPasswordConfirmation') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
+                                        </div>
                                     </div>
                                 </div>
                             @else
                             {{-- Campos Pessoa Jurídica --}}
                                 <div class="space-y-3">
-                                    <div>
-                                        <label class="block text-xs font-medium text-gray-700 mb-1">Razão Social *</label>
-                                        <input wire:model="registerCompanyName" type="text" placeholder="Nome da empresa"
-                                               class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-0 focus:border-black focus:outline-none @error('registerCompanyName') border-red-400 @enderror">
-                                        @error('registerCompanyName') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
-                                    </div>
                                     <div class="grid grid-cols-2 gap-3">
+                                        <div>
+                                            <label class="block text-xs font-medium text-gray-700 mb-1">Razão Social *</label>
+                                            <input wire:model="registerCompanyName" type="text" placeholder="Nome da empresa"
+                                                   class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-0 focus:border-black focus:outline-none @error('registerCompanyName') border-red-400 @enderror">
+                                            @error('registerCompanyName') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
+                                        </div>
                                         <div>
                                             <label class="block text-xs font-medium text-gray-700 mb-1">CNPJ</label>
                                             <input wire:model="registerCnpj" type="text" placeholder="00.000.000/0000-00"
                                                    x-mask="99.999.999/9999-99"
                                                    class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-0 focus:border-black focus:outline-none @error('registerCnpj') border-red-400 @enderror">
-                                            @error('registerCnpj') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
+                                            @error('registerCnpj')
+                                                <p class="text-xs text-red-600 mt-1">
+                                                    {{ $message }}
+                                                    @if(str_contains($message, 'já está cadastrado'))
+                                                        <button type="button" wire:click="backToEmailCheck" class="text-gray-900 font-medium underline hover:no-underline">Acesse sua conta</button>
+                                                    @endif
+                                                </p>
+                                            @enderror
                                         </div>
+                                    </div>
+                                    <div class="grid grid-cols-2 gap-3">
                                         <div>
                                             <label class="block text-xs font-medium text-gray-700 mb-1">Nome do responsável *</label>
                                             <input wire:model="registerResponsibleName" type="text" placeholder="Nome completo"
                                                    class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-0 focus:border-black focus:outline-none @error('registerResponsibleName') border-red-400 @enderror">
                                             @error('registerResponsibleName') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
                                         </div>
+                                        <div>
+                                            <label class="block text-xs font-medium text-gray-700 mb-1">Celular</label>
+                                            <input wire:model="registerMobile" type="tel" placeholder="(11) 99999-9999" autocomplete="tel"
+                                                   x-mask="(99) 99999-9999"
+                                                   class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-0 focus:border-black focus:outline-none">
+                                        </div>
+                                    </div>
+                                    <div class="grid grid-cols-2 gap-3">
+                                        <div>
+                                            <label class="block text-xs font-medium text-gray-700 mb-1">Senha *</label>
+                                            <input wire:model="registerPassword" type="password" placeholder="Mín. 8 caracteres" autocomplete="new-password"
+                                                   class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-0 focus:border-black focus:outline-none @error('registerPassword') border-red-400 @enderror">
+                                            @error('registerPassword') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
+                                        </div>
+                                        <div>
+                                            <label class="block text-xs font-medium text-gray-700 mb-1">Confirmar senha *</label>
+                                            <input wire:model="registerPasswordConfirmation" type="password" placeholder="Repita a senha" autocomplete="new-password"
+                                                   class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-0 focus:border-black focus:outline-none @error('registerPasswordConfirmation') border-red-400 @enderror">
+                                            @error('registerPasswordConfirmation') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
+                                        </div>
                                     </div>
                                 </div>
                             @endif
-
-                            {{-- Campos comuns --}}
-                            <div class="grid grid-cols-2 gap-3">
-                                <div>
-                                    <label class="block text-xs font-medium text-gray-700 mb-1">E-mail *</label>
-                                    <input wire:model="registerEmail" type="email" placeholder="seu@email.com" autocomplete="email"
-                                           class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-0 focus:border-black focus:outline-none @error('registerEmail') border-red-400 @enderror">
-                                    @error('registerEmail') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
-                                </div>
-                                <div>
-                                    <label class="block text-xs font-medium text-gray-700 mb-1">Celular</label>
-                                    <input wire:model="registerMobile" type="tel" placeholder="(11) 99999-9999" autocomplete="tel"
-                                           x-mask="(99) 99999-9999"
-                                           class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-0 focus:border-black focus:outline-none">
-                                </div>
-                            </div>
-                            <div class="grid grid-cols-2 gap-3">
-                                <div>
-                                    <label class="block text-xs font-medium text-gray-700 mb-1">Senha *</label>
-                                    <input wire:model="registerPassword" type="password" placeholder="Mín. 8 caracteres" autocomplete="new-password"
-                                           class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-0 focus:border-black focus:outline-none @error('registerPassword') border-red-400 @enderror">
-                                    @error('registerPassword') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
-                                </div>
-                                <div>
-                                    <label class="block text-xs font-medium text-gray-700 mb-1">Confirmar senha *</label>
-                                    <input wire:model="registerPasswordConfirmation" type="password" placeholder="Repita a senha" autocomplete="new-password"
-                                           class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-0 focus:border-black focus:outline-none @error('registerPasswordConfirmation') border-red-400 @enderror">
-                                    @error('registerPasswordConfirmation') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
-                                </div>
-                            </div>
                             <button type="submit" wire:loading.attr="disabled"
                                     class="w-full py-3 px-6 bg-green-700 text-white font-semibold rounded-xl hover:bg-green-800 transition-colors disabled:opacity-60">
                                 <span wire:loading.remove wire:target="attemptRegister" class="flex items-center justify-center gap-2">
@@ -343,6 +368,7 @@
                                 </span>
                                 <span wire:loading wire:target="attemptRegister">Criando conta...</span>
                             </button>
+
                         </form>
                     @endif
 

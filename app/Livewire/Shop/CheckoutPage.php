@@ -30,7 +30,9 @@ class CheckoutPage extends Component
     public int $step = 1;
 
     // ── Etapa 0: Autenticação ─────────────────────────────────────────────
-    public string $authMode = 'login';   // 'login' | 'register'
+    public string $authMode  = 'login';    // 'login' | 'register'
+    public string $authStep  = 'email';    // 'email' | 'login' | 'register'
+    public string $authEmail = '';         // e-mail digitado na primeira tela
 
     // Login
     public string $loginEmail    = '';
@@ -220,9 +222,44 @@ class CheckoutPage extends Component
 
     // ── Etapa 0: Autenticação ─────────────────────────────────────────────
 
+    public function checkEmail(): void
+    {
+        $this->errorMessage = null;
+
+        $this->validate([
+            'authEmail' => 'required|email',
+        ], [
+            'authEmail.required' => 'Informe seu e-mail.',
+            'authEmail.email'    => 'E-mail inválido.',
+        ]);
+
+        $exists = Customer::where('email', $this->authEmail)->exists();
+
+        if ($exists) {
+            $this->loginEmail = $this->authEmail;
+            $this->authStep   = 'login';
+            $this->authMode   = 'login';
+        } else {
+            $this->registerEmail = $this->authEmail;
+            $this->authStep      = 'register';
+            $this->authMode      = 'register';
+        }
+
+        $this->resetValidation();
+    }
+
+    public function backToEmailCheck(): void
+    {
+        $this->authStep = 'email';
+        $this->errorMessage = null;
+        $this->loginPassword = '';
+        $this->resetValidation();
+    }
+
     public function switchAuthMode(string $mode): void
     {
         $this->authMode = $mode;
+        $this->authStep = $mode === 'login' ? 'login' : 'register';
         $this->errorMessage = null;
         $this->resetValidation();
     }

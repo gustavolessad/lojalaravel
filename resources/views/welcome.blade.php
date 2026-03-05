@@ -7,5 +7,5 @@
 @endsection
 
 @section('content')
-    {{-- Conteúdo da home --}}
+    <x-shop.category-carousel />
 @endsection

@@ -74,3 +74,66 @@ html{
 .price-range-input::-moz-range-thumb:active {
     cursor: grabbing;
 }
+
+/* ── Swiper: setas de navegação ───────────────────────────────────── */
+.swiper-button-prev,
+.swiper-button-next {
+    --swiper-navigation-sides-offset: 16px;
+    width: 32px !important;
+    height: 32px !important;
+    border-radius: 50%;
+    background: white;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
+    transition: background 0.2s;
+}
+.swiper-button-prev::after,
+.swiper-button-next::after {
+    font-size: 10px !important;
+    font-weight: 700;
+    color: #111 !important;
+}
+.swiper-button-prev .swiper-navigation-icon,
+.swiper-button-next .swiper-navigation-icon {
+    width: 18px !important;
+    height: 18px !important;
+    color: #111 !important;
+}
+.swiper-button-prev:hover,
+.swiper-button-next:hover {
+    background: #111;
+}
+.swiper-button-prev:hover::after,
+.swiper-button-next:hover::after {
+    color: white !important;
+}
+.swiper-button-prev:hover .swiper-navigation-icon,
+.swiper-button-next:hover .swiper-navigation-icon {
+    color: white !important;
+}
+.swiper-button-prev.swiper-button-disabled,
+.swiper-button-next.swiper-button-disabled {
+    opacity: 0.3 !important;
+}
+
+/* ── Swiper: paginação (dots) ────────────────────────────────────── */
+.swiper-pagination-bullet {
+    width: 8px !important;
+    height: 8px !important;
+    background: #d1d5db !important;
+    opacity: 1 !important;
+    transition: background 0.2s, width 0.2s;
+}
+.swiper-pagination-bullet-active {
+    width: 20px !important;
+    border-radius: 4px !important;
+    background: #374151 !important;
+}
+
+/* ── Esconde scrollbar mantendo scroll ────────────────────────────── */
+.scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+    display: none;
+}

@@ -453,7 +453,6 @@ class ProductList extends Component
 
         return Category::findOrFail($this->scopeId)
             ->children()
-            ->where('active', true)
             ->get();
     }
 

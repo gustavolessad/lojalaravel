@@ -66,8 +66,11 @@ class CategoryResource extends Resource
                     ->getUploadedFileNameForStorageUsing(function (TemporaryUploadedFile $file, ?Category $record): string {
                         $slug = Str::slug($record?->name ?? 'categoria');
                         return $slug . '-' . date('Ymd-His') . '-' . substr(md5(uniqid()), 0, 5) . '.jpg';
-                    })
-                    ->columnSpanFull(),
+                    }),
+
+                Forms\Components\Toggle::make('show_on_home')
+                    ->label('Mostrar na página inicial')
+                    ->helperText('Exibe esta categoria no carrossel da home.'),
             ])->columns(2),
 
             Forms\Components\Section::make('SEO')->schema([

@@ -29,7 +29,15 @@ class Category extends Model implements HasMedia, MenuPanelable
         'seo_description',
         'seo_keywords',
         'order',
+        'show_on_home',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'show_on_home' => 'boolean',
+        ];
+    }
 
     protected static function booted(): void
     {

@@ -1,85 +1,161 @@
-@push('header-steps')
-{{-- Steps inline no header — Alpine reage a eventos Livewire 'checkout-step-changed' --}}
-<div
-    x-data="{ step: {{ $step }} }"
-    x-on:checkout-step-changed.window="step = $event.detail.step"
-    x-show="step > 0"
-    class="select-none">
-
-    {{-- Desktop: círculos + labels + conectores curtos --}}
-    <div class="hidden sm:flex items-center">
-
-        <div class="flex items-center gap-1.5">
-            <div class="w-5 h-5 rounded-full flex items-center justify-center font-bold flex-shrink-0 transition-colors"
-                 :class="step >= 1 ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-400'">
-                <svg x-show="step > 1" class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
-                </svg>
-                <span x-show="step <= 1" class="text-[10px]">1</span>
-            </div>
-            <span class="text-xs font-medium transition-colors"
-                  :class="step >= 1 ? 'text-green-700' : 'text-gray-400'">Endereço</span>
-        </div>
-
-        <div class="w-5 h-px mx-2 transition-colors" :class="step > 1 ? 'bg-green-400' : 'bg-gray-300'"></div>
-
-        <div class="flex items-center gap-1.5">
-            <div class="w-5 h-5 rounded-full flex items-center justify-center font-bold flex-shrink-0 transition-colors"
-                 :class="step >= 2 ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-400'">
-                <svg x-show="step > 2" class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
-                </svg>
-                <span x-show="step <= 2" class="text-[10px]">2</span>
-            </div>
-            <span class="text-xs font-medium transition-colors"
-                  :class="step >= 2 ? 'text-green-700' : 'text-gray-400'">Frete</span>
-        </div>
-
-        <div class="w-5 h-px mx-2 transition-colors" :class="step > 2 ? 'bg-green-400' : 'bg-gray-300'"></div>
-
-        <div class="flex items-center gap-1.5">
-            <div class="w-5 h-5 rounded-full flex items-center justify-center font-bold flex-shrink-0 transition-colors"
-                 :class="step >= 3 ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-400'">
-                <svg x-show="step > 3" class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
-                </svg>
-                <span x-show="step <= 3" class="text-[10px]">3</span>
-            </div>
-            <span class="text-xs font-medium transition-colors"
-                  :class="step >= 3 ? 'text-green-700' : 'text-gray-400'">Pagamento</span>
-        </div>
-
-        <div class="w-5 h-px mx-2 transition-colors" :class="step > 3 ? 'bg-green-400' : 'bg-gray-300'"></div>
-
-        <div class="flex items-center gap-1.5">
-            <div class="w-5 h-5 rounded-full flex items-center justify-center font-bold flex-shrink-0 transition-colors"
-                 :class="step >= 4 ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-400'">
-                <span class="text-[10px]">4</span>
-            </div>
-            <span class="text-xs font-medium transition-colors"
-                  :class="step >= 4 ? 'text-green-700' : 'text-gray-400'">Revisão</span>
-        </div>
-
-    </div>
-
-    {{-- Mobile: 4 dots com conector --}}
-    <div class="flex sm:hidden items-center gap-1">
-        <div class="w-2 h-2 rounded-full transition-colors" :class="step >= 1 ? 'bg-green-600' : 'bg-gray-300'"></div>
-        <div class="w-3 h-px transition-colors" :class="step > 1 ? 'bg-green-400' : 'bg-gray-300'"></div>
-        <div class="w-2 h-2 rounded-full transition-colors" :class="step >= 2 ? 'bg-green-600' : 'bg-gray-300'"></div>
-        <div class="w-3 h-px transition-colors" :class="step > 2 ? 'bg-green-400' : 'bg-gray-300'"></div>
-        <div class="w-2 h-2 rounded-full transition-colors" :class="step >= 3 ? 'bg-green-600' : 'bg-gray-300'"></div>
-        <div class="w-3 h-px transition-colors" :class="step > 3 ? 'bg-green-400' : 'bg-gray-300'"></div>
-        <div class="w-2 h-2 rounded-full transition-colors" :class="step >= 4 ? 'bg-green-600' : 'bg-gray-300'"></div>
-    </div>
-
-</div>
-@endpush
-
 <div>
 
+    {{-- ── Steps do checkout ─────────────────────────────────────────── --}}
+    <div
+        x-data="{ step: {{ $step }} }"
+        x-on:checkout-step-changed.window="step = $event.detail.step"
+        class="select-none mb-6">
+
+        {{-- Desktop: ícones + labels + conectores --}}
+        <div class="hidden sm:flex items-center justify-center">
+
+            {{-- 0 — Identificação --}}
+            <div class="flex items-center gap-1.5">
+                <div class="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 transition-colors"
+                     :class="step >= 0 ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-400'">
+                    <svg x-show="step > 0" class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+                    </svg>
+                    <svg x-show="step <= 0" class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0"/>
+                    </svg>
+                </div>
+                <span class="text-xs font-medium transition-colors"
+                      :class="step >= 0 ? 'text-green-700' : 'text-gray-400'">Identificação</span>
+            </div>
+
+            <div class="w-5 h-px mx-2 transition-colors" :class="step > 0 ? 'bg-green-400' : 'bg-gray-300'"></div>
+
+            {{-- 1 — Endereço --}}
+            <div class="flex items-center gap-1.5">
+                <div class="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 transition-colors"
+                     :class="step >= 1 ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-400'">
+                    <svg x-show="step > 1" class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+                    </svg>
+                    <svg x-show="step <= 1" class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z"/>
+                    </svg>
+                </div>
+                <span class="text-xs font-medium transition-colors"
+                      :class="step >= 1 ? 'text-green-700' : 'text-gray-400'">Endereço</span>
+            </div>
+
+            <div class="w-5 h-px mx-2 transition-colors" :class="step > 1 ? 'bg-green-400' : 'bg-gray-300'"></div>
+
+            {{-- 2 — Frete --}}
+            <div class="flex items-center gap-1.5">
+                <div class="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 transition-colors"
+                     :class="step >= 2 ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-400'">
+                    <svg x-show="step > 2" class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+                    </svg>
+                    <svg x-show="step <= 2" class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 18.75a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 0 1-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 0 0-3.213-9.193 2.056 2.056 0 0 0-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 0 0-10.026 0 1.106 1.106 0 0 0-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12"/>
+                    </svg>
+                </div>
+                <span class="text-xs font-medium transition-colors"
+                      :class="step >= 2 ? 'text-green-700' : 'text-gray-400'">Frete</span>
+            </div>
+
+            <div class="w-5 h-px mx-2 transition-colors" :class="step > 2 ? 'bg-green-400' : 'bg-gray-300'"></div>
+
+            {{-- 3 — Pagamento --}}
+            <div class="flex items-center gap-1.5">
+                <div class="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 transition-colors"
+                     :class="step >= 3 ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-400'">
+                    <svg x-show="step > 3" class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+                    </svg>
+                    <svg x-show="step <= 3" class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25v10.5A2.25 2.25 0 0 0 4.5 19.5Z"/>
+                    </svg>
+                </div>
+                <span class="text-xs font-medium transition-colors"
+                      :class="step >= 3 ? 'text-green-700' : 'text-gray-400'">Pagamento</span>
+            </div>
+
+            <div class="w-5 h-px mx-2 transition-colors" :class="step > 3 ? 'bg-green-400' : 'bg-gray-300'"></div>
+
+            {{-- 4 — Revisão --}}
+            <div class="flex items-center gap-1.5">
+                <div class="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 transition-colors"
+                     :class="step >= 4 ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-400'">
+                    <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+                    </svg>
+                </div>
+                <span class="text-xs font-medium transition-colors"
+                      :class="step >= 4 ? 'text-green-700' : 'text-gray-400'">Revisão</span>
+            </div>
+
+        </div>
+
+        {{-- Mobile: bolinhas com ícones + conectores --}}
+        <div class="flex sm:hidden items-center justify-center gap-1">
+            {{-- Identificação --}}
+            <div class="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 transition-colors"
+                 :class="step >= 0 ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-400'">
+                <svg x-show="step > 0" class="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+                </svg>
+                <svg x-show="step <= 0" class="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0"/>
+                </svg>
+            </div>
+            <div class="w-3 h-px transition-colors" :class="step > 0 ? 'bg-green-400' : 'bg-gray-300'"></div>
+
+            {{-- Endereço --}}
+            <div class="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 transition-colors"
+                 :class="step >= 1 ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-400'">
+                <svg x-show="step > 1" class="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+                </svg>
+                <svg x-show="step <= 1" class="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z"/>
+                </svg>
+            </div>
+            <div class="w-3 h-px transition-colors" :class="step > 1 ? 'bg-green-400' : 'bg-gray-300'"></div>
+
+            {{-- Frete --}}
+            <div class="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 transition-colors"
+                 :class="step >= 2 ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-400'">
+                <svg x-show="step > 2" class="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+                </svg>
+                <svg x-show="step <= 2" class="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 18.75a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 0 1-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 0 0-3.213-9.193 2.056 2.056 0 0 0-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 0 0-10.026 0 1.106 1.106 0 0 0-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12"/>
+                </svg>
+            </div>
+            <div class="w-3 h-px transition-colors" :class="step > 2 ? 'bg-green-400' : 'bg-gray-300'"></div>
+
+            {{-- Pagamento --}}
+            <div class="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 transition-colors"
+                 :class="step >= 3 ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-400'">
+                <svg x-show="step > 3" class="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+                </svg>
+                <svg x-show="step <= 3" class="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25v10.5A2.25 2.25 0 0 0 4.5 19.5Z"/>
+                </svg>
+            </div>
+            <div class="w-3 h-px transition-colors" :class="step > 3 ? 'bg-green-400' : 'bg-gray-300'"></div>
+
+            {{-- Revisão --}}
+            <div class="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 transition-colors"
+                 :class="step >= 4 ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-400'">
+                <svg class="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+                </svg>
+            </div>
+        </div>
+
+    </div>
+
     {{-- ── Layout principal ────────────────────────────────────────────── --}}
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-5 items-start">
 
         {{-- ════════════════════════════════════════════════════════════════
              COLUNA ESQUERDA: formulários por etapa
@@ -131,13 +207,13 @@
                             <div>
                                 <label class="block text-xs font-medium text-gray-700 mb-1">E-mail *</label>
                                 <input wire:model="loginEmail" type="email" placeholder="seu@email.com" autocomplete="email"
-                                       class="w-full px-3.5 py-2 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-gray-900 focus:border-gray-900 focus:outline-none @error('loginEmail') border-red-400 @enderror">
+                                       class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-0 focus:border-black focus:outline-none @error('loginEmail') border-red-400 @enderror">
                                 @error('loginEmail') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
                             </div>
                             <div>
                                 <label class="block text-xs font-medium text-gray-700 mb-1">Senha *</label>
                                 <input wire:model="loginPassword" type="password" placeholder="••••••••" autocomplete="current-password"
-                                       class="w-full px-3.5 py-2 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-gray-900 focus:border-gray-900 focus:outline-none @error('loginPassword') border-red-400 @enderror">
+                                       class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-0 focus:border-black focus:outline-none @error('loginPassword') border-red-400 @enderror">
                                 @error('loginPassword') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
                             </div>
                             <button type="submit" wire:loading.attr="disabled"
@@ -184,7 +260,7 @@
                                     <div>
                                         <label class="block text-xs font-medium text-gray-700 mb-1">Nome completo *</label>
                                         <input wire:model="registerName" type="text" placeholder="Seu nome completo" autocomplete="name"
-                                               class="w-full px-3.5 py-2 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-gray-900 focus:border-gray-900 focus:outline-none @error('registerName') border-red-400 @enderror">
+                                               class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-0 focus:border-black focus:outline-none @error('registerName') border-red-400 @enderror">
                                         @error('registerName') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
                                     </div>
                                     <div class="grid grid-cols-2 gap-3">
@@ -192,14 +268,14 @@
                                             <label class="block text-xs font-medium text-gray-700 mb-1">CPF</label>
                                             <input wire:model="registerCpf" type="text" placeholder="000.000.000-00"
                                                    x-mask="999.999.999-99"
-                                                   class="w-full px-3.5 py-2 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-gray-900 focus:border-gray-900 focus:outline-none @error('registerCpf') border-red-400 @enderror">
+                                                   class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-0 focus:border-black focus:outline-none @error('registerCpf') border-red-400 @enderror">
                                             @error('registerCpf') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
                                         </div>
                                         <div>
                                             <label class="block text-xs font-medium text-gray-700 mb-1">Data de nascimento</label>
                                             <input wire:model="registerBirthDate" type="tel"
                                                    placeholder="DD/MM/AAAA" x-mask="99/99/9999"
-                                                   class="w-full px-3.5 py-2 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-gray-900 focus:border-gray-900 focus:outline-none">
+                                                   class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-0 focus:border-black focus:outline-none">
                                         </div>
                                     </div>
                                 </div>
@@ -209,7 +285,7 @@
                                     <div>
                                         <label class="block text-xs font-medium text-gray-700 mb-1">Razão Social *</label>
                                         <input wire:model="registerCompanyName" type="text" placeholder="Nome da empresa"
-                                               class="w-full px-3.5 py-2 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-gray-900 focus:border-gray-900 focus:outline-none @error('registerCompanyName') border-red-400 @enderror">
+                                               class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-0 focus:border-black focus:outline-none @error('registerCompanyName') border-red-400 @enderror">
                                         @error('registerCompanyName') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
                                     </div>
                                     <div class="grid grid-cols-2 gap-3">
@@ -217,13 +293,13 @@
                                             <label class="block text-xs font-medium text-gray-700 mb-1">CNPJ</label>
                                             <input wire:model="registerCnpj" type="text" placeholder="00.000.000/0000-00"
                                                    x-mask="99.999.999/9999-99"
-                                                   class="w-full px-3.5 py-2 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-gray-900 focus:border-gray-900 focus:outline-none @error('registerCnpj') border-red-400 @enderror">
+                                                   class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-0 focus:border-black focus:outline-none @error('registerCnpj') border-red-400 @enderror">
                                             @error('registerCnpj') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
                                         </div>
                                         <div>
                                             <label class="block text-xs font-medium text-gray-700 mb-1">Nome do responsável *</label>
                                             <input wire:model="registerResponsibleName" type="text" placeholder="Nome completo"
-                                                   class="w-full px-3.5 py-2 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-gray-900 focus:border-gray-900 focus:outline-none @error('registerResponsibleName') border-red-400 @enderror">
+                                                   class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-0 focus:border-black focus:outline-none @error('registerResponsibleName') border-red-400 @enderror">
                                             @error('registerResponsibleName') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
                                         </div>
                                     </div>
@@ -235,27 +311,27 @@
                                 <div>
                                     <label class="block text-xs font-medium text-gray-700 mb-1">E-mail *</label>
                                     <input wire:model="registerEmail" type="email" placeholder="seu@email.com" autocomplete="email"
-                                           class="w-full px-3.5 py-2 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-gray-900 focus:border-gray-900 focus:outline-none @error('registerEmail') border-red-400 @enderror">
+                                           class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-0 focus:border-black focus:outline-none @error('registerEmail') border-red-400 @enderror">
                                     @error('registerEmail') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
                                 </div>
                                 <div>
                                     <label class="block text-xs font-medium text-gray-700 mb-1">Celular</label>
                                     <input wire:model="registerMobile" type="tel" placeholder="(11) 99999-9999" autocomplete="tel"
                                            x-mask="(99) 99999-9999"
-                                           class="w-full px-3.5 py-2 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-gray-900 focus:border-gray-900 focus:outline-none">
+                                           class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-0 focus:border-black focus:outline-none">
                                 </div>
                             </div>
                             <div class="grid grid-cols-2 gap-3">
                                 <div>
                                     <label class="block text-xs font-medium text-gray-700 mb-1">Senha *</label>
                                     <input wire:model="registerPassword" type="password" placeholder="Mín. 8 caracteres" autocomplete="new-password"
-                                           class="w-full px-3.5 py-2 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-gray-900 focus:border-gray-900 focus:outline-none @error('registerPassword') border-red-400 @enderror">
+                                           class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-0 focus:border-black focus:outline-none @error('registerPassword') border-red-400 @enderror">
                                     @error('registerPassword') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
                                 </div>
                                 <div>
                                     <label class="block text-xs font-medium text-gray-700 mb-1">Confirmar senha *</label>
                                     <input wire:model="registerPasswordConfirmation" type="password" placeholder="Repita a senha" autocomplete="new-password"
-                                           class="w-full px-3.5 py-2 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-gray-900 focus:border-gray-900 focus:outline-none @error('registerPasswordConfirmation') border-red-400 @enderror">
+                                           class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-0 focus:border-black focus:outline-none @error('registerPasswordConfirmation') border-red-400 @enderror">
                                     @error('registerPasswordConfirmation') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
                                 </div>
                             </div>
@@ -349,89 +425,78 @@
                             </div>
                         @endif
 
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div class="space-y-3">
 
-                            {{-- Identificação do endereço --}}
-                            <div class="sm:col-span-2">
-                                <label class="block text-xs font-medium text-gray-700 mb-1">Identificação do endereço</label>
-                                <input wire:model="addrLabel" type="text" placeholder="Ex: Casa, Trabalho, Minha empresa..."
-                                       class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:outline-none">
-                                <p class="text-xs text-gray-400 mt-1">Opcional — ajuda a identificar o endereço nas próximas compras</p>
+                            {{-- Identificação + Nome do destinatário --}}
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-700 mb-1">Identificação do endereço</label>
+                                    <input wire:model="addrLabel" type="text" placeholder="Ex: Casa, Trabalho..."
+                                           class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-0 focus:border-black focus:outline-none">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-700 mb-1">Nome do destinatário *</label>
+                                    <input wire:model="addrName" type="text" placeholder="Quem vai receber"
+                                           class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-0 focus:border-black focus:outline-none @error('addrName') border-red-400 @enderror">
+                                    @error('addrName') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
+                                </div>
                             </div>
 
-                            {{-- Nome do destinatário --}}
-                            <div class="sm:col-span-2">
-                                <label class="block text-xs font-medium text-gray-700 mb-1">Nome do destinatário *</label>
-                                <input wire:model="addrName" type="text" placeholder="Quem vai receber"
-                                       class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:outline-none @error('addrName') border-red-400 @enderror">
-                                @error('addrName') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
+                            {{-- CEP (20%) + Rua/Logradouro (60%) + Número (20%) --}}
+                            <div class="grid grid-cols-1 sm:grid-cols-5 gap-3">
+                                <div class="sm:col-span-1">
+                                    <label class="block text-xs font-medium text-gray-700 mb-1">CEP *</label>
+                                    <input wire:model.blur="addrZip" type="text" placeholder="00000-000" maxlength="9"
+                                           wire:change="lookupZip" x-mask="99999-999"
+                                           class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-0 focus:border-black focus:outline-none @error('addrZip') border-red-400 @enderror">
+                                    @error('addrZip') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
+                                </div>
+                                <div class="sm:col-span-3">
+                                    <label class="block text-xs font-medium text-gray-700 mb-1">Rua/Logradouro *</label>
+                                    <input wire:model="addrStreet" type="text" placeholder="Rua, Avenida, etc."
+                                           class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-0 focus:border-black focus:outline-none @error('addrStreet') border-red-400 @enderror">
+                                    @error('addrStreet') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
+                                </div>
+                                <div class="sm:col-span-1">
+                                    <label class="block text-xs font-medium text-gray-700 mb-1">Número *</label>
+                                    <input wire:model="addrNumber" type="text" placeholder="123"
+                                           class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-0 focus:border-black focus:outline-none @error('addrNumber') border-red-400 @enderror">
+                                    @error('addrNumber') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
+                                </div>
                             </div>
 
-                            {{-- CEP com lookup --}}
-                            <div>
-                                <label class="block text-xs font-medium text-gray-700 mb-1">CEP *</label>
-                                <input wire:model.blur="addrZip" type="text" placeholder="00000-000" maxlength="9"
-                                       wire:change="lookupZip" x-mask="99999-999"
-                                       class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:outline-none @error('addrZip') border-red-400 @enderror">
-                                @error('addrZip') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
-                            </div>
-
-                            {{-- Telefone --}}
-                            <div>
-                                <label class="block text-xs font-medium text-gray-700 mb-1">Telefone</label>
-                                <input wire:model="addrPhone" type="tel" placeholder="(11) 99999-9999"
-                                       x-mask="(99) 99999-9999"
-                                       class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:outline-none">
-                            </div>
-
-                            {{-- Rua --}}
-                            <div class="sm:col-span-2">
-                                <label class="block text-xs font-medium text-gray-700 mb-1">Logradouro *</label>
-                                <input wire:model="addrStreet" type="text" placeholder="Rua, Avenida, etc."
-                                       class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:outline-none @error('addrStreet') border-red-400 @enderror">
-                                @error('addrStreet') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
-                            </div>
-
-                            {{-- Número + Complemento --}}
-                            <div>
-                                <label class="block text-xs font-medium text-gray-700 mb-1">Número *</label>
-                                <input wire:model="addrNumber" type="text" placeholder="123"
-                                       class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:outline-none @error('addrNumber') border-red-400 @enderror">
-                                @error('addrNumber') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
-                            </div>
+                            {{-- Complemento (100%) --}}
                             <div>
                                 <label class="block text-xs font-medium text-gray-700 mb-1">Complemento</label>
-                                <input wire:model="addrComplement" type="text" placeholder="Apto, Bloco..."
-                                       class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:outline-none">
+                                <input wire:model="addrComplement" type="text" placeholder="Apto, Bloco, Sala..."
+                                       class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-0 focus:border-black focus:outline-none">
                             </div>
 
-                            {{-- Bairro --}}
-                            <div>
-                                <label class="block text-xs font-medium text-gray-700 mb-1">Bairro *</label>
-                                <input wire:model="addrDistrict" type="text"
-                                       class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:outline-none @error('addrDistrict') border-red-400 @enderror">
-                                @error('addrDistrict') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
-                            </div>
-
-                            {{-- Cidade --}}
-                            <div>
-                                <label class="block text-xs font-medium text-gray-700 mb-1">Cidade *</label>
-                                <input wire:model="addrCity" type="text"
-                                       class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:outline-none @error('addrCity') border-red-400 @enderror">
-                                @error('addrCity') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
-                            </div>
-
-                            {{-- Estado --}}
-                            <div>
-                                <label class="block text-xs font-medium text-gray-700 mb-1">Estado *</label>
-                                <select wire:model="addrState"
-                                        class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:outline-none bg-white @error('addrState') border-red-400 @enderror">
-                                    <option value="">UF</option>
-                                    @foreach(['AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS','MG','PA','PB','PR','PE','PI','RJ','RN','RS','RO','RR','SC','SP','SE','TO'] as $uf)
-                                        <option value="{{ $uf }}">{{ $uf }}</option>
-                                    @endforeach
-                                </select>
-                                @error('addrState') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
+                            {{-- Bairro + Cidade + Estado (33% cada) --}}
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-700 mb-1">Bairro *</label>
+                                    <input wire:model="addrDistrict" type="text"
+                                           class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-0 focus:border-black focus:outline-none @error('addrDistrict') border-red-400 @enderror">
+                                    @error('addrDistrict') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-700 mb-1">Cidade *</label>
+                                    <input wire:model="addrCity" type="text"
+                                           class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-0 focus:border-black focus:outline-none @error('addrCity') border-red-400 @enderror">
+                                    @error('addrCity') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-700 mb-1">Estado *</label>
+                                    <select wire:model="addrState"
+                                            class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-0 focus:border-black focus:outline-none bg-white @error('addrState') border-red-400 @enderror">
+                                        <option value="">UF</option>
+                                        @foreach(['AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS','MG','PA','PB','PR','PE','PI','RJ','RN','RS','RO','RR','SC','SP','SE','TO'] as $uf)
+                                            <option value="{{ $uf }}">{{ $uf }}</option>
+                                        @endforeach
+                                    </select>
+                                    @error('addrState') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
+                                </div>
                             </div>
                         </div>
                     @endif
@@ -567,14 +632,14 @@
                             <div>
                                 <label class="block text-xs font-medium text-gray-700 mb-1">Nome no cartão *</label>
                                 <input wire:model="cardHolder" type="text" placeholder="Igual ao cartão" autocomplete="cc-name"
-                                       class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:outline-none @error('cardHolder') border-red-400 @enderror">
+                                       class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-0 focus:border-black focus:outline-none @error('cardHolder') border-red-400 @enderror">
                                 @error('cardHolder') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
                             </div>
                             <div>
                                 <label class="block text-xs font-medium text-gray-700 mb-1">Número do cartão *</label>
                                 <input wire:model.blur="cardNumber" type="text" placeholder="0000 0000 0000 0000" maxlength="19" autocomplete="cc-number"
                                        x-mask="9999 9999 9999 9999"
-                                       class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:outline-none @error('cardNumber') border-red-400 @enderror">
+                                       class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-0 focus:border-black focus:outline-none @error('cardNumber') border-red-400 @enderror">
                                 @error('cardNumber') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
                             </div>
                             <div class="grid grid-cols-2 gap-4">
@@ -582,21 +647,21 @@
                                     <label class="block text-xs font-medium text-gray-700 mb-1">Validade *</label>
                                     <input wire:model.blur="cardExpiry" type="text" placeholder="MM/AA" maxlength="5" autocomplete="cc-exp"
                                            x-mask="99/99"
-                                           class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:outline-none @error('cardExpiry') border-red-400 @enderror">
+                                           class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-0 focus:border-black focus:outline-none @error('cardExpiry') border-red-400 @enderror">
                                     @error('cardExpiry') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
                                 </div>
                                 <div>
                                     <label class="block text-xs font-medium text-gray-700 mb-1">CVV *</label>
                                     <input wire:model.blur="cardCvv" type="text" placeholder="000" maxlength="4" autocomplete="cc-csc"
                                            x-mask="9999"
-                                           class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:outline-none @error('cardCvv') border-red-400 @enderror">
+                                           class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-0 focus:border-black focus:outline-none @error('cardCvv') border-red-400 @enderror">
                                     @error('cardCvv') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
                                 </div>
                             </div>
                             <div>
                                 <label class="block text-xs font-medium text-gray-700 mb-1">Parcelamento</label>
                                 <select wire:model="installments"
-                                        class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:outline-none bg-white">
+                                        class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-0 focus:border-black focus:outline-none bg-white">
                                     @foreach ($this->installmentOptions as $opt)
                                         <option value="{{ $opt['value'] }}">{{ $opt['label'] }}</option>
                                     @endforeach
@@ -732,7 +797,7 @@
                             x-transition:leave-end="opacity-0"
                             class="px-5 pb-4 border-t border-gray-100 pt-3">
                             <textarea wire:model="notes" rows="2" placeholder="Instruções de entrega, referências, etc."
-                                      class="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-gray-900 focus:border-transparent focus:outline-none resize-none transition"></textarea>
+                                      class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-0 focus:border-black focus:outline-none resize-none transition"></textarea>
                         </div>
                     </div>
 
@@ -762,7 +827,7 @@
         {{-- ════════════════════════════════════════════════════════════════
              COLUNA DIREITA: resumo do pedido (sticky)
         ════════════════════════════════════════════════════════════════ --}}
-        <div class="lg:sticky lg:top-24 space-y-4">
+        <div class="lg:sticky lg:top-24 ">
             <div class="bg-white rounded-2xl border border-gray-200 p-5">
                 @php $itemCount = $this->cart->item_count; @endphp
 
@@ -780,13 +845,13 @@
                                 @endif
                             </div>
                             <div class="flex-1 min-w-0">
-                                <p class="text-xs font-medium text-gray-900 truncate">{{ $item->product->name }}</p>
+                                <p class="text-xs font-semibold text-black truncate">{{ $item->product->name }}</p>
                                 @if ($item->variant)
                                     <p class="text-xs text-gray-500">{{ $item->variant->label }}</p>
                                 @endif
                                 <p class="text-xs text-gray-500">Qtd: {{ $item->quantity }}</p>
                             </div>
-                            <p class="text-xs font-semibold text-gray-900 flex-shrink-0">
+                            <p class="text-xs font-semibold text-black flex-shrink-0">
                                 R$ {{ number_format($item->subtotal, 2, ',', '.') }}
                             </p>
                         </div>
@@ -833,7 +898,7 @@
                         </div>
                     @endif
 
-                    <div class="flex justify-between font-bold text-gray-900 pt-2 border-t border-gray-100 text-base">
+                    <div class="flex justify-between font-bold text-gray-900 mt-4 pt-4 mb-0 border-t border-gray-100 text-base">
                         <span>Total</span>
                         <span>R$ {{ number_format($step >= 3 ? $this->finalTotal : $this->total, 2, ',', '.') }}</span>
                     </div>
@@ -844,14 +909,14 @@
                         $instHint = $calc->bestFreeInstallmentLabel($this->total);
                     @endphp
                     @if ($step < 3 && ($pixHint || $instHint))
-                        <div class="pt-3 border-t border-gray-100 space-y-1">
+                        <div class="text-xs text-right text-gray-500 mt-1">
                             @if ($pixHint)
-                                <p class="text-sm text-green-700 text-end">
-                                    ou <span class="font-semibold">R$ {{ number_format($pixHint, 2, ',', '.') }}</span> no PIX
+                                <p class="text-green-700 text-end">
+                                    <span class="font-semibold">R$ {{ number_format($pixHint, 2, ',', '.') }}</span> no PIX
                                 </p>
                             @endif
                             @if ($instHint)
-                                <p class="text-xs text-gray-500 text-end">ou {{ $instHint }}</p>
+                                <p class="text-gray-500 text-end">ou {{ $instHint }}</p>
                             @endif
                         </div>
                     @endif

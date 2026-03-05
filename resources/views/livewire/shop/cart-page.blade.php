@@ -92,7 +92,7 @@
                         <div class="flex-1 min-w-0 flex flex-col justify-between">
                             <div>
                                 <a href="{{ route('product.show', $item->product->slug) }}"
-                                    class="text-sm font-medium text-gray-900 hover:text-indigo-600 transition-colors line-clamp-2 leading-snug">
+                                    class="text-sm font-semibold text-black hover:underline line-clamp-2 leading-snug">
                                     {{ $item->product->name }}
                                 </a>
                                 @if ($item->variant)
@@ -198,7 +198,7 @@
                                 placeholder="00000-000"
                                 maxlength="9"
                                 x-mask="99999-999"
-                                class="flex-1 min-w-0 px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent transition">
+                                class="flex-1 min-w-0 px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-0 focus:border-black transition">
                             <button type="submit"
                                 wire:loading.attr="disabled"
                                 class="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium rounded-xl transition-colors disabled:opacity-50 shrink-0">
@@ -275,7 +275,7 @@
                                 <input wire:model="couponCode"
                                     type="text"
                                     placeholder="Código"
-                                    class="flex-1 min-w-0 text-sm border border-gray-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent transition">
+                                    class="flex-1 min-w-0 text-sm border border-gray-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-0 focus:border-black transition">
                                 <button type="submit"
                                     wire:loading.attr="disabled"
                                     class="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium rounded-xl transition-colors disabled:opacity-50 shrink-0">
@@ -317,9 +317,9 @@
                     </div>
                     @endif
 
-                    <div class="flex justify-between text-gray-400 text-xs">
+                    <div class="flex justify-between text-gray-600">
                         <span>Frete</span>
-                        <span>Calcular ao lado</span>
+                        <span>—</span>
                     </div>
                 </div>
 
@@ -335,9 +335,9 @@
                     $instLabel = $calc->bestFreeInstallmentLabel((float) $cart->total);
                 @endphp
                 @if ($pixTotal || $instLabel)
-                <div class="mt-3 space-y-1 text-xs text-right text-gray-500 border-t border-gray-50 pt-3">
+                <div class="text-xs text-right text-gray-500 mt-1">
                     @if ($pixTotal)
-                        <p class="text-green-600">ou <span class="font-semibold">R$ {{ number_format($pixTotal, 2, ',', '.') }}</span> no PIX</p>
+                        <p class="text-green-700"><span class="font-semibold">R$ {{ number_format($pixTotal, 2, ',', '.') }}</span> no PIX</p>
                     @endif
                     @if ($instLabel)
                         <p>ou {{ $instLabel }}</p>

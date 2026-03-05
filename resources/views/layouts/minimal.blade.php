@@ -35,21 +35,24 @@ $contactPhone = $storePhone;
     {{-- Header --}}
     <header class="bg-white">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-            <div class="flex items-center">
+            <div class="flex items-center justify-between gap-6">
 
                 {{-- Logo --}}
                 <a href="/" class="shrink-0">
                     @if ($logoUrl)
-                    <img src="{{ $logoUrl }}" alt="{{ $storeName }}" class="h-10 w-auto">
+                    <img src="{{ $logoUrl }}" alt="{{ $storeName }}" class="h-7 sm:h-10 w-auto">
                     @else
-                    <span class="text-xl font-bold text-gray-900 tracking-tight">{{ $storeName }}</span>
+                    <span class="text-lg sm:text-xl font-bold text-gray-900 tracking-tight">{{ $storeName }}</span>
                     @endif
                 </a>
 
-                {{-- Steps (injetado pelo checkout via @push, vazio nas demais páginas) --}}
-                <div class="flex-1 flex justify-center px-4">
-                    @stack('header-steps')
-                </div>
+                {{-- Continuar comprando --}}
+                <a href="/" class="inline-flex items-center gap-1.5 text-xs ms-auto text-gray-600 hover:text-black transition-colors">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" />
+                    </svg>
+                    <span>Continuar comprando</span>
+                </a>
 
                 {{-- Telefone de atendimento --}}
                 @if ($contactPhone)
@@ -64,7 +67,7 @@ $contactPhone = $storePhone;
                             <p class="text-sm font-semibold text-gray-900 leading-none group-hover:text-gray-600 transition-colors">{{ $contactPhone }}</p>
                         </div>
                     </div>
-                    @endif
+                @endif
 
             </div>
         </div>
@@ -74,7 +77,7 @@ $contactPhone = $storePhone;
     @yield('before-main')
 
     {{-- Conteúdo da página --}}
-    <main class="@yield('main-class', 'flex-1 max-w-6xl mx-auto w-full px-4 sm:px-6 lg:px-8 pt-10 pb-16')">
+    <main class="@yield('main-class', 'flex-1 max-w-6xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-4 lg:py-10')">
         @yield('content')
     </main>
 

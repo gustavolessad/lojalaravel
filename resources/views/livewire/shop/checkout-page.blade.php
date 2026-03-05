@@ -26,7 +26,7 @@
 
             <div class="w-5 h-px mx-2 transition-colors" :class="step > 0 ? 'bg-green-400' : 'bg-gray-300'"></div>
 
-            {{-- 1 — Endereço --}}
+            {{-- 1 — Entrega --}}
             <div class="flex items-center gap-1.5">
                 <div class="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 transition-colors"
                      :class="step >= 1 ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-400'">
@@ -34,17 +34,16 @@
                         <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
                     </svg>
                     <svg x-show="step <= 1" class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/>
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 18.75a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 0 1-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 0 0-3.213-9.193 2.056 2.056 0 0 0-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 0 0-10.026 0 1.106 1.106 0 0 0-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12"/>
                     </svg>
                 </div>
                 <span class="text-xs font-medium transition-colors"
-                      :class="step >= 1 ? 'text-green-700' : 'text-gray-400'">Endereço</span>
+                      :class="step >= 1 ? 'text-green-700' : 'text-gray-400'">Entrega</span>
             </div>
 
             <div class="w-5 h-px mx-2 transition-colors" :class="step > 1 ? 'bg-green-400' : 'bg-gray-300'"></div>
 
-            {{-- 2 — Frete --}}
+            {{-- 2 — Pagamento --}}
             <div class="flex items-center gap-1.5">
                 <div class="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 transition-colors"
                      :class="step >= 2 ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-400'">
@@ -52,42 +51,25 @@
                         <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
                     </svg>
                     <svg x-show="step <= 2" class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 18.75a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 0 1-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 0 0-3.213-9.193 2.056 2.056 0 0 0-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 0 0-10.026 0 1.106 1.106 0 0 0-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12"/>
-                    </svg>
-                </div>
-                <span class="text-xs font-medium transition-colors"
-                      :class="step >= 2 ? 'text-green-700' : 'text-gray-400'">Frete</span>
-            </div>
-
-            <div class="w-5 h-px mx-2 transition-colors" :class="step > 2 ? 'bg-green-400' : 'bg-gray-300'"></div>
-
-            {{-- 3 — Pagamento --}}
-            <div class="flex items-center gap-1.5">
-                <div class="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 transition-colors"
-                     :class="step >= 3 ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-400'">
-                    <svg x-show="step > 3" class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
-                    </svg>
-                    <svg x-show="step <= 3" class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25v10.5A2.25 2.25 0 0 0 4.5 19.5Z"/>
                     </svg>
                 </div>
                 <span class="text-xs font-medium transition-colors"
-                      :class="step >= 3 ? 'text-green-700' : 'text-gray-400'">Pagamento</span>
+                      :class="step >= 2 ? 'text-green-700' : 'text-gray-400'">Pagamento</span>
             </div>
 
-            <div class="w-5 h-px mx-2 transition-colors" :class="step > 3 ? 'bg-green-400' : 'bg-gray-300'"></div>
+            <div class="w-5 h-px mx-2 transition-colors" :class="step > 2 ? 'bg-green-400' : 'bg-gray-300'"></div>
 
-            {{-- 4 — Revisão --}}
+            {{-- 3 — Revisão --}}
             <div class="flex items-center gap-1.5">
                 <div class="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 transition-colors"
-                     :class="step >= 4 ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-400'">
+                     :class="step >= 3 ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-400'">
                     <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
                     </svg>
                 </div>
                 <span class="text-xs font-medium transition-colors"
-                      :class="step >= 4 ? 'text-green-700' : 'text-gray-400'">Revisão</span>
+                      :class="step >= 3 ? 'text-green-700' : 'text-gray-400'">Revisão</span>
             </div>
 
         </div>
@@ -106,46 +88,33 @@
             </div>
             <div class="w-3 h-px transition-colors" :class="step > 0 ? 'bg-green-400' : 'bg-gray-300'"></div>
 
-            {{-- Endereço --}}
+            {{-- Entrega --}}
             <div class="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 transition-colors"
                  :class="step >= 1 ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-400'">
                 <svg x-show="step > 1" class="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
                 </svg>
                 <svg x-show="step <= 1" class="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/>
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 18.75a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 0 1-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 0 0-3.213-9.193 2.056 2.056 0 0 0-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 0 0-10.026 0 1.106 1.106 0 0 0-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12"/>
                 </svg>
             </div>
             <div class="w-3 h-px transition-colors" :class="step > 1 ? 'bg-green-400' : 'bg-gray-300'"></div>
 
-            {{-- Frete --}}
+            {{-- Pagamento --}}
             <div class="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 transition-colors"
                  :class="step >= 2 ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-400'">
                 <svg x-show="step > 2" class="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
                 </svg>
                 <svg x-show="step <= 2" class="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 18.75a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 0 1-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 0 0-3.213-9.193 2.056 2.056 0 0 0-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 0 0-10.026 0 1.106 1.106 0 0 0-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25v10.5A2.25 2.25 0 0 0 4.5 19.5Z"/>
                 </svg>
             </div>
             <div class="w-3 h-px transition-colors" :class="step > 2 ? 'bg-green-400' : 'bg-gray-300'"></div>
 
-            {{-- Pagamento --}}
-            <div class="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 transition-colors"
-                 :class="step >= 3 ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-400'">
-                <svg x-show="step > 3" class="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
-                </svg>
-                <svg x-show="step <= 3" class="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25v10.5A2.25 2.25 0 0 0 4.5 19.5Z"/>
-                </svg>
-            </div>
-            <div class="w-3 h-px transition-colors" :class="step > 3 ? 'bg-green-400' : 'bg-gray-300'"></div>
-
             {{-- Revisão --}}
             <div class="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 transition-colors"
-                 :class="step >= 4 ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-400'">
+                 :class="step >= 3 ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-400'">
                 <svg class="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
                 </svg>
@@ -238,17 +207,33 @@
                         <form wire:submit.prevent="attemptRegister" class="space-y-3">
 
                             {{-- Tipo de cadastro --}}
-                            <div class="flex items-center gap-5">
-                                <label class="flex items-center gap-2 cursor-pointer">
-                                    <input type="radio" wire:model.live="registerType" value="pf"
-                                           class="w-4 h-4 text-gray-900 border-gray-300 focus:ring-0 focus:ring-offset-0">
+                            <div class="flex items-center gap-2">
+                                <div wire:click="$set('registerType', 'pf')"
+                                     class="flex items-center gap-2 px-3.5 py-2 border rounded-xl cursor-pointer transition-all
+                                        {{ $registerType === 'pf' ? 'border-green-500 bg-green-50/60' : 'border-gray-200 hover:border-gray-300' }}">
+                                    <div class="w-4 h-4 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-colors
+                                        {{ $registerType === 'pf' ? 'border-green-500 bg-green-500' : 'border-gray-300 bg-white' }}">
+                                        @if ($registerType === 'pf')
+                                            <svg class="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+                                            </svg>
+                                        @endif
+                                    </div>
                                     <span class="text-sm text-gray-700">Pessoa Física</span>
-                                </label>
-                                <label class="flex items-center gap-2 cursor-pointer">
-                                    <input type="radio" wire:model.live="registerType" value="pj"
-                                           class="w-4 h-4 text-gray-900 border-gray-300 focus:ring-0 focus:ring-offset-0">
+                                </div>
+                                <div wire:click="$set('registerType', 'pj')"
+                                     class="flex items-center gap-2 px-3.5 py-2 border rounded-xl cursor-pointer transition-all
+                                        {{ $registerType === 'pj' ? 'border-green-500 bg-green-50/60' : 'border-gray-200 hover:border-gray-300' }}">
+                                    <div class="w-4 h-4 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-colors
+                                        {{ $registerType === 'pj' ? 'border-green-500 bg-green-500' : 'border-gray-300 bg-white' }}">
+                                        @if ($registerType === 'pj')
+                                            <svg class="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+                                            </svg>
+                                        @endif
+                                    </div>
                                     <span class="text-sm text-gray-700">Pessoa Jurídica</span>
-                                </label>
+                                </div>
                             </div>
 
                             {{-- Campos Pessoa Física --}}
@@ -262,8 +247,8 @@
                                             @error('registerName') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
                                         </div>
                                         <div>
-                                            <label class="block text-xs font-medium text-gray-700 mb-1">CPF</label>
-                                            <input wire:model="registerCpf" type="text" placeholder="000.000.000-00"
+                                            <label class="block text-xs font-medium text-gray-700 mb-1">CPF *</label>
+                                            <input wire:model="registerCpf" type="text" placeholder="000.000.000-00" required
                                                    x-mask="999.999.999-99"
                                                    class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-0 focus:border-black focus:outline-none @error('registerCpf') border-red-400 @enderror">
                                             @error('registerCpf')
@@ -278,16 +263,18 @@
                                     </div>
                                     <div class="grid grid-cols-2 gap-3">
                                         <div>
-                                            <label class="block text-xs font-medium text-gray-700 mb-1">Data de nascimento</label>
-                                            <input wire:model="registerBirthDate" type="tel"
+                                            <label class="block text-xs font-medium text-gray-700 mb-1">Data de nascimento *</label>
+                                            <input wire:model="registerBirthDate" type="tel" required
                                                    placeholder="DD/MM/AAAA" x-mask="99/99/9999"
-                                                   class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-0 focus:border-black focus:outline-none">
+                                                   class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-0 focus:border-black focus:outline-none @error('registerBirthDate') border-red-400 @enderror">
+                                            @error('registerBirthDate') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
                                         </div>
                                         <div>
-                                            <label class="block text-xs font-medium text-gray-700 mb-1">Celular</label>
-                                            <input wire:model="registerMobile" type="tel" placeholder="(11) 99999-9999" autocomplete="tel"
+                                            <label class="block text-xs font-medium text-gray-700 mb-1">Celular *</label>
+                                            <input wire:model="registerMobile" type="tel" placeholder="(11) 99999-9999" autocomplete="tel" required
                                                    x-mask="(99) 99999-9999"
-                                                   class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-0 focus:border-black focus:outline-none">
+                                                   class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-0 focus:border-black focus:outline-none @error('registerMobile') border-red-400 @enderror">
+                                            @error('registerMobile') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
                                         </div>
                                     </div>
                                     <div class="grid grid-cols-2 gap-3">
@@ -316,8 +303,8 @@
                                             @error('registerCompanyName') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
                                         </div>
                                         <div>
-                                            <label class="block text-xs font-medium text-gray-700 mb-1">CNPJ</label>
-                                            <input wire:model="registerCnpj" type="text" placeholder="00.000.000/0000-00"
+                                            <label class="block text-xs font-medium text-gray-700 mb-1">CNPJ *</label>
+                                            <input wire:model="registerCnpj" type="text" placeholder="00.000.000/0000-00" required
                                                    x-mask="99.999.999/9999-99"
                                                    class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-0 focus:border-black focus:outline-none @error('registerCnpj') border-red-400 @enderror">
                                             @error('registerCnpj')
@@ -338,10 +325,11 @@
                                             @error('registerResponsibleName') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
                                         </div>
                                         <div>
-                                            <label class="block text-xs font-medium text-gray-700 mb-1">Celular</label>
-                                            <input wire:model="registerMobile" type="tel" placeholder="(11) 99999-9999" autocomplete="tel"
+                                            <label class="block text-xs font-medium text-gray-700 mb-1">Celular *</label>
+                                            <input wire:model="registerMobile" type="tel" placeholder="(11) 99999-9999" autocomplete="tel" required
                                                    x-mask="(99) 99999-9999"
-                                                   class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-0 focus:border-black focus:outline-none">
+                                                   class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-0 focus:border-black focus:outline-none @error('registerMobile') border-red-400 @enderror">
+                                            @error('registerMobile') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
                                         </div>
                                     </div>
                                     <div class="grid grid-cols-2 gap-3">
@@ -375,14 +363,14 @@
                 </div>
 
             {{-- ══════════════════════════════════════════════════════
-                 ETAPA 1 — Endereço
+                 ETAPA 1 — Entrega (endereço + frete)
             ══════════════════════════════════════════════════════ --}}
             @elseif ($step === 1)
-                <div class="bg-white rounded-2xl border border-gray-200 p-6 space-y-5">
+                <div class="bg-white rounded-2xl border border-gray-200 p-6">
 
                     {{-- Info do cliente logado --}}
                     @if ($this->customer)
-                        <div class="flex items-center gap-3 p-3 bg-green-50 border border-green-100 rounded-xl">
+                        <div class="flex items-center gap-3 p-3 bg-green-50 border border-green-100 rounded-xl mb-4">
                             <svg class="w-4 h-4 text-green-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                             </svg>
@@ -392,264 +380,208 @@
                         </div>
                     @endif
 
-                    <h2 class="text-base font-semibold text-gray-900">Endereço de entrega</h2>
+                    <h3 class="text-sm font-semibold text-black mb-1">Entrega</h3>
+                    <p class="text-xs text-gray-500 mb-4">Selecione um endereço de entrega</p>
 
                     {{-- Seletor de endereços salvos --}}
                     @if ($this->savedAddresses->isNotEmpty())
-                        <div class="space-y-2">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-3">
                             @foreach ($this->savedAddresses as $addr)
-                                <div class="flex items-start gap-3 p-3 border rounded-xl transition-all
-                                    {{ $selectedAddressId === $addr->id && ! $useNewAddress
-                                        ? 'border-indigo-500 bg-indigo-50'
-                                        : 'border-gray-200 hover:border-gray-300' }}">
-                                    <input
-                                        type="radio"
-                                        name="saved_address"
-                                        wire:click="selectSavedAddress({{ $addr->id }})"
-                                        @checked($selectedAddressId === $addr->id && ! $useNewAddress)
-                                        class="mt-1 accent-indigo-600 cursor-pointer flex-shrink-0"
-                                    >
-                                    <div class="text-sm leading-snug flex-1 cursor-pointer" wire:click="selectSavedAddress({{ $addr->id }})">
-                                        @if ($addr->label)
-                                            <span class="font-medium text-gray-900">{{ $addr->label }} — </span>
-                                        @endif
-                                        {{ $addr->full_address }}
+                                @if ($editingAddressId === $addr->id)
+                                    {{-- ── Formulário de edição inline ── --}}
+                                    <div class="sm:col-span-2 p-4 border-2 border-amber-400 bg-amber-50/30 rounded-xl space-y-3">
+                                        <div class="flex items-center justify-between">
+                                            <span class="text-xs font-semibold text-amber-700">Editando endereço</span>
+                                            <button type="button" wire:click="cancelEditAddress"
+                                                    class="text-xs text-gray-500 hover:text-gray-700 underline">Cancelar</button>
+                                        </div>
+
+                                        @include('livewire.shop.partials.address-form')
+
+                                        <button type="button" wire:click="saveEditedAddress" wire:loading.attr="disabled"
+                                                class="w-full py-2.5 px-4 bg-gray-900 text-white text-sm font-semibold rounded-xl hover:bg-black transition-colors disabled:opacity-60">
+                                            <span wire:loading.remove wire:target="saveEditedAddress">Salvar endereço</span>
+                                            <span wire:loading wire:target="saveEditedAddress">Salvando...</span>
+                                        </button>
                                     </div>
-                                    <button type="button"
-                                            wire:click="editSavedAddress({{ $addr->id }})"
-                                            class="text-xs text-indigo-500 hover:text-indigo-700 flex-shrink-0 underline">
-                                        Editar
-                                    </button>
-                                </div>
+                                @else
+                                    {{-- ── Card de endereço salvo ── --}}
+                                    @php $isSelected = $selectedAddressId === $addr->id && ! $editingAddressId; @endphp
+                                    <div wire:click="selectSavedAddress({{ $addr->id }})"
+                                         class="relative p-3.5 border rounded-xl cursor-pointer transition-all
+                                            {{ $isSelected ? 'border-green-500 bg-green-50/60' : 'border-gray-200 hover:border-gray-300' }}">
+                                        {{-- Círculo no canto superior direito --}}
+                                        <div class="absolute top-2.5 right-2.5 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors
+                                            {{ $isSelected ? 'border-green-500 bg-green-500' : 'border-gray-300 bg-white' }}">
+                                            @if ($isSelected)
+                                                <svg class="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+                                                </svg>
+                                            @endif
+                                        </div>
+                                        <p class="text-sm font-semibold text-gray-900 pr-7">{{ $addr->label ?: $this->customer->display_name }}</p>
+                                        <p class="text-xs text-gray-500 mt-1 leading-relaxed">
+                                            {{ $addr->street }}, {{ $addr->number }}@if($addr->complement) - {{ $addr->complement }}@endif, 
+                                            {{ $addr->district }}, {{ $addr->city }}/{{ $addr->state }} - 
+                                            CEP {{ $addr->cep }}
+                                        </p>
+                                        <button type="button"
+                                                wire:click.stop="editSavedAddress({{ $addr->id }})"
+                                                class="text-xs text-indigo-500 hover:text-indigo-700 underline mt-2">
+                                            Editar
+                                        </button>
+                                    </div>
+                                @endif
                             @endforeach
-
-                            <label class="flex items-center gap-3 p-3 border rounded-xl cursor-pointer transition-all
-                                {{ $useNewAddress && ! $editingAddressId ? 'border-indigo-500 bg-indigo-50' : 'border-gray-200 hover:border-gray-300' }}">
-                                <input
-                                    type="radio"
-                                    name="saved_address"
-                                    wire:click="switchToNewAddress"
-                                    @checked($useNewAddress && ! $editingAddressId)
-                                    class="accent-indigo-600"
-                                >
-                                <span class="text-sm font-medium text-gray-700">Usar outro endereço</span>
-                            </label>
                         </div>
-                    @endif
 
-                    {{-- Formulário de endereço --}}
-                    @if ($useNewAddress || $this->savedAddresses->isEmpty())
-
-                        {{-- Indicador de modo de edição --}}
-                        @if ($editingAddressId)
-                            <div class="flex items-center justify-between px-3 py-2 bg-amber-50 border border-amber-200 rounded-lg">
-                                <span class="text-xs text-amber-700 font-medium">Editando endereço salvo</span>
-                                <button type="button" wire:click="selectSavedAddress({{ $editingAddressId }})"
-                                        class="text-xs text-amber-600 hover:text-amber-800 underline">
-                                    Cancelar
-                                </button>
-                            </div>
+                        @if (! $editingAddressId)
+                            <button type="button" wire:click="switchToNewAddress"
+                                    class="text-sm text-indigo-600 hover:text-indigo-800 underline">
+                                + Usar outro endereço
+                            </button>
                         @endif
+                    @endif
 
+                    {{-- Formulário de novo endereço --}}
+                    @if (($useNewAddress && ! $editingAddressId) || $this->savedAddresses->isEmpty())
                         <div class="space-y-3">
-
-                            {{-- Identificação + Nome do destinatário --}}
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                <div>
-                                    <label class="block text-xs font-medium text-gray-700 mb-1">Identificação do endereço</label>
-                                    <input wire:model="addrLabel" type="text" placeholder="Ex: Casa, Trabalho..."
-                                           class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-0 focus:border-black focus:outline-none">
-                                </div>
-                                <div>
-                                    <label class="block text-xs font-medium text-gray-700 mb-1">Nome do destinatário *</label>
-                                    <input wire:model="addrName" type="text" placeholder="Quem vai receber"
-                                           class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-0 focus:border-black focus:outline-none @error('addrName') border-red-400 @enderror">
-                                    @error('addrName') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
-                                </div>
-                            </div>
-
-                            {{-- CEP (20%) + Rua/Logradouro (60%) + Número (20%) --}}
-                            <div class="grid grid-cols-1 sm:grid-cols-5 gap-3">
-                                <div class="sm:col-span-1">
-                                    <label class="block text-xs font-medium text-gray-700 mb-1">CEP *</label>
-                                    <input wire:model.blur="addrZip" type="text" placeholder="00000-000" maxlength="9"
-                                           wire:change="lookupZip" x-mask="99999-999"
-                                           class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-0 focus:border-black focus:outline-none @error('addrZip') border-red-400 @enderror">
-                                    @error('addrZip') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
-                                </div>
-                                <div class="sm:col-span-3">
-                                    <label class="block text-xs font-medium text-gray-700 mb-1">Rua/Logradouro *</label>
-                                    <input wire:model="addrStreet" type="text" placeholder="Rua, Avenida, etc."
-                                           class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-0 focus:border-black focus:outline-none @error('addrStreet') border-red-400 @enderror">
-                                    @error('addrStreet') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
-                                </div>
-                                <div class="sm:col-span-1">
-                                    <label class="block text-xs font-medium text-gray-700 mb-1">Número *</label>
-                                    <input wire:model="addrNumber" type="text" placeholder="123"
-                                           class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-0 focus:border-black focus:outline-none @error('addrNumber') border-red-400 @enderror">
-                                    @error('addrNumber') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
-                                </div>
-                            </div>
-
-                            {{-- Complemento (100%) --}}
-                            <div>
-                                <label class="block text-xs font-medium text-gray-700 mb-1">Complemento</label>
-                                <input wire:model="addrComplement" type="text" placeholder="Apto, Bloco, Sala..."
-                                       class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-0 focus:border-black focus:outline-none">
-                            </div>
-
-                            {{-- Bairro + Cidade + Estado (33% cada) --}}
-                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                                <div>
-                                    <label class="block text-xs font-medium text-gray-700 mb-1">Bairro *</label>
-                                    <input wire:model="addrDistrict" type="text"
-                                           class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-0 focus:border-black focus:outline-none @error('addrDistrict') border-red-400 @enderror">
-                                    @error('addrDistrict') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
-                                </div>
-                                <div>
-                                    <label class="block text-xs font-medium text-gray-700 mb-1">Cidade *</label>
-                                    <input wire:model="addrCity" type="text"
-                                           class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-0 focus:border-black focus:outline-none @error('addrCity') border-red-400 @enderror">
-                                    @error('addrCity') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
-                                </div>
-                                <div>
-                                    <label class="block text-xs font-medium text-gray-700 mb-1">Estado *</label>
-                                    <select wire:model="addrState"
-                                            class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-0 focus:border-black focus:outline-none bg-white @error('addrState') border-red-400 @enderror">
-                                        <option value="">UF</option>
-                                        @foreach(['AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS','MG','PA','PB','PR','PE','PI','RJ','RN','RS','RO','RR','SC','SP','SE','TO'] as $uf)
-                                            <option value="{{ $uf }}">{{ $uf }}</option>
-                                        @endforeach
-                                    </select>
-                                    @error('addrState') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
-                                </div>
-                            </div>
+                            @include('livewire.shop.partials.address-form')
                         </div>
                     @endif
 
-                    <div class="pt-2">
-                        <button wire:click="goToShipping" wire:loading.attr="disabled"
-                                class="w-full py-3 px-6 bg-green-700 text-white font-semibold rounded-xl hover:bg-green-800 transition-colors disabled:opacity-60">
-                            <span wire:loading.remove wire:target="goToShipping" class="flex items-center justify-center gap-2">
-                                Continuar para o Frete
-                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"/></svg>
-                            </span>
-                            <span wire:loading wire:target="goToShipping">Calculando...</span>
-                        </button>
-                    </div>
+                    @if (! $editingAddressId)
+                        {{-- ── Opções de frete (inline) ────────────────────── --}}
+                        <div class="mt-4">
+                            <h3 class="text-sm font-semibold text-black mb-1">Opções de frete</h3>
+                            <p class="text-xs text-gray-500 mb-4">Selecione uma opção</p>
+
+                        @if (! $addrZip || strlen(preg_replace('/\D/', '', $addrZip)) !== 8)
+                            {{-- Aguardando CEP --}}
+                            <div class="flex flex-col items-center justify-center py-6 text-gray-400">
+                                <svg class="w-8 h-8 mb-2" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z"/>
+                                </svg>
+                                <p class="text-sm">Preencha seu endereço acima para calcular o frete</p>
+                            </div>
+                        @elseif ($loadingShipping)
+                            {{-- Skeleton de carregamento --}}
+                            <div class="space-y-2 animate-pulse">
+                                @for ($i = 0; $i < 3; $i++)
+                                    <div class="flex items-center gap-4 p-4 border border-gray-200 rounded-xl">
+                                        <div class="w-4 h-4 bg-gray-200 rounded-full flex-shrink-0"></div>
+                                        <div class="flex-1 space-y-1.5">
+                                            <div class="h-3.5 bg-gray-200 rounded w-1/3"></div>
+                                            <div class="h-3 bg-gray-100 rounded w-2/5"></div>
+                                        </div>
+                                        <div class="h-4 bg-gray-200 rounded w-16"></div>
+                                    </div>
+                                @endfor
+                            </div>
+                        @else
+                            {{-- Sem resultados --}}
+                            @if (empty($shippingOptions))
+                                <p class="text-sm text-red-600 py-2">
+                                    Não foi possível calcular o frete para este CEP. Verifique o endereço e tente novamente.
+                                </p>
+
+                            {{-- Opções disponíveis --}}
+                            @else
+                                <div class="space-y-2">
+                                    @foreach ($shippingOptions as $idx => $option)
+                                        @php $isShipSelected = $selectedShippingIndex === $idx; @endphp
+                                        <div wire:click="$set('selectedShippingIndex', {{ $idx }})"
+                                             class="flex items-center gap-3 p-3 border rounded-xl cursor-pointer transition-all
+                                                {{ $isShipSelected ? 'border-green-500 bg-green-50/60' : 'border-gray-200 hover:border-gray-300' }}">
+                                            <div class="w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-colors
+                                                {{ $isShipSelected ? 'border-green-500 bg-green-500' : 'border-gray-300 bg-white' }}">
+                                                @if ($isShipSelected)
+                                                    <svg class="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+                                                    </svg>
+                                                @endif
+                                            </div>
+                                            <div class="flex-1">
+                                                <p class="text-sm font-semibold text-gray-900">
+                                                    {{ trim(($option['company'] ?? '') . ' ' . $option['name']) }}
+                                                </p>
+                                                <p class="text-xs text-gray-500">Prazo estimado: {{ $option['days'] }} {{ $option['days'] === 1 ? 'dia útil' : 'dias úteis' }}</p>
+                                            </div>
+                                            <span class="text-sm font-bold {{ $option['price'] == 0 ? 'text-emerald-600' : 'text-gray-900' }}">
+                                                {{ $option['price'] == 0 ? 'Grátis' : 'R$ ' . number_format($option['price'], 2, ',', '.') }}
+                                            </span>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            @endif
+
+                            @error('selectedShippingIndex')
+                                <p class="text-xs text-red-600">{{ $message }}</p>
+                            @enderror
+                        @endif
+                        </div>
+
+                        <div class="mt-4">
+                            <button wire:click="goToPayment" wire:loading.attr="disabled"
+                                    class="w-full flex items-center justify-center gap-2 py-3 px-6 bg-green-700 text-white font-semibold rounded-xl hover:bg-green-800 transition-colors disabled:opacity-60">
+                                <span wire:loading.remove wire:target="goToPayment" class="flex items-center justify-center gap-2">
+                                    Continuar para o Pagamento
+                                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"/></svg>
+                                </span>
+                                <span wire:loading wire:target="goToPayment">Validando...</span>
+                            </button>
+                        </div>
+                    @endif
                 </div>
 
             {{-- ══════════════════════════════════════════════════════
-                 ETAPA 2 — Frete
+                 ETAPA 2 — Pagamento
             ══════════════════════════════════════════════════════ --}}
             @elseif ($step === 2)
-                <div class="bg-white rounded-2xl border border-gray-200 p-6 space-y-4"
-                     wire:init="loadShipping">
-                    <div class="flex items-center gap-3">
-                        <h2 class="text-base font-semibold text-gray-900 flex-1">Opções de entrega</h2>
-                        <button type="button" wire:click="backTo(1)" class="text-sm text-indigo-600 hover:text-indigo-800">← Endereço</button>
-                    </div>
-
-                    <p class="text-sm text-gray-500">
-                        Entrega para: <span class="font-medium text-gray-700">{{ $addrCity }}/{{ strtoupper($addrState) }}</span>
-                        — CEP {{ $addrZip }}
-                    </p>
-
-                    {{-- Loading skeleton --}}
-                    @if ($loadingShipping)
-                        <div class="space-y-3">
-                            @foreach ([1, 2, 3] as $_)
-                                <div class="animate-pulse flex items-center gap-4 p-4 border border-gray-200 rounded-xl">
-                                    <div class="w-4 h-4 bg-gray-200 rounded-full flex-shrink-0"></div>
-                                    <div class="flex-1 space-y-2">
-                                        <div class="h-3 bg-gray-200 rounded w-2/5"></div>
-                                        <div class="h-2 bg-gray-100 rounded w-1/4"></div>
-                                    </div>
-                                    <div class="h-4 bg-gray-200 rounded w-14"></div>
-                                </div>
-                            @endforeach
-                        </div>
-
-                    {{-- Sem resultados --}}
-                    @elseif (empty($shippingOptions))
-                        <p class="text-sm text-red-600 py-2">
-                            Não foi possível calcular o frete para este CEP.
-                            <button type="button" wire:click="backTo(1)" class="underline">Verifique o endereço</button> e tente novamente.
-                        </p>
-
-                    {{-- Opções disponíveis --}}
-                    @else
-                        <div class="space-y-3">
-                            @foreach ($shippingOptions as $idx => $option)
-                                <label class="flex items-center gap-4 p-4 border rounded-xl cursor-pointer transition-all
-                                    {{ $selectedShippingIndex === $idx
-                                        ? 'border-indigo-500 bg-indigo-50'
-                                        : 'border-gray-200 hover:border-gray-300' }}">
-                                    <input type="radio"
-                                           name="shipping_option"
-                                           wire:click="$set('selectedShippingIndex', {{ $idx }})"
-                                           @checked($selectedShippingIndex === $idx)
-                                           class="accent-indigo-600">
-                                    <div class="flex-1">
-                                        <p class="text-sm font-semibold text-gray-900">
-                                            {{ trim(($option['company'] ?? '') . ' ' . $option['name']) }}
-                                        </p>
-                                        <p class="text-xs text-gray-500">Prazo estimado: {{ $option['days'] }} {{ $option['days'] === 1 ? 'dia útil' : 'dias úteis' }}</p>
-                                    </div>
-                                    <span class="text-sm font-bold {{ $option['price'] == 0 ? 'text-emerald-600' : 'text-gray-900' }}">
-                                        {{ $option['price'] == 0 ? 'Grátis' : 'R$ ' . number_format($option['price'], 2, ',', '.') }}
-                                    </span>
-                                </label>
-                            @endforeach
-                        </div>
-                    @endif
-
-                    @error('selectedShippingIndex')
-                        <p class="text-xs text-red-600">{{ $message }}</p>
-                    @enderror
-
-                    <button wire:click="goToPayment"
-                            @disabled($loadingShipping || empty($shippingOptions))
-                            class="w-full flex items-center justify-center gap-2 py-3 px-6 bg-green-700 text-white font-semibold rounded-xl hover:bg-green-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
-                        Continuar para o Pagamento
-                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"/></svg>
-                    </button>
-                </div>
-
-            {{-- ══════════════════════════════════════════════════════
-                 ETAPA 3 — Pagamento
-            ══════════════════════════════════════════════════════ --}}
-            @elseif ($step === 3)
                 <div class="bg-white rounded-2xl border border-gray-200 p-6 space-y-5">
                     <div class="flex items-center gap-3">
                         <h2 class="text-base font-semibold text-gray-900 flex-1">Forma de pagamento</h2>
-                        <button type="button" wire:click="backTo(2)" class="text-sm text-indigo-600 hover:text-indigo-800">← Frete</button>
+                        <button type="button" wire:click="backTo(1)" class="text-sm text-indigo-600 hover:text-indigo-800">← Entrega</button>
                     </div>
 
                     {{-- Seletor de método --}}
                     <div class="grid grid-cols-2 gap-3">
-                        <label class="flex items-center gap-3 p-4 border rounded-xl cursor-pointer transition-all
-                            {{ $paymentMethod === 'pix' ? 'border-indigo-500 bg-indigo-50' : 'border-gray-200 hover:border-gray-300' }}">
-                            <input type="radio" name="payment_method"
-                                   wire:click="$set('paymentMethod','pix')"
-                                   @checked($paymentMethod === 'pix')
-                                   class="accent-indigo-600">
-                            <div>
-                                <p class="text-sm font-semibold text-gray-900">PIX</p>
-                                <p class="text-xs text-gray-500">Aprovação imediata</p>
+                        {{-- PIX --}}
+                        <div wire:click="$set('paymentMethod','pix')"
+                             class="relative p-3.5 border rounded-xl cursor-pointer transition-all
+                                {{ $paymentMethod === 'pix' ? 'border-green-500 bg-green-50/60' : 'border-gray-200 hover:border-gray-300' }}">
+                            <div class="absolute top-2.5 right-2.5 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors
+                                {{ $paymentMethod === 'pix' ? 'border-green-500 bg-green-500' : 'border-gray-300 bg-white' }}">
+                                @if ($paymentMethod === 'pix')
+                                    <svg class="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+                                    </svg>
+                                @endif
                             </div>
-                        </label>
-                        <label class="flex items-center gap-3 p-4 border rounded-xl cursor-pointer transition-all
-                            {{ $paymentMethod === 'credit_card' ? 'border-indigo-500 bg-indigo-50' : 'border-gray-200 hover:border-gray-300' }}">
-                            <input type="radio" name="payment_method"
-                                   wire:click="$set('paymentMethod','credit_card')"
-                                   @checked($paymentMethod === 'credit_card')
-                                   class="accent-indigo-600">
-                            <div>
-                                <p class="text-sm font-semibold text-gray-900">Cartão de crédito</p>
-                                <p class="text-xs text-gray-500">Em até {{ app(\App\Services\PaymentCalculator::class)->installmentsMax() }}×</p>
+                            <p class="text-sm font-semibold text-gray-900 pr-7">PIX</p>
+                            <p class="text-xs text-gray-500 mt-0.5">Aprovação imediata</p>
+                            @if ($this->pixSavings > 0)
+                                <p class="text-xs font-semibold text-emerald-600 mt-1">
+                                    Economize R$ {{ number_format($this->pixSavings, 2, ',', '.') }}
+                                </p>
+                            @endif
+                        </div>
+                        {{-- Cartão --}}
+                        <div wire:click="$set('paymentMethod','credit_card')"
+                             class="relative p-3.5 border rounded-xl cursor-pointer transition-all
+                                {{ $paymentMethod === 'credit_card' ? 'border-green-500 bg-green-50/60' : 'border-gray-200 hover:border-gray-300' }}">
+                            <div class="absolute top-2.5 right-2.5 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors
+                                {{ $paymentMethod === 'credit_card' ? 'border-green-500 bg-green-500' : 'border-gray-300 bg-white' }}">
+                                @if ($paymentMethod === 'credit_card')
+                                    <svg class="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+                                    </svg>
+                                @endif
                             </div>
-                        </label>
+                            <p class="text-sm font-semibold text-gray-900 pr-7">Cartão de crédito</p>
+                            <p class="text-xs text-gray-500 mt-0.5">Em até {{ app(\App\Services\PaymentCalculator::class)->installmentsMax() }}×</p>
+                        </div>
                     </div>
 
                     {{-- Formulário cartão --}}
@@ -695,29 +627,22 @@
                             </div>
                         </div>
                     @else
-                        {{-- Desconto PIX --}}
-                        @if ($this->pixTotal)
-                            <div class="flex items-center gap-3 p-4 bg-green-50 border border-green-200 rounded-xl">
-                                <svg class="w-5 h-5 text-green-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                                </svg>
-                                <div>
-                                    <p class="text-sm font-semibold text-green-800">
-                                        Pagando no PIX:
-                                        <span class="text-lg">R$ {{ number_format($this->pixTotal, 2, ',', '.') }}</span>
-                                    </p>
-                                    <p class="text-xs text-green-600 mt-0.5">
-                                        Você economiza R$ {{ number_format($this->pixSavings, 2, ',', '.') }} pagando à vista
-                                    </p>
+                        {{-- Resumo PIX --}}
+                        <div class="p-4 bg-green-50 border border-green-200 rounded-xl space-y-2">
+                            @if ($this->pixTotal)
+                                <div class="flex items-baseline justify-between">
+                                    <span class="text-sm text-green-800">Total no PIX:</span>
+                                    <span class="text-xl font-bold text-green-700">R$ {{ number_format($this->pixTotal, 2, ',', '.') }}</span>
                                 </div>
-                            </div>
-                        @endif
-                        {{-- Info QR Code --}}
-                        <div class="flex items-center gap-3 p-4 bg-blue-50 border border-blue-200 rounded-xl">
-                            <svg class="w-5 h-5 text-blue-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                            </svg>
-                            <p class="text-sm text-blue-700">O QR Code PIX será gerado após a confirmação do pedido.</p>
+                                @if ($this->pixSavings > 0)
+                                    <p class="text-sm font-semibold text-emerald-600">
+                                        Economia de R$ {{ number_format($this->pixSavings, 2, ',', '.') }} pagando à vista
+                                    </p>
+                                @endif
+                            @endif
+                            <p class="text-xs text-green-700/70 pt-1 border-t border-green-200">
+                                O QR Code PIX será gerado após a confirmação do pedido.
+                            </p>
                         </div>
                     @endif
 
@@ -729,9 +654,9 @@
                 </div>
 
             {{-- ══════════════════════════════════════════════════════
-                 ETAPA 4 — Revisão
+                 ETAPA 3 — Revisão
             ══════════════════════════════════════════════════════ --}}
-            @elseif ($step === 4)
+            @elseif ($step === 3)
                 <div class="space-y-4">
 
                     {{-- Resumo do endereço --}}
@@ -755,7 +680,7 @@
                         <div class="bg-white rounded-2xl border border-gray-200 p-5">
                             <div class="flex items-center justify-between mb-2">
                                 <h3 class="text-sm font-semibold text-gray-900">Frete</h3>
-                                <button type="button" wire:click="backTo(2)" class="text-xs text-indigo-600 hover:text-indigo-800">Alterar</button>
+                                <button type="button" wire:click="backTo(1)" class="text-xs text-indigo-600 hover:text-indigo-800">Alterar</button>
                             </div>
                             @if ($this->selectedShipping)
                                 <p class="text-sm text-gray-700">
@@ -774,7 +699,7 @@
                         <div class="bg-white rounded-2xl border border-gray-200 p-5">
                             <div class="flex items-center justify-between mb-2">
                                 <h3 class="text-sm font-semibold text-gray-900">Pagamento</h3>
-                                <button type="button" wire:click="backTo(3)" class="text-xs text-indigo-600 hover:text-indigo-800">Alterar</button>
+                                <button type="button" wire:click="backTo(2)" class="text-xs text-indigo-600 hover:text-indigo-800">Alterar</button>
                             </div>
                             <p class="text-sm text-gray-700">
                                 {{ $paymentMethod === 'pix' ? 'PIX' : 'Cartão de crédito' }}
@@ -909,7 +834,7 @@
                     </div>
 
                     {{-- Desconto PIX (visível a partir da etapa de pagamento) --}}
-                    @if ($step >= 3 && $paymentMethod === 'pix' && $this->pixSavings > 0)
+                    @if ($step >= 2 && $paymentMethod === 'pix' && $this->pixSavings > 0)
                         <div class="flex justify-between text-emerald-600">
                             <span>Desconto PIX</span>
                             <span>− R$ {{ number_format($this->pixSavings, 2, ',', '.') }}</span>
@@ -917,7 +842,7 @@
                     @endif
 
                     {{-- Juros de parcelamento (visível quando parcelas com juros selecionadas) --}}
-                    @if ($step >= 3 && $paymentMethod === 'credit_card' && $this->cardInterestAmount > 0)
+                    @if ($step >= 2 && $paymentMethod === 'credit_card' && $this->cardInterestAmount > 0)
                         <div class="flex justify-between text-orange-600">
                             <span>Juros de parcelamento</span>
                             <span>+ R$ {{ number_format($this->cardInterestAmount, 2, ',', '.') }}</span>
@@ -926,7 +851,7 @@
 
                     <div class="flex justify-between font-bold text-gray-900 mt-4 pt-4 mb-0 border-t border-gray-100 text-base">
                         <span>Total</span>
-                        <span>R$ {{ number_format($step >= 3 ? $this->finalTotal : $this->total, 2, ',', '.') }}</span>
+                        <span>R$ {{ number_format($step >= 2 ? $this->finalTotal : $this->total, 2, ',', '.') }}</span>
                     </div>
 
                     @php

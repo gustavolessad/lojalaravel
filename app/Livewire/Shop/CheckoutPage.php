@@ -21,12 +21,13 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\On;
 use Livewire\Component;
 
 class CheckoutPage extends Component
 {
-    // ── Etapa atual (0-4) ─────────────────────────────────────────────────
-    // 0 = Identificação (login/cadastro), 1 = Endereço, 2 = Frete, 3 = Pagamento, 4 = Revisão
+    // ── Etapa atual (0-3) ─────────────────────────────────────────────────
+    // 0 = Identificação (login/cadastro), 1 = Entrega (endereço+frete), 2 = Pagamento, 3 = Revisão
     public int $step = 1;
 
     // ── Etapa 0: Autenticação ─────────────────────────────────────────────
@@ -51,7 +52,7 @@ class CheckoutPage extends Component
     public string $registerPassword             = '';
     public string $registerPasswordConfirmation = '';
 
-    // ── Etapa 1: Endereço ─────────────────────────────────────────────────
+    // ── Etapa 1: Entrega (endereço + frete) ─────────────────────────────
     public ?int $selectedAddressId = null;
     public ?int $editingAddressId  = null;   // null = novo endereço | int = editando existente
     public bool $useNewAddress     = false;
@@ -67,12 +68,10 @@ class CheckoutPage extends Component
     public string $addrCity        = '';
     public string $addrState       = '';
 
-    // ── Etapa 2: Frete ────────────────────────────────────────────────────
     public ?int  $selectedShippingIndex = null;
     public array $shippingOptions       = [];
-    public bool  $loadingShipping       = false;
 
-    // ── Etapa 3: Pagamento ────────────────────────────────────────────────
+    // ── Etapa 2: Pagamento ────────────────────────────────────────────────
     public string $paymentMethod = 'pix';
 
     public string $cardHolder   = '';
@@ -81,12 +80,13 @@ class CheckoutPage extends Component
     public string $cardCvv      = '';
     public int    $installments = 1;
 
-    // ── Etapa 4: Notas ────────────────────────────────────────────────────
+    // ── Etapa 3: Notas ────────────────────────────────────────────────────
     public string $notes = '';
 
     // ── Estado interno ────────────────────────────────────────────────────
-    public bool    $processing   = false;
-    public ?string $errorMessage = null;
+    public bool    $processing      = false;
+    public bool    $loadingShipping = false;
+    public ?string $errorMessage    = null;
 
     // ── Mount ─────────────────────────────────────────────────────────────
 
@@ -129,22 +129,6 @@ class CheckoutPage extends Component
     public function savedAddresses()
     {
         return $this->customer?->addresses()->orderByDesc('is_default')->get() ?? collect();
-    }
-
-    /**
-     * Chamado via wire:init no step 2. Calcula as opções de frete de forma
-     * assíncrona, permitindo que a tela mude instantaneamente.
-     */
-    public function loadShipping(): void
-    {
-        $zip = preg_replace('/\D/', '', $this->addrZip);
-
-        if (strlen($zip) === 8) {
-            $this->shippingOptions = app(ShippingCalculator::class)
-                ->calculate($zip, (float) $this->cart->subtotal, $this->cart->items);
-        }
-
-        $this->loadingShipping = false;
     }
 
     #[Computed]
@@ -298,6 +282,7 @@ class CheckoutPage extends Component
         $rules = [
             'registerType'                 => 'required|in:pf,pj',
             'registerEmail'                => 'required|email|max:200|unique:customers,email',
+            'registerMobile'               => 'required|digits_between:10,11',
             'registerPassword'             => 'required|string|min:8',
             'registerPasswordConfirmation' => 'required|same:registerPassword',
         ];
@@ -307,6 +292,8 @@ class CheckoutPage extends Component
             'registerEmail.required'                => 'Informe seu e-mail.',
             'registerEmail.email'                   => 'E-mail inválido.',
             'registerEmail.unique'                  => 'Este e-mail já está cadastrado. Faça login.',
+            'registerMobile.required'               => 'Informe seu celular.',
+            'registerMobile.digits_between'         => 'Celular inválido.',
             'registerPassword.required'             => 'Informe uma senha.',
             'registerPassword.min'                  => 'A senha deve ter pelo menos 8 caracteres.',
             'registerPasswordConfirmation.required' => 'Confirme sua senha.',
@@ -319,17 +306,22 @@ class CheckoutPage extends Component
         $mobile = preg_replace('/\D/', '', $this->registerMobile);
 
         if ($this->registerType === 'pf') {
-            $rules['registerName'] = 'required|string|min:3|max:120';
-            $rules['registerCpf']  = ['nullable', 'digits:11', new ValidCpf(), 'unique:customers,cpf'];
-            $messages['registerName.required']   = 'Informe seu nome completo.';
-            $messages['registerCpf.digits']      = 'O CPF deve conter 11 dígitos.';
-            $messages['registerCpf.unique']      = 'Este CPF já está cadastrado.';
+            $rules['registerName']      = 'required|string|min:3|max:120';
+            $rules['registerCpf']       = ['required', 'digits:11', new ValidCpf(), 'unique:customers,cpf'];
+            $rules['registerBirthDate'] = 'required|string|size:10';
+            $messages['registerName.required']      = 'Informe seu nome completo.';
+            $messages['registerCpf.required']       = 'Informe seu CPF.';
+            $messages['registerCpf.digits']         = 'O CPF deve conter 11 dígitos.';
+            $messages['registerCpf.unique']         = 'Este CPF já está cadastrado.';
+            $messages['registerBirthDate.required'] = 'Informe sua data de nascimento.';
+            $messages['registerBirthDate.size']     = 'Data de nascimento inválida.';
         } else {
             $rules['registerCompanyName']      = 'required|string|min:2|max:200';
             $rules['registerResponsibleName']  = 'required|string|min:3|max:120';
-            $rules['registerCnpj']             = ['nullable', 'digits:14', new ValidCnpj(), 'unique:customers,cnpj'];
+            $rules['registerCnpj']             = ['required', 'digits:14', new ValidCnpj(), 'unique:customers,cnpj'];
             $messages['registerCompanyName.required']     = 'Informe a razão social.';
             $messages['registerResponsibleName.required'] = 'Informe o nome do responsável.';
+            $messages['registerCnpj.required']            = 'Informe o CNPJ.';
             $messages['registerCnpj.digits']              = 'O CNPJ deve conter 14 dígitos.';
             $messages['registerCnpj.unique']              = 'Este CNPJ já está cadastrado.';
         }
@@ -395,7 +387,7 @@ class CheckoutPage extends Component
         $this->redirect(route('checkout.index'), navigate: false);
     }
 
-    // ── Etapa 1: Endereço ─────────────────────────────────────────────────
+    // ── Etapa 1: Entrega (endereço + frete) ────────────────────────────
 
     public function selectSavedAddress(int $addressId): void
     {
@@ -407,6 +399,7 @@ class CheckoutPage extends Component
 
         if ($address && $address->customer_id === $this->customer?->id) {
             $this->fillFromAddress($address);
+            $this->requestShippingCalc();
         }
     }
 
@@ -422,7 +415,7 @@ class CheckoutPage extends Component
 
         $this->editingAddressId  = $addressId;
         $this->selectedAddressId = null;
-        $this->useNewAddress     = true;
+        $this->useNewAddress     = false;
 
         $this->addrLabel      = $address->label ?? '';
         $this->addrName       = $this->customer?->display_name ?? '';
@@ -434,6 +427,75 @@ class CheckoutPage extends Component
         $this->addrDistrict   = $address->district;
         $this->addrCity       = $address->city;
         $this->addrState      = $address->state;
+
+        // Limpa frete anterior enquanto edita
+        $this->shippingOptions       = [];
+        $this->selectedShippingIndex = null;
+
+    }
+
+    public function saveEditedAddress(): void
+    {
+        $this->validate([
+            'addrName'     => 'required|string|min:3|max:120',
+            'addrZip'      => ['required', 'regex:/^\d{5}-?\d{3}$/'],
+            'addrStreet'   => 'required|string|min:3|max:200',
+            'addrNumber'   => 'required|string|max:20',
+            'addrDistrict' => 'required|string|max:100',
+            'addrCity'     => 'required|string|max:100',
+            'addrState'    => 'required|string|size:2',
+        ], [
+            'addrName.required'     => 'Informe o nome do destinatário.',
+            'addrZip.required'      => 'Informe o CEP.',
+            'addrZip.regex'         => 'CEP inválido.',
+            'addrStreet.required'   => 'Informe o logradouro.',
+            'addrNumber.required'   => 'Informe o número.',
+            'addrDistrict.required' => 'Informe o bairro.',
+            'addrCity.required'     => 'Informe a cidade.',
+            'addrState.required'    => 'Informe o estado.',
+        ]);
+
+        $customer = $this->customer;
+
+        if (! $customer || ! $this->editingAddressId) {
+            return;
+        }
+
+        $addrData = [
+            'label'      => $this->addrLabel ?: null,
+            'cep'        => preg_replace('/\D/', '', $this->addrZip),
+            'street'     => $this->addrStreet,
+            'number'     => $this->addrNumber,
+            'complement' => $this->addrComplement ?: null,
+            'district'   => $this->addrDistrict,
+            'city'       => $this->addrCity,
+            'state'      => strtoupper($this->addrState),
+        ];
+
+        CustomerAddress::where('id', $this->editingAddressId)
+            ->where('customer_id', $customer->id)
+            ->update($addrData);
+
+        $this->selectedAddressId = $this->editingAddressId;
+        $this->editingAddressId  = null;
+        $this->useNewAddress     = false;
+
+        $this->requestShippingCalc();
+    }
+
+    public function cancelEditAddress(): void
+    {
+        $this->editingAddressId = null;
+
+        // Volta para o endereço que estava selecionado antes (ou o primeiro)
+        $default = $this->customer?->addresses()->where('is_default', true)->first()
+            ?? $this->customer?->addresses()->first();
+
+        if ($default) {
+            $this->selectedAddressId = $default->id;
+            $this->fillFromAddress($default);
+            $this->requestShippingCalc();
+        }
     }
 
     public function switchToNewAddress(): void
@@ -461,9 +523,48 @@ class CheckoutPage extends Component
             $this->addrCity     = $data['localidade'] ?? '';
             $this->addrState    = $data['uf'] ?? '';
         }
+
+        $this->requestShippingCalc();
     }
 
-    public function goToShipping(): void
+    /**
+     * Prepara o estado de loading e dispara evento para calcular frete de forma assíncrona.
+     * Isso permite que o radio/endereço atualize instantaneamente na tela.
+     */
+    private function requestShippingCalc(): void
+    {
+        $this->shippingOptions       = [];
+        $this->selectedShippingIndex = null;
+        $this->loadingShipping       = true;
+        $this->dispatch('do-calculate-shipping');
+    }
+
+    /**
+     * Calcula frete de fato (chamado pelo evento self-dispatch).
+     */
+    #[On('do-calculate-shipping')]
+    public function calculateShipping(): void
+    {
+        $zip = preg_replace('/\D/', '', $this->addrZip);
+
+        if (strlen($zip) !== 8) {
+            $this->shippingOptions       = [];
+            $this->selectedShippingIndex = null;
+            $this->loadingShipping       = false;
+            return;
+        }
+
+        $this->selectedShippingIndex = null;
+
+        $this->shippingOptions = app(ShippingCalculator::class)
+            ->calculate($zip, (float) $this->cart->subtotal, $this->cart->items);
+
+        $this->loadingShipping = false;
+    }
+
+    // ── Etapa 1 → 2: Validar endereço + frete → Pagamento ──────────────
+
+    public function goToPayment(): void
     {
         $this->errorMessage = null;
 
@@ -486,8 +587,13 @@ class CheckoutPage extends Component
             'addrState.required'    => 'Informe o estado.',
         ]);
 
-        // Persiste o endereço na conta do cliente
-        if ($customer = $this->customer) {
+        if ($this->selectedShippingIndex === null) {
+            $this->addError('selectedShippingIndex', 'Selecione uma opção de frete.');
+            return;
+        }
+
+        // Persiste novo endereço na conta do cliente (edição é tratada em saveEditedAddress)
+        if (($customer = $this->customer) && $this->useNewAddress) {
             $addrData = [
                 'label'      => $this->addrLabel ?: null,
                 'cep'        => preg_replace('/\D/', '', $this->addrZip),
@@ -499,47 +605,20 @@ class CheckoutPage extends Component
                 'state'      => strtoupper($this->addrState),
             ];
 
-            if ($this->editingAddressId) {
-                CustomerAddress::where('id', $this->editingAddressId)
-                    ->where('customer_id', $customer->id)
-                    ->update($addrData);
+            $isFirst    = $customer->addresses()->count() === 0;
+            $newAddress = $customer->addresses()->create(
+                array_merge($addrData, ['country' => 'BR', 'is_default' => $isFirst])
+            );
 
-                $this->selectedAddressId = $this->editingAddressId;
-                $this->editingAddressId  = null;
-                $this->useNewAddress     = false;
-
-            } elseif ($this->useNewAddress) {
-                $isFirst    = $customer->addresses()->count() === 0;
-                $newAddress = $customer->addresses()->create(
-                    array_merge($addrData, ['country' => 'BR', 'is_default' => $isFirst])
-                );
-
-                $this->selectedAddressId = $newAddress->id;
-                $this->useNewAddress     = false;
-            }
+            $this->selectedAddressId = $newAddress->id;
+            $this->useNewAddress     = false;
         }
 
-        $this->shippingOptions       = [];
-        $this->selectedShippingIndex = null;
-        $this->loadingShipping       = true;
-        $this->step                  = 2;
+        $this->step = 2;
         $this->dispatch('checkout-step-changed', step: 2);
     }
 
-    // ── Etapa 2: Frete ────────────────────────────────────────────────────
-
-    public function goToPayment(): void
-    {
-        if ($this->selectedShippingIndex === null) {
-            $this->addError('selectedShippingIndex', 'Selecione uma opção de frete.');
-            return;
-        }
-
-        $this->step = 3;
-        $this->dispatch('checkout-step-changed', step: 3);
-    }
-
-    // ── Etapa 3: Pagamento ────────────────────────────────────────────────
+    // ── Etapa 2: Pagamento ────────────────────────────────────────────────
 
     // Remove espaços da máscara do cartão ao sincronizar com Livewire
     public function updatedCardNumber(): void
@@ -567,11 +646,11 @@ class CheckoutPage extends Component
             ]);
         }
 
-        $this->step = 4;
-        $this->dispatch('checkout-step-changed', step: 4);
+        $this->step = 3;
+        $this->dispatch('checkout-step-changed', step: 3);
     }
 
-    // ── Etapa 4: Confirmar pedido ─────────────────────────────────────────
+    // ── Etapa 3: Confirmar pedido ─────────────────────────────────────────
 
     public function placeOrder(): void
     {
@@ -672,8 +751,8 @@ class CheckoutPage extends Component
                     $lastError  = $paymentManager->getLastError();
                     $errorDesc  = $lastError['errors'][0]['description'] ?? null;
                     $this->errorMessage = $errorDesc ?? 'Verifique os dados do cartão e tente novamente.';
-                    $this->step = 3;
-                    $this->dispatch('checkout-step-changed', step: 3);
+                    $this->step = 2;
+                    $this->dispatch('checkout-step-changed', step: 2);
                     return;
                 }
 
@@ -776,6 +855,7 @@ class CheckoutPage extends Component
         if ($default) {
             $this->selectedAddressId = $default->id;
             $this->fillFromAddress($default);
+            $this->requestShippingCalc();
         } else {
             $this->useNewAddress = true;
             $this->addrName      = $customer->display_name;

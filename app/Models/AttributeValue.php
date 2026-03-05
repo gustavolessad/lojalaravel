@@ -6,9 +6,15 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Support\Str;
+use Spatie\Image\Enums\Fit;
+use Spatie\MediaLibrary\HasMedia;
+use Spatie\MediaLibrary\InteractsWithMedia;
+use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
-class AttributeValue extends Model
+class AttributeValue extends Model implements HasMedia
 {
+    use InteractsWithMedia;
+
     protected $fillable = [
         'attribute_id',
         'value',
@@ -45,5 +51,20 @@ class AttributeValue extends Model
     public function getLabel(): string
     {
         return $this->display_value ?? $this->value;
+    }
+
+    public function registerMediaCollections(): void
+    {
+        $this->addMediaCollection('icon')->singleFile();
+    }
+
+    public function registerMediaConversions(Media $media = null): void
+    {
+        $this->addMediaConversion('thumb')
+            ->format('webp')
+            ->quality(80)
+            ->fit(Fit::Contain, 100, 100)
+            ->performOnCollections('icon')
+            ->nonQueued();
     }
 }

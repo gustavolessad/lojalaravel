@@ -115,8 +115,9 @@ class ProductDetail extends Component
             'variants' => fn ($q) => $q->where('active', true)
                 ->with(['attributeValues.attribute', 'media', 'variantGroup.media'])
                 ->orderBy('order'),
-            'attributes' => fn ($q) => $q->withPivot('expand_in_catalog')->with([
+            'attributes' => fn ($q) => $q->withPivot('expand_in_catalog', 'variant_display')->with([
                 'values' => fn ($vq) => $vq
+                    ->with('media')
                     ->whereHas('variants', fn ($varq) => $varq
                         ->where('product_id', $this->productId)
                         ->where('active', true)
@@ -349,10 +350,9 @@ class ProductDetail extends Component
     }
 
     /**
-     * Mapa de imagens de variante por atributo de expansão.
-     * Retorna [attribute_slug => [value_slug => image_url]] apenas para
-     * atributos que têm expand_in_catalog = true no produto atual.
-     * Usado nos seletores da página de produto para mostrar foto em vez de texto.
+     * Mapa de imagens de variante por atributo.
+     * Retorna [attribute_slug => [value_slug => image_url]] conforme o
+     * variant_display configurado no produto (text, attribute_icon, group_cover).
      */
     #[Computed]
     public function variantImageMap(): array
@@ -360,25 +360,33 @@ class ProductDetail extends Component
         $map = [];
 
         foreach ($this->product->attributes as $attribute) {
-            if (empty($attribute->pivot->expand_in_catalog)) {
+            $display = $attribute->pivot->variant_display ?? 'text';
+
+            if ($display === 'text') {
                 continue;
             }
 
             $map[$attribute->slug] = [];
 
             foreach ($attribute->values as $value) {
-                // Variante representativa: prefere com estoque; dentro delas, a primeira na ordem
-                $variant = $this->product->variants
-                    ->filter(fn ($v) => $v->attributeValues->contains('id', $value->id))
-                    ->sortByDesc(fn ($v) => ($v->stock ?? 0) > 0 ? 1 : 0)
-                    ->first();
+                $url = null;
 
-                if ($variant) {
-                    $url = $variant->variantGroup?->getFirstMediaUrl('group-cover', 'thumb')
-                        ?: $variant->getFirstMediaUrl('variant-cover', 'thumb');
-                    if ($url) {
-                        $map[$attribute->slug][$value->slug] = $url;
+                if ($display === 'attribute_icon') {
+                    $url = $value->getFirstMediaUrl('icon', 'thumb');
+                } elseif ($display === 'group_cover') {
+                    $variant = $this->product->variants
+                        ->filter(fn ($v) => $v->attributeValues->contains('id', $value->id))
+                        ->sortByDesc(fn ($v) => ($v->stock ?? 0) > 0 ? 1 : 0)
+                        ->first();
+
+                    if ($variant) {
+                        $url = $variant->variantGroup?->getFirstMediaUrl('group-cover', 'thumb')
+                            ?: $variant->getFirstMediaUrl('variant-cover', 'thumb');
                     }
+                }
+
+                if ($url) {
+                    $map[$attribute->slug][$value->slug] = $url;
                 }
             }
         }

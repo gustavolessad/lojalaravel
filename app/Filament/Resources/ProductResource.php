@@ -233,6 +233,47 @@ class ProductResource extends Resource
                                 }
                             }),
 
+                        Forms\Components\Select::make('variant_image_attribute')
+                            ->label('Exibir imagens nos botões de')
+                            ->helperText('O atributo selecionado exibirá imagens nos botões de variação na página do produto.')
+                            ->placeholder('Nenhum (somente texto)')
+                            ->options(fn (Forms\Get $get): array =>
+                                collect($get('attributes') ?? [])
+                                    ->mapWithKeys(fn ($id) => [$id => Attribute::find((int) $id)?->name ?? ''])
+                                    ->filter()
+                                    ->toArray()
+                            )
+                            ->nullable()
+                            ->live()
+                            ->visible(fn (Forms\Get $get) => count($get('attributes') ?? []) > 0)
+                            ->dehydrated(true)
+                            ->afterStateHydrated(function ($component, $record) {
+                                if ($record?->exists) {
+                                    $attr = $record->attributes()
+                                        ->wherePivotNotIn('variant_display', ['text'])
+                                        ->first();
+                                    $component->state($attr?->id);
+                                }
+                            }),
+
+                        Forms\Components\Select::make('variant_image_type')
+                            ->label('Tipo de imagem')
+                            ->options([
+                                'attribute_icon' => 'Ícone do valor do atributo',
+                                'group_cover'    => 'Imagem do grupo de imagens',
+                            ])
+                            ->default('attribute_icon')
+                            ->visible(fn (Forms\Get $get) => filled($get('variant_image_attribute')))
+                            ->dehydrated(true)
+                            ->afterStateHydrated(function ($component, $record) {
+                                if ($record?->exists) {
+                                    $attr = $record->attributes()
+                                        ->wherePivotNotIn('variant_display', ['text'])
+                                        ->first();
+                                    $component->state($attr?->pivot?->variant_display ?? 'attribute_icon');
+                                }
+                            }),
+
                         Forms\Components\Repeater::make('variants')
                             ->label('Variantes')
                             ->relationship()

@@ -9,6 +9,8 @@ use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Support\Str;
+use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 
 class AttributeResource extends Resource
 {
@@ -63,8 +65,20 @@ class AttributeResource extends Resource
                             ->numeric()
                             ->default(0)
                             ->minValue(0),
+
+                        Forms\Components\SpatieMediaLibraryFileUpload::make('icon')
+                            ->label('Ícone')
+                            ->collection('icon')
+                            ->image()
+                            ->imageEditor()
+                            ->helperText('100×100px, usado nos botões de variação.')
+                            ->getUploadedFileNameForStorageUsing(function (TemporaryUploadedFile $file, $record): string {
+                                $attrSlug = Str::slug($record?->attribute?->name ?? 'atributo');
+                                $valueSlug = Str::slug($record?->value ?? 'valor');
+                                return $attrSlug . '-' . $valueSlug . '-' . date('Ymd-His') . '-' . substr(md5(uniqid()), 0, 5) . '.jpg';
+                            }),
                     ])
-                    ->columns(3)
+                    ->columns(4)
                     ->addActionLabel('Adicionar valor')
                     ->cloneable()
                     ->collapsible(),

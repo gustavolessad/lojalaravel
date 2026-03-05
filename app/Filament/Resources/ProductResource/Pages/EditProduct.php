@@ -45,11 +45,16 @@ class EditProduct extends EditRecord
 
     private function syncExpandAttributes(): void
     {
-        $attrIds  = $this->data['attributes'] ?? [];
-        $expandId = (int) ($this->data['expand_catalog_attributes'] ?? 0);
+        $attrIds      = $this->data['attributes'] ?? [];
+        $expandId     = (int) ($this->data['expand_catalog_attributes'] ?? 0);
+        $imageAttrId  = (int) ($this->data['variant_image_attribute'] ?? 0);
+        $imageType    = $this->data['variant_image_type'] ?? 'attribute_icon';
 
         $pivotData = collect($attrIds)->mapWithKeys(fn ($id) => [
-            (int) $id => ['expand_in_catalog' => $expandId > 0 && (int) $id === $expandId],
+            (int) $id => [
+                'expand_in_catalog' => $expandId > 0 && (int) $id === $expandId,
+                'variant_display'   => $imageAttrId > 0 && (int) $id === $imageAttrId ? $imageType : 'text',
+            ],
         ])->toArray();
 
         $this->record->attributes()->sync($pivotData);

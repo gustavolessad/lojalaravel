@@ -77,7 +77,7 @@ $contactPhone = $storePhone;
     @yield('before-main')
 
     {{-- Conteúdo da página --}}
-    <main class="@yield('main-class', 'flex-1 max-w-6xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-4 lg:py-10')">
+    <main class="@yield('main-class', 'flex-1 max-w-6xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-6')">
         @yield('content')
     </main>
 

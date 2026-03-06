@@ -1,11 +1,16 @@
 @props(['url'])
+@php
+    $storeLogo = \App\Models\Setting::get('store_logo', '');
+    $storeName = \App\Models\Setting::get('store_name', config('app.name'));
+    $logoUrl = $storeLogo ? \Illuminate\Support\Facades\Storage::disk('public')->url($storeLogo) : null;
+@endphp
 <tr>
 <td class="header">
 <a href="{{ $url }}" style="display: inline-block;">
-@if (trim($slot) === 'Laravel')
-<img src="https://laravel.com/img/notification-logo-v2.1.png" class="logo" alt="Laravel Logo">
+@if ($logoUrl)
+<img src="{{ $logoUrl }}" class="logo" alt="{{ $storeName }}">
 @else
-{!! $slot !!}
+{{ $storeName }}
 @endif
 </a>
 </td>

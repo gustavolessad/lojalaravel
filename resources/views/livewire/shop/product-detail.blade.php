@@ -288,23 +288,27 @@
                         @endphp
 
                         @if ($variantThumb)
-                        {{-- ── Pill com imagem da variante (atributo de expansão com foto) ── --}}
-                        <span class="relative inline-block">
+                        {{-- ── Botão com imagem da variante (sem label, com tooltip) ── --}}
+                        <span class="relative inline-block" x-data="{ show: false }" @mouseenter="show = true" @mouseleave="show = false">
                             <button
                                 wire:click="selectValue('{{ $attribute->slug }}', '{{ $value->slug }}')"
-                                title="{{ $value->getLabel() }}{{ $isOutOfStock ? ' (sem estoque)' : ($isCascade ? ' — vai alterar outra seleção' : '') }}"
-                                @class([ 'flex items-center gap-2 pl-1.5 pr-3 py-1.5 rounded-xl border font-medium transition-all duration-150 text-sm' , 'border-gray-500 bg-gray-50 text-gray-700'=> $isSelected,
-                                'border-gray-200 text-gray-700 hover:border-gray-400' => ! $isSelected && $isAvailable && ! $isOutOfStock,
-                                'border-gray-200 text-gray-400 opacity-60' => $isAvailable && $isOutOfStock,
-                                'border-dashed border-gray-300 text-gray-600 hover:border-gray-400 hover:text-gray-800' => $isCascade,
-                                'border-dashed border-gray-200 text-gray-300 opacity-60' => ! $isAvailable && $isOutOfStock,
+                                @class([ 'p-1 rounded-xl border transition-all duration-150' , 'border-gray-500 bg-gray-50'=> $isSelected,
+                                'border-gray-200 hover:border-gray-400' => ! $isSelected && $isAvailable && ! $isOutOfStock,
+                                'border-gray-200 opacity-60' => $isAvailable && $isOutOfStock,
+                                'border-dashed border-gray-300 hover:border-gray-400' => $isCascade,
+                                'border-dashed border-gray-200 opacity-60' => ! $isAvailable && $isOutOfStock,
                                 ])
                                 >
                                 <img src="{{ $variantThumb }}"
                                     alt="{{ $value->getLabel() }}"
-                                    class="w-20 h-20 rounded-lg object-cover shrink-0 {{ ($isAvailable && $isOutOfStock) || (! $isAvailable && $isOutOfStock) ? 'opacity-50' : '' }}">
-                                <span>{{ $value->getLabel() }}</span>
+                                    class="w-12 h-12 rounded-lg object-cover {{ ($isAvailable && $isOutOfStock) || (! $isAvailable && $isOutOfStock) ? 'opacity-50' : '' }}">
                             </button>
+                            <span
+                                x-show="show"
+                                x-cloak
+                                style="position:absolute; top:-28px; left:50%; transform:translateX(-50%);"
+                                class="pointer-events-none whitespace-nowrap rounded bg-gray-900 px-2 py-1 text-xs text-white z-20"
+                            >{{ $value->getLabel() }}@if ($isOutOfStock) (sem estoque)@endif</span>
                             @if ($isOutOfStock) {!! $xBadge !!} @endif
                         </span>
                         @else

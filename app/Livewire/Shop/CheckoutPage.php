@@ -13,6 +13,7 @@ use App\Services\Payment\PaymentManager;
 use App\Services\Payment\PaymentPayload;
 use App\Services\Payment\PaymentCalculator;
 use App\Services\Cart\CartService;
+use App\Services\Order\CouponService;
 use App\Services\Order\OrderService;
 use App\Services\Shipping\ShippingCalculator;
 use Illuminate\Contracts\View\View;
@@ -70,6 +71,11 @@ class CheckoutPage extends Component
     public ?int  $selectedShippingIndex = null;
     public array $shippingOptions       = [];
 
+    // ── Cupom ────────────────────────────────────────────────────────────
+    public string  $couponCode    = '';
+    public ?string $couponError   = null;
+    public ?string $couponSuccess = null;
+
     // ── Etapa 2: Pagamento ────────────────────────────────────────────────
     public string $paymentMethod = 'pix';
 
@@ -97,6 +103,8 @@ class CheckoutPage extends Component
             $this->redirect(route('cart.index'), navigate: true);
             return;
         }
+
+        $this->couponCode = $cart->coupon_code ?? '';
 
         $customer = Auth::guard('customer')->user();
 
@@ -616,6 +624,52 @@ class CheckoutPage extends Component
     public function updatedCardNumber(): void
     {
         $this->cardNumber = preg_replace('/\D/', '', $this->cardNumber);
+    }
+
+    // ── Cupom ────────────────────────────────────────────────────────────
+
+    public function applyCoupon(): void
+    {
+        $this->couponError   = null;
+        $this->couponSuccess = null;
+
+        if (blank($this->couponCode)) {
+            $this->couponError = 'Digite um código de cupom.';
+            return;
+        }
+
+        $cart     = $this->cart;
+        $subtotal = (float) ($cart?->subtotal ?? 0);
+        $items    = $cart?->items ?? collect();
+        $customer = Auth::guard('customer')->user();
+
+        $result = app(CouponService::class)->validate(
+            $this->couponCode,
+            $subtotal,
+            $customer,
+            $items
+        );
+
+        if (is_string($result)) {
+            $this->couponError = $result;
+            return;
+        }
+
+        $cart->update([
+            'coupon_code'     => $result['coupon']->code,
+            'coupon_discount' => $result['discount'],
+        ]);
+
+        $this->couponCode    = $result['coupon']->code;
+        $this->couponSuccess = 'Cupom aplicado! Desconto de R$ ' . number_format($result['discount'], 2, ',', '.');
+    }
+
+    public function removeCoupon(): void
+    {
+        $this->cart?->update(['coupon_code' => null, 'coupon_discount' => 0]);
+        $this->couponCode    = '';
+        $this->couponError   = null;
+        $this->couponSuccess = null;
     }
 
     public function goToReview(): void

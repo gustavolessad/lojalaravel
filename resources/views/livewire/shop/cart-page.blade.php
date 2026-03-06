@@ -225,6 +225,7 @@
                                 </li>
                                 @endforeach
                             </ul>
+                            <p class="mt-2 text-[11px] text-gray-400 leading-tight">* Valores aproximados. O frete definitivo será calculado na finalização da compra.</p>
                         @endif
                     </div>
                 </div>

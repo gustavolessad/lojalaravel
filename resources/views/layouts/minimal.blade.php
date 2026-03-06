@@ -131,7 +131,6 @@ $contactPhone = $storePhone;
         </div>
     </footer>
 
-    @livewireScripts
     @stack('scripts')
 </body>
 

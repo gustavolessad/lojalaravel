@@ -79,11 +79,12 @@ class CheckoutPage extends Component
     // ── Etapa 2: Pagamento ────────────────────────────────────────────────
     public string $paymentMethod = 'pix';
 
-    public string $cardHolder   = '';
-    public string $cardNumber   = '';
-    public string $cardExpiry   = '';   // MM/YY
-    public string $cardCvv      = '';
-    public int    $installments = 1;
+    public string $cardHolder     = '';
+    public string $cardNumber     = '';
+    public string $cardExpiry     = '';   // MM/YY
+    public string $cardCvv        = '';
+    public int    $installments   = 1;
+    public string $encryptedCard  = '';   // PagBank: cartão criptografado via JS SDK
 
     // ── Etapa 3: Notas ────────────────────────────────────────────────────
     public string $notes = '';
@@ -209,6 +210,24 @@ class CheckoutPage extends Component
         }
 
         return round($this->total + $this->cardInterestAmount, 2);
+    }
+
+    /**
+     * Gateway de pagamento ativo (para o blade saber qual SDK carregar).
+     */
+    #[Computed]
+    public function activeGateway(): string
+    {
+        return (string) \App\Models\Setting::get('payment_gateway', 'asaas');
+    }
+
+    /**
+     * Chave pública do PagBank para criptografia do cartão via JS SDK.
+     */
+    #[Computed]
+    public function pagbankPublicKey(): string
+    {
+        return (string) \App\Models\Setting::get('payment_pagbank_public_key', '');
     }
 
     // ── Etapa 0: Autenticação ─────────────────────────────────────────────
@@ -789,6 +808,7 @@ class CheckoutPage extends Component
                     installments:         $this->installments,
                     installmentValue:     $installmentValue,
                     interestFree:         $interestFree,
+                    encryptedCard:        $this->encryptedCard ?: null,
                 );
 
                 $result = $paymentManager->createCharge($payload);

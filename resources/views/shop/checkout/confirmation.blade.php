@@ -51,7 +51,7 @@
                     @if (! empty($pixData['pix_qrcode']))
                         <div class="flex justify-center mb-4">
                             <img src="data:image/png;base64,{{ $pixData['pix_qrcode'] }}"
-                                 alt="QR Code PIX" class="w-44 h-44 rounded-xl border border-gray-200">
+                                 alt="QR Code PIX" class="w-44 h-44 rounded-xl border border-gray-200 p-2">
                         </div>
                     @endif
 

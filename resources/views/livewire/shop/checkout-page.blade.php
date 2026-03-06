@@ -824,22 +824,76 @@
             </div>
 
             {{-- Botão confirmar --}}
-            <button
-                wire:click="placeOrder"
-                wire:loading.attr="disabled"
-                wire:target="placeOrder"
-                class="w-full py-4 px-6 bg-green-700 text-white text-base font-bold rounded-2xl hover:bg-green-800 transition-colors disabled:opacity-60 disabled:cursor-not-allowed">
-                <span wire:loading.remove wire:target="placeOrder">
-                    Confirmar Pedido — R$ {{ number_format($this->finalTotal, 2, ',', '.') }} no {{ $paymentMethod === 'pix' ? 'PIX' : 'Cartão de crédito' }}
-                </span>
-                <span wire:loading.flex wire:target="placeOrder" class="items-center justify-center gap-2">
-                    <svg class="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
-                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
-                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                    </svg>
-                    Processando...
-                </span>
-            </button>
+            <div x-data="{
+                encrypting: false,
+                async confirmOrder() {
+                    const gateway = '{{ $this->activeGateway }}';
+                    const method  = '{{ $paymentMethod }}';
+
+                    // PagBank + cartão: criptografar antes de enviar
+                    if (gateway === 'pagbank' && method === 'credit_card') {
+                        if (typeof PagSeguro === 'undefined') {
+                            alert('Erro ao carregar o SDK de pagamento. Recarregue a página.');
+                            return;
+                        }
+
+                        this.encrypting = true;
+
+                        try {
+                            const card = PagSeguro.encryptCard({
+                                publicKey:    '{{ $this->pagbankPublicKey }}',
+                                holder:       $wire.cardHolder,
+                                number:       $wire.cardNumber.replace(/\D/g, ''),
+                                expMonth:     $wire.cardExpiry.substring(0, 2),
+                                expYear:      '20' + $wire.cardExpiry.substring(3, 5),
+                                securityCode: $wire.cardCvv,
+                            });
+
+                            if (card.hasErrors) {
+                                const msgs = card.errors.map(e => e.message).join(', ');
+                                alert('Erro na criptografia do cartão: ' + msgs);
+                                this.encrypting = false;
+                                return;
+                            }
+
+                            $wire.encryptedCard = card.encryptedCard;
+                        } catch (err) {
+                            alert('Falha ao processar o cartão. Verifique os dados e tente novamente.');
+                            this.encrypting = false;
+                            return;
+                        }
+
+                        this.encrypting = false;
+                    }
+
+                    $wire.placeOrder();
+                }
+            }">
+                <button
+                    @click="confirmOrder()"
+                    :disabled="encrypting"
+                    wire:loading.attr="disabled"
+                    wire:target="placeOrder"
+                    class="w-full py-4 px-6 bg-green-700 text-white text-base font-bold rounded-2xl hover:bg-green-800 transition-colors disabled:opacity-60 disabled:cursor-not-allowed">
+                    <span wire:loading.remove wire:target="placeOrder" x-show="!encrypting">
+                        Confirmar Pedido — R$ {{ number_format($this->finalTotal, 2, ',', '.') }} no {{ $paymentMethod === 'pix' ? 'PIX' : 'Cartão de crédito' }}
+                    </span>
+                    <span x-show="encrypting" x-cloak class="flex items-center justify-center gap-2">
+                        <svg class="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                        </svg>
+                        Criptografando...
+                    </span>
+                    <span wire:loading.flex wire:target="placeOrder" x-show="!encrypting" class="items-center justify-center gap-2">
+                        <svg class="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                        </svg>
+                        Processando...
+                    </span>
+                </button>
+            </div>
         </div>
         @endif
 
@@ -946,4 +1000,10 @@
 </div>
 
 </div>{{-- /grid --}}
+
+{{-- PagBank JS SDK (carregado apenas quando PagBank é o gateway ativo) --}}
+@if ($this->activeGateway === 'pagbank')
+<script src="https://assets.pagseguro.com.br/checkout-sdk-js/rc/dist/browser/pagseguro.min.js"></script>
+@endif
+
 </div>

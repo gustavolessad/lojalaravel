@@ -38,5 +38,8 @@ readonly class PaymentPayload
         public int     $installments      = 1,
         public float   $installmentValue  = 0.0,   // valor de cada parcela já com juros
         public bool    $interestFree      = true,
+
+        // Cartão criptografado (PagBank SDK — substitui dados crus do cartão)
+        public ?string $encryptedCard     = null,
     ) {}
 }

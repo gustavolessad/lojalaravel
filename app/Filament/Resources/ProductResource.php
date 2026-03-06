@@ -3,13 +3,13 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\ProductResource\Pages;
-use App\Models\Attribute;
-use App\Models\AttributeValue;
-use App\Models\Brand;
-use App\Models\Category;
-use App\Models\Product;
-use App\Models\ProductTag;
-use App\Models\ProductVariantGroup;
+use App\Models\Catalog\Attribute;
+use App\Models\Catalog\AttributeValue;
+use App\Models\Catalog\Brand;
+use App\Models\Catalog\Category;
+use App\Models\Catalog\Product;
+use App\Models\Catalog\ProductTag;
+use App\Models\Catalog\ProductVariantGroup;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;

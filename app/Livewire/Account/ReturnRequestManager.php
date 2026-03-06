@@ -2,8 +2,8 @@
 
 namespace App\Livewire\Account;
 
-use App\Models\Order;
-use App\Models\ReturnRequest;
+use App\Models\Sales\Order;
+use App\Models\Sales\ReturnRequest;
 use App\Models\User;
 use Filament\Notifications\Actions\Action as NotificationAction;
 use Filament\Notifications\Notification as FilamentNotification;

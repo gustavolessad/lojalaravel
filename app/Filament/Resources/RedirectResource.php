@@ -4,7 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Filament\Clusters\Geral;
 use App\Filament\Resources\RedirectResource\Pages;
-use App\Models\Redirect;
+use App\Models\Content\Redirect;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;

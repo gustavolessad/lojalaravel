@@ -2,7 +2,7 @@
 
 namespace App\Http\Middleware;
 
-use App\Models\Redirect;
+use App\Models\Content\Redirect;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;

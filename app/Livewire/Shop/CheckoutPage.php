@@ -2,24 +2,23 @@
 
 namespace App\Livewire\Shop;
 
-use App\Mail\CustomerWelcome;
-use App\Models\Cart;
-use App\Models\Customer;
-use App\Models\CustomerAddress;
-use App\Models\Order;
+use App\Events\CustomerRegistered;
+use App\Models\Cart\Cart;
+use App\Models\Customer\Customer;
+use App\Models\Customer\CustomerAddress;
+use App\Models\Sales\Order;
 use App\Rules\ValidCpf;
 use App\Rules\ValidCnpj;
 use App\Services\Payment\PaymentManager;
 use App\Services\Payment\PaymentPayload;
-use App\Services\PaymentCalculator;
-use App\Services\CartService;
-use App\Services\OrderService;
-use App\Services\ShippingCalculator;
+use App\Services\Payment\PaymentCalculator;
+use App\Services\Cart\CartService;
+use App\Services\Order\OrderService;
+use App\Services\Shipping\ShippingCalculator;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Mail;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\On;
 use Livewire\Component;
@@ -362,15 +361,8 @@ class CheckoutPage extends Component
 
         Auth::guard('customer')->login($customer);
 
-        try {
-            Log::channel('email')->info('Checkout: disparando CustomerWelcome', ['email' => $customer->email]);
-            Mail::to($customer->email)->send(new CustomerWelcome($customer));
-        } catch (\Throwable $e) {
-            Log::channel('email')->error('Checkout: FALHA ao enviar CustomerWelcome', [
-                'email'     => $customer->email,
-                'exception' => $e->getMessage(),
-            ]);
-        }
+        // Dispara evento — listener cuida do e-mail de boas-vindas
+        CustomerRegistered::dispatch($customer);
 
         $this->afterAuth();
     }

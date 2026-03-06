@@ -2,7 +2,7 @@
 
 namespace App\Services\Shipping;
 
-use App\Models\Carrier;
+use App\Models\Shipping\Carrier;
 
 class ManualCarrierDriver
 {

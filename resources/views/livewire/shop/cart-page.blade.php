@@ -330,7 +330,7 @@
 
                 {{-- Hints de pagamento --}}
                 @php
-                    $calc = app(\App\Services\PaymentCalculator::class);
+                    $calc = app(\App\Services\Payment\PaymentCalculator::class);
                     $pixTotal = $calc->pixPrice((float) $cart->total);
                     $instLabel = $calc->bestFreeInstallmentLabel((float) $cart->total);
                 @endphp

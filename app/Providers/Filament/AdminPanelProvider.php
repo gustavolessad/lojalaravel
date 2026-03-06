@@ -3,9 +3,9 @@
 namespace App\Providers\Filament;
 
 use App\Filament\Pages\Dashboard;
-use App\Models\Brand;
-use App\Models\Category;
-use App\Models\StorePage;
+use App\Models\Catalog\Brand;
+use App\Models\Catalog\Category;
+use App\Models\Content\StorePage;
 use Datlechin\FilamentMenuBuilder\FilamentMenuBuilderPlugin;
 use Datlechin\FilamentMenuBuilder\MenuPanel\ModelMenuPanel;
 use Datlechin\FilamentMenuBuilder\MenuPanel\StaticMenuPanel;

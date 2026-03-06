@@ -3,7 +3,7 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\AttributeResource\Pages;
-use App\Models\Attribute;
+use App\Models\Catalog\Attribute;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;

@@ -2,8 +2,8 @@
 
 namespace App\Mail;
 
-use App\Models\Cart;
-use App\Models\Customer;
+use App\Models\Cart\Cart;
+use App\Models\Customer\Customer;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;

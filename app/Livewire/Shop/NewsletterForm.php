@@ -2,7 +2,7 @@
 
 namespace App\Livewire\Shop;
 
-use App\Models\NewsletterLead;
+use App\Models\Marketing\NewsletterLead;
 use Illuminate\Contracts\View\View;
 use Livewire\Component;
 

@@ -1,6 +1,6 @@
 @php
 use App\Models\Setting;
-use App\Models\StorePage;
+use App\Models\Content\StorePage;
 use Datlechin\FilamentMenuBuilder\Models\Menu;
 use Illuminate\Support\Facades\Storage;
 
@@ -492,12 +492,15 @@ $principalMenu = Menu::location('principal');
 
     </header>
 
+    @stack('after-header')
+
     {{-- Slot full-width (banners, hero) — fora do container --}}
     @hasSection('hero')
     @yield('hero')
     @endif
 
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        @stack('before-content')
         @if (session('success'))
         <div class="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg text-green-800 text-sm">
             {{ session('success') }}
@@ -510,6 +513,7 @@ $principalMenu = Menu::location('principal');
         @endif
 
         @yield('content')
+        @stack('after-content')
     </main>
 
     {{-- ═══ Pre-footer: Newsletter ═══ --}}
@@ -529,6 +533,8 @@ $principalMenu = Menu::location('principal');
             @livewire('shop.newsletter-form')
         </div>
     </section>
+
+    @stack('before-footer')
 
     {{-- ═══ Footer ═══ --}}
     <footer class="text-gray-900">

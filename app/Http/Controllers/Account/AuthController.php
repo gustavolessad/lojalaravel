@@ -2,17 +2,15 @@
 
 namespace App\Http\Controllers\Account;
 
+use App\Events\CustomerRegistered;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Account\LoginRequest;
 use App\Http\Requests\Account\RegisterRequest;
-use App\Mail\CustomerWelcome;
-use App\Models\Customer;
-use App\Services\CartService;
+use App\Models\Customer\Customer;
+use App\Services\Cart\CartService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\View\View;
 
 class AuthController extends Controller
@@ -65,18 +63,8 @@ class AuthController extends Controller
         // Funde o carrinho anônimo com o carrinho do novo cliente
         app(CartService::class)->mergeSessionIntoCustomer($customer->id);
 
-        // Envia e-mail de boas-vindas
-        try {
-            Log::channel('email')->info('Register: disparando CustomerWelcome', ['email' => $customer->email]);
-            Mail::to($customer->email)->send(new CustomerWelcome($customer));
-            Log::channel('email')->info('Register: CustomerWelcome enviado com sucesso', ['email' => $customer->email]);
-        } catch (\Throwable $e) {
-            Log::channel('email')->error('Register: FALHA ao enviar CustomerWelcome', [
-                'email'     => $customer->email,
-                'exception' => $e->getMessage(),
-                'file'      => $e->getFile() . ':' . $e->getLine(),
-            ]);
-        }
+        // Dispara evento — listener cuida do e-mail de boas-vindas
+        CustomerRegistered::dispatch($customer);
 
         return redirect()->route('account.dashboard');
     }

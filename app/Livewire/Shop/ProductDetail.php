@@ -3,11 +3,11 @@
 namespace App\Livewire\Shop;
 
 use App\Data\CatalogEntry;
-use App\Models\Product;
-use App\Models\ProductVariant;
-use App\Models\StockNotification;
-use App\Services\CartService;
-use App\Services\ShippingCalculator;
+use App\Models\Catalog\Product;
+use App\Models\Catalog\ProductVariant;
+use App\Models\Marketing\StockNotification;
+use App\Services\Cart\CartService;
+use App\Services\Shipping\ShippingCalculator;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Collection;
 use Livewire\Attributes\Computed;

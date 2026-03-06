@@ -3,9 +3,9 @@
 namespace App\Http\Controllers\Webhook;
 
 use App\Http\Controllers\Controller;
-use App\Models\Order;
+use App\Models\Sales\Order;
 use App\Models\Setting;
-use App\Services\OrderService;
+use App\Services\Order\OrderService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Log;

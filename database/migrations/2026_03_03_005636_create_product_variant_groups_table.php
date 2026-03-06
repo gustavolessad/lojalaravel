@@ -28,7 +28,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('product_variants', function (Blueprint $table) {
-            $table->dropForeignIdFor(\App\Models\ProductVariantGroup::class, 'variant_group_id');
+            $table->dropForeignIdFor(\App\Models\Catalog\ProductVariantGroup::class, 'variant_group_id');
             $table->dropColumn('variant_group_id');
         });
 

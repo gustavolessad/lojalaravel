@@ -27,6 +27,7 @@ $contactPhone = $storePhone;
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @livewireStyles
     @livewireScriptConfig
+    @stack('head')
     @yield('head')
 </head>
 

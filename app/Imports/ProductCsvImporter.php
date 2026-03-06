@@ -2,14 +2,14 @@
 
 namespace App\Imports;
 
-use App\Models\Attribute;
-use App\Models\AttributeValue;
-use App\Models\Brand;
-use App\Models\Category;
-use App\Models\Product;
-use App\Models\ProductTag;
-use App\Models\ProductVariant;
-use App\Models\ProductVariantGroup;
+use App\Models\Catalog\Attribute;
+use App\Models\Catalog\AttributeValue;
+use App\Models\Catalog\Brand;
+use App\Models\Catalog\Category;
+use App\Models\Catalog\Product;
+use App\Models\Catalog\ProductTag;
+use App\Models\Catalog\ProductVariant;
+use App\Models\Catalog\ProductVariantGroup;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;

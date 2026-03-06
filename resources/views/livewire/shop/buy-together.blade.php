@@ -330,7 +330,7 @@
 
                     {{-- Hints de pagamento (PIX / parcelamento) --}}
                     @php
-                        $calc      = app(\App\Services\PaymentCalculator::class);
+                        $calc      = app(\App\Services\Payment\PaymentCalculator::class);
                         $cardMode  = $calc->cardDisplayMode();
                         $pixTotal  = $calc->pixPrice($this->total);
                         $instLabel = $calc->bestFreeInstallmentLabel($this->total);

@@ -2,8 +2,8 @@
 
 namespace App\Filament\Resources\FreeShippingRuleResource\RelationManagers;
 
-use App\Models\Category;
-use App\Models\Product;
+use App\Models\Catalog\Category;
+use App\Models\Catalog\Product;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Forms\Get;

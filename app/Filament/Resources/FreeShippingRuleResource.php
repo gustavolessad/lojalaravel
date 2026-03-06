@@ -5,7 +5,7 @@ namespace App\Filament\Resources;
 use App\Filament\Clusters\Logistica;
 use App\Filament\Resources\FreeShippingRuleResource\Pages;
 use App\Filament\Resources\FreeShippingRuleResource\RelationManagers;
-use App\Models\FreeShippingRule;
+use App\Models\Shipping\FreeShippingRule;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;

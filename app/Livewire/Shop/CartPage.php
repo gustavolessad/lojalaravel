@@ -2,10 +2,10 @@
 
 namespace App\Livewire\Shop;
 
-use App\Models\Cart;
-use App\Services\CartService;
-use App\Services\CouponService;
-use App\Services\ShippingCalculator;
+use App\Models\Cart\Cart;
+use App\Services\Cart\CartService;
+use App\Services\Order\CouponService;
+use App\Services\Shipping\ShippingCalculator;
 use Livewire\Component;
 
 class CartPage extends Component

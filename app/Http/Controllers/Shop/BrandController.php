@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Shop;
 
 use App\Http\Controllers\Controller;
-use App\Models\Brand;
+use App\Models\Catalog\Brand;
 
 class BrandController extends Controller
 {

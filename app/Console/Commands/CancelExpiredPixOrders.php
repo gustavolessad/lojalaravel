@@ -2,8 +2,8 @@
 
 namespace App\Console\Commands;
 
-use App\Models\Order;
-use App\Services\OrderService;
+use App\Models\Sales\Order;
+use App\Services\Order\OrderService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
 

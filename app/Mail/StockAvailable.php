@@ -2,7 +2,7 @@
 
 namespace App\Mail;
 
-use App\Models\StockNotification;
+use App\Models\Marketing\StockNotification;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;

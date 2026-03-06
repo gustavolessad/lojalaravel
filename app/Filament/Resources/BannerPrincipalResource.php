@@ -4,7 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Filament\Clusters\Banners;
 use App\Filament\Resources\BannerPrincipalResource\Pages;
-use App\Models\Banner;
+use App\Models\Content\Banner;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;

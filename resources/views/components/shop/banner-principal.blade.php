@@ -1,5 +1,5 @@
 @php
-    $banners = \App\Models\Banner::where('group', 'principal')
+    $banners = \App\Models\Content\Banner::where('group', 'principal')
         ->where('active', true)
         ->orderBy('order')
         ->get();

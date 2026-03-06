@@ -1,7 +1,7 @@
 @props(['entry'])
 
 @php
-    $calc      = app(\App\Services\PaymentCalculator::class);
+    $calc      = app(\App\Services\Payment\PaymentCalculator::class);
     $cardMode  = $calc->cardDisplayMode();
     $pixP      = $calc->pixPrice($entry->price);
     $instLabel = $calc->bestFreeInstallmentLabel($entry->price);

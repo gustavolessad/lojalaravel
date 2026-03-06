@@ -593,7 +593,7 @@
                         @endif
                     </div>
                     <p class="text-sm font-semibold text-gray-900 pr-7">Cartão de crédito</p>
-                    <p class="text-xs text-gray-500 mt-0.5">Em até {{ app(\App\Services\PaymentCalculator::class)->installmentsMax() }}×</p>
+                    <p class="text-xs text-gray-500 mt-0.5">Em até {{ app(\App\Services\Payment\PaymentCalculator::class)->installmentsMax() }}×</p>
                 </div>
             </div>
 
@@ -869,7 +869,7 @@
                 </div>
 
                 @php
-                $calc = app(\App\Services\PaymentCalculator::class);
+                $calc = app(\App\Services\Payment\PaymentCalculator::class);
                 $pixHint = $calc->pixPrice($this->total);
                 $instHint = $calc->bestFreeInstallmentLabel($this->total);
                 @endphp

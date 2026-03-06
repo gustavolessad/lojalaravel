@@ -3,8 +3,8 @@
 namespace App\Filament\Widgets;
 
 use App\Filament\Widgets\Concerns\ResolvesDateRange;
-use App\Models\Customer;
-use App\Models\Order;
+use App\Models\Customer\Customer;
+use App\Models\Sales\Order;
 use Filament\Widgets\Concerns\InteractsWithPageFilters;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;

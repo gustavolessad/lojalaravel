@@ -5,7 +5,7 @@ namespace App\Filament\Resources;
 use App\Filament\Clusters\Logistica;
 use App\Filament\Resources\CarrierResource\Pages;
 use App\Filament\Resources\CarrierResource\RelationManagers;
-use App\Models\Carrier;
+use App\Models\Shipping\Carrier;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;

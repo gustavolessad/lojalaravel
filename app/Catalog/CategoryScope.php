@@ -3,8 +3,8 @@
 namespace App\Catalog;
 
 use App\Contracts\ProductScopeInterface;
-use App\Models\Category;
-use App\Models\Product;
+use App\Models\Catalog\Category;
+use App\Models\Catalog\Product;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 

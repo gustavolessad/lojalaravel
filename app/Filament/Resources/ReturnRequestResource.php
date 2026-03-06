@@ -4,7 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\ReturnRequestResource\Pages;
 use App\Filament\Resources\ReturnRequestResource\RelationManagers;
-use App\Models\ReturnRequest;
+use App\Models\Sales\ReturnRequest;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;

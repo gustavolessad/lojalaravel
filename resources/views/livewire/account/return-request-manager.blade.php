@@ -346,7 +346,7 @@
                     <select wire:model="reason"
                             class="w-full rounded-xl border border-gray-300 px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent @error('reason') border-red-400 @enderror bg-white">
                         <option value="">Selecione o motivo...</option>
-                        @foreach (\App\Models\ReturnRequest::reasons() as $value => $label)
+                        @foreach (\App\Models\Sales\ReturnRequest::reasons() as $value => $label)
                             <option value="{{ $value }}" @selected($reason === $value)>{{ $label }}</option>
                         @endforeach
                     </select>

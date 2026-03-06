@@ -1,0 +1,333 @@
+<?php
+
+namespace App\Services\Order;
+
+use App\Events\OrderCancelled;
+use App\Events\OrderCreated;
+use App\Events\OrderPaid;
+use App\Exceptions\CheckoutException;
+use App\Models\Cart\Cart;
+use App\Models\Marketing\Coupon;
+use App\Models\Marketing\CouponUsage;
+use App\Models\Customer\Customer;
+use App\Models\Sales\Order;
+use App\Models\Sales\OrderEvent;
+use App\Models\Sales\Payment;
+use App\Models\Setting;
+use App\Models\User;
+use App\Services\Cart\CartService;
+use App\Services\Payment\PaymentCalculator;
+use App\Contracts\OrderServiceInterface;
+use Illuminate\Support\Facades\DB;
+
+class OrderService implements OrderServiceInterface
+{
+    /**
+     * Cria um pedido a partir do carrinho atual.
+     *
+     * @param  Cart           $cart     Carrinho com itens carregados
+     * @param  array          $address  Dados do endereço de entrega
+     * @param  array          $shipping ['name' => 'PAC', 'price' => 14.90, 'days' => 8]
+     * @param  string         $paymentMethod  pix | credit_card | boleto
+     * @param  Customer|null  $customer Cliente logado (null = guest)
+     * @param  array          $guest    ['name', 'email', 'phone'] — apenas para guests
+     * @param  string|null    $notes
+     */
+    public function createFromCart(
+        Cart     $cart,
+        array    $address,
+        array    $shipping,
+        string   $paymentMethod,
+        ?Customer $customer = null,
+        array    $guest     = [],
+        ?string  $notes       = null,
+        float    $pixDiscount  = 0.0,
+        float    $cardInterest = 0.0,
+        ?string  $orderNumber  = null,   // pré-gerado no checkout de cartão
+    ): Order {
+        // O e-mail é enviado FORA da transaction para não quebrar o pedido
+        // caso a fila (Redis) esteja indisponível.
+        $order = DB::transaction(function () use ($cart, $address, $shipping, $paymentMethod, $customer, $guest, $notes, $pixDiscount, $cardInterest, $orderNumber) {
+
+            // ── 1. Lock pessimista + verificação de estoque ───────────────────────
+            // Previne overselling quando dois pedidos concorrentes chegam ao mesmo tempo.
+            foreach ($cart->items as $item) {
+                if ($item->variant_id) {
+                    $lockedVariant = $item->variant()->lockForUpdate()->first();
+                    $available     = (int) ($lockedVariant?->stock ?? 0);
+                    if ($available < $item->quantity) {
+                        $label = $item->product->name
+                            . ($item->variant?->label ? ' — ' . $item->variant->label : '');
+                        throw new CheckoutException(
+                            "Estoque insuficiente para \"{$label}\". "
+                            . "Disponível: {$available}, solicitado: {$item->quantity}."
+                        );
+                    }
+                } elseif ($item->product->stock !== null) {
+                    $lockedProduct = $item->product()->lockForUpdate()->first();
+                    $available     = (int) ($lockedProduct?->stock ?? 0);
+                    if ($available < $item->quantity) {
+                        throw new CheckoutException(
+                            "Estoque insuficiente para \"{$item->product->name}\". "
+                            . "Disponível: {$available}, solicitado: {$item->quantity}."
+                        );
+                    }
+                }
+            }
+
+            // ── 2. Re-validação do cupom ──────────────────────────────────────────
+            // Garante que o cupom ainda é válido no momento exato da finalização.
+            $subtotal     = (float) $cart->subtotal;
+            $shippingCost = (float) $shipping['price'];
+
+            if ($cart->coupon_code) {
+                $couponResult = app(CouponService::class)->validate(
+                    $cart->coupon_code,
+                    $subtotal,
+                    $customer,
+                    $cart->items
+                );
+                if (is_string($couponResult)) {
+                    throw new CheckoutException(
+                        'O cupom "' . $cart->coupon_code . '" não é mais válido: '
+                        . $couponResult . ' Volte ao carrinho para removê-lo.'
+                    );
+                }
+                $discount = $couponResult['discount'];
+            } else {
+                $discount = 0.0;
+            }
+
+            // ── 3. Totais ─────────────────────────────────────────────────────────
+            $baseTotal = max(0, $subtotal - $discount) + $shippingCost;
+            $total     = max(0, $baseTotal - $pixDiscount) + $cardInterest;
+
+            // Cria o pedido
+            $order = Order::create([
+                'order_number' => $orderNumber,   // null = booted() gera automaticamente
+                'customer_id'  => $customer?->id,
+                'guest_name'   => $customer ? null : ($guest['name'] ?? null),
+                'guest_email'  => $customer ? null : ($guest['email'] ?? null),
+                'guest_phone'  => $customer ? null : ($guest['phone'] ?? null),
+
+                'status'         => 'pending',
+                'payment_status' => 'pending',
+                'payment_method' => $paymentMethod,
+
+                'shipping_name'       => $address['name'],
+                'shipping_phone'      => $address['phone'] ?? null,
+                'shipping_zip'        => $address['zip'],
+                'shipping_street'     => $address['street'],
+                'shipping_number'     => $address['number'],
+                'shipping_complement' => $address['complement'] ?? null,
+                'shipping_district'   => $address['district'],
+                'shipping_city'       => $address['city'],
+                'shipping_state'      => $address['state'],
+
+                'shipping_method' => $shipping['name'],
+                'shipping_days'   => $shipping['days'],
+                'shipping_cost'   => $shippingCost,
+
+                'subtotal'    => $subtotal,
+                'discount'     => $discount,
+                'pix_discount' => $pixDiscount,
+                'total'        => $total,
+                'coupon_code' => $cart->coupon_code,
+
+                'notes' => $notes,
+            ]);
+
+            // Cria os itens (snapshot)
+            foreach ($cart->items as $item) {
+                $order->items()->create([
+                    'product_id'    => $item->product_id,
+                    'variant_id'    => $item->variant_id,
+                    'product_name'  => $item->product->name,
+                    'variant_label' => $item->variant?->label,
+                    'sku'           => $item->variant?->sku ?? $item->product->sku,
+                    'quantity'      => $item->quantity,
+                    'unit_price'    => $item->unit_price,
+                    'total'         => $item->subtotal,
+                ]);
+
+                // Decrementa o estoque
+                if ($item->variant) {
+                    $item->variant->decrement('stock', $item->quantity);
+                } elseif ($item->product->stock !== null) {
+                    $item->product->decrement('stock', $item->quantity);
+                }
+            }
+
+            // Registra uso do cupom
+            if ($cart->coupon_code && $discount > 0) {
+                $coupon = Coupon::where('code', $cart->coupon_code)->first();
+                if ($coupon) {
+                    app(CouponService::class)->recordUsage($coupon, $order, $customer, $discount);
+                }
+            }
+
+            // Limpa o carrinho
+            app(CartService::class)->clear();
+
+            return $order;
+        });
+
+        // Registra evento de criação do pedido
+        $this->logEvent($order, 'order_created', "Pedido criado via checkout — método: {$order->payment_method_label}");
+
+        // Dispara evento — listeners cuidam de e-mail e notificação admin
+        OrderCreated::dispatch($order);
+
+        return $order;
+    }
+
+    /**
+     * Marca o pedido como pago.
+     */
+    public function markAsPaid(Order $order, string $paymentId, array $paymentData = []): void
+    {
+        $order->update([
+            'status'         => 'processing',
+            'payment_status' => 'paid',
+            'payment_id'     => $paymentId,
+            'payment_data'   => array_merge($order->payment_data ?? [], $paymentData),
+            'paid_at'        => now(),
+        ]);
+
+        // Confirma o registro de pagamento correspondente
+        $order->payments()
+            ->where('gateway_payment_id', $paymentId)
+            ->update([
+                'status'       => 'confirmed',
+                'confirmed_at' => now(),
+            ]);
+
+        // Registra evento de confirmação
+        $this->logEvent($order, 'payment_confirmed', 'Pagamento confirmado', ['payment_id' => $paymentId]);
+
+        // Dispara evento — listener cuida do e-mail
+        OrderPaid::dispatch($order, $paymentId);
+    }
+
+    /**
+     * Cancela o pedido e restaura o estoque de todos os itens.
+     * Usado pelo comando de cancelamento automático de PIX expirados.
+     */
+    public function cancelAndRestoreStock(Order $order, string $reason = 'Cancelado automaticamente'): void
+    {
+        DB::transaction(function () use ($order, $reason) {
+            // Recarrega itens dentro da transaction para ter dados frescos
+            $items = $order->items()->with(['product', 'variant'])->get();
+
+            foreach ($items as $item) {
+                if ($item->variant) {
+                    $item->variant->increment('stock', $item->quantity);
+                } elseif ($item->product && $item->product->stock !== null) {
+                    $item->product->increment('stock', $item->quantity);
+                }
+            }
+
+            // Estorna uso do cupom, se houver
+            if ($order->coupon_code) {
+                CouponUsage::where('order_id', $order->id)->delete();
+
+                $coupon = Coupon::where('code', $order->coupon_code)->first();
+                if ($coupon && $coupon->uses_count > 0) {
+                    $coupon->decrement('uses_count');
+                }
+            }
+
+            $order->update([
+                'status'         => 'cancelled',
+                'payment_status' => 'cancelled',
+            ]);
+        });
+
+        $this->logEvent($order, 'order_cancelled', $reason);
+
+        // Dispara evento — listeners podem reagir ao cancelamento
+        OrderCancelled::dispatch($order, $reason);
+    }
+
+    /**
+     * Registra um evento no histórico do pedido.
+     */
+    public function logEvent(Order $order, string $type, string $description, array $metadata = []): void
+    {
+        try {
+            $order->orderEvents()->create([
+                'type'        => $type,
+                'description' => $description,
+                'metadata'    => $metadata ?: null,
+                'created_at'  => now(),
+            ]);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('OrderService: falha ao registrar evento', [
+                'order' => $order->order_number,
+                'type'  => $type,
+                'error' => $e->getMessage(),
+            ]);
+        }
+    }
+
+    /**
+     * Salva os dados de pagamento no pedido e cria o registro na tabela payments.
+     */
+    public function attachPaymentData(Order $order, string $paymentId, array $data): void
+    {
+        $order->update([
+            'payment_id'   => $paymentId,
+            'payment_data' => $data,
+        ]);
+
+        $methodLabel = match ($order->payment_method) {
+            'pix'         => 'PIX',
+            'credit_card' => 'Cartão de crédito',
+            'boleto'      => 'Boleto',
+            default       => $order->payment_method,
+        };
+        $this->logEvent($order, 'payment_attempted', "Tentativa de pagamento via {$methodLabel} iniciada", ['payment_id' => $paymentId]);
+
+        // Cria registro de tentativa de pagamento
+        $order->payments()->create([
+            'gateway'            => Setting::get('payment_gateway', 'asaas'),
+            'gateway_payment_id' => $paymentId,
+            'method'             => $order->payment_method,
+            'status'             => 'pending',
+            'amount'             => (float) $order->total,
+            'installments'       => $data['installments'] ?? 1,
+            'installment_value'  => $data['installment_value'] ?? null,
+            'data'               => array_filter($data, fn ($k) => in_array($k, [
+                'pix_qrcode', 'pix_copy_paste', 'expires_at', 'invoice_url',
+            ], true), ARRAY_FILTER_USE_KEY),
+        ]);
+    }
+
+    /**
+     * Registra uma tentativa de pagamento que falhou antes de chegar ao gateway.
+     */
+    public function recordFailedPayment(Order $order, string $method, float $amount, ?string $errorMessage = null): void
+    {
+        $order->payments()->create([
+            'gateway'       => 'asaas',
+            'method'        => $method,
+            'status'        => 'failed',
+            'amount'        => $amount,
+            'error_message' => $errorMessage,
+        ]);
+
+        $methodLabel = match ($method) {
+            'pix'         => 'PIX',
+            'credit_card' => 'cartão de crédito',
+            'boleto'      => 'boleto',
+            default       => $method,
+        };
+
+        $desc = "Pagamento via {$methodLabel} falhou";
+        if ($errorMessage) {
+            $desc .= ": {$errorMessage}";
+        }
+
+        $this->logEvent($order, 'payment_failed', $desc, $errorMessage ? ['error' => $errorMessage] : []);
+    }
+}

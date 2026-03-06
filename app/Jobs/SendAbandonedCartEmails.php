@@ -3,7 +3,7 @@
 namespace App\Jobs;
 
 use App\Mail\AbandonedCart;
-use App\Models\Cart;
+use App\Models\Cart\Cart;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;

@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Shop;
 
 use App\Http\Controllers\Controller;
-use App\Models\StorePage;
+use App\Models\Content\StorePage;
 
 class StorePageController extends Controller
 {

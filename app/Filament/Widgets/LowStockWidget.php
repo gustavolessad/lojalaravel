@@ -2,8 +2,8 @@
 
 namespace App\Filament\Widgets;
 
-use App\Models\Product;
-use App\Models\ProductVariant;
+use App\Models\Catalog\Product;
+use App\Models\Catalog\ProductVariant;
 use Filament\Widgets\Widget;
 use Illuminate\Support\Collection;
 

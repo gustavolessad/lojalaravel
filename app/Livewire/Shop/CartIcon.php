@@ -2,8 +2,8 @@
 
 namespace App\Livewire\Shop;
 
-use App\Services\CartService;
-use App\Services\PaymentCalculator;
+use App\Services\Cart\CartService;
+use App\Services\Payment\PaymentCalculator;
 use Illuminate\Support\Collection;
 use Livewire\Attributes\On;
 use Livewire\Component;

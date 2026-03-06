@@ -5,7 +5,7 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\OrderResource\Pages;
 use App\Filament\Resources\OrderResource\RelationManagers;
 use App\Mail\OrderShipped;
-use App\Models\Order;
+use App\Models\Sales\Order;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Infolists;

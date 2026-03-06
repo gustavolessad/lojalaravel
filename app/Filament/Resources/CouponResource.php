@@ -4,7 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\CouponResource\Pages;
 use App\Filament\Resources\CouponResource\RelationManagers;
-use App\Models\Coupon;
+use App\Models\Marketing\Coupon;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Forms\Get;

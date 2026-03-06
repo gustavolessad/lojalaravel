@@ -2,9 +2,9 @@
 
 namespace App\Livewire\Shop;
 
-use App\Models\Product;
-use App\Models\ProductVariant;
-use App\Services\CartService;
+use App\Models\Catalog\Product;
+use App\Models\Catalog\ProductVariant;
+use App\Services\Cart\CartService;
 use Illuminate\Support\Collection;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\On;

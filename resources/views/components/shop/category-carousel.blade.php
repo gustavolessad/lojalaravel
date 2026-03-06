@@ -1,5 +1,5 @@
 @php
-    $categories = \App\Models\Category::where('show_on_home', true)
+    $categories = \App\Models\Catalog\Category::where('show_on_home', true)
         ->with('media')
         ->orderBy('order')
         ->orderBy('name')

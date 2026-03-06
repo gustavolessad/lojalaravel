@@ -3,7 +3,7 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\NewsletterLeadResource\Pages;
-use App\Models\NewsletterLead;
+use App\Models\Marketing\NewsletterLead;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;

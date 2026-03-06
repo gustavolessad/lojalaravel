@@ -232,7 +232,7 @@
                 </div>
 
                 @php
-                $calc = app(\App\Services\PaymentCalculator::class);
+                $calc = app(\App\Services\Payment\PaymentCalculator::class);
                 $cardMode = $calc->cardDisplayMode();
                 $pixP = $calc->pixPrice($this->currentPrice);
                 $instLabel = $calc->bestFreeInstallmentLabel($this->currentPrice);

@@ -2,7 +2,7 @@
 
 namespace App\Livewire\Shop;
 
-use App\Models\Product;
+use App\Models\Catalog\Product;
 use Illuminate\Support\Collection;
 use Livewire\Attributes\Computed;
 use Livewire\Component;

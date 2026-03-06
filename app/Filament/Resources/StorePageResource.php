@@ -4,7 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Filament\Clusters\Geral;
 use App\Filament\Resources\StorePageResource\Pages;
-use App\Models\StorePage;
+use App\Models\Content\StorePage;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;

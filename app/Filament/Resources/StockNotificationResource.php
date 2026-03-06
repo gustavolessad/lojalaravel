@@ -4,7 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\StockNotificationResource\Pages;
 use App\Mail\StockAvailable;
-use App\Models\StockNotification;
+use App\Models\Marketing\StockNotification;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;

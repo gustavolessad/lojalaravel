@@ -8,6 +8,7 @@ use App\Contracts\OrderServiceInterface;
 use App\Services\Cart\CartService;
 use App\Services\Order\CouponService;
 use App\Services\Order\OrderService;
+use App\Services\Shipping\BrasspressDriver;
 use App\Services\Shipping\ManualCarrierDriver;
 use App\Services\Shipping\MelhorEnvioDriver;
 use App\Services\Shipping\ShippingManager;
@@ -24,6 +25,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(ShippingManager::class, function ($app) {
             $manager = new ShippingManager();
             $manager->registerDriver('melhor_envio', $app->make(MelhorEnvioDriver::class));
+            $manager->registerDriver('braspress', $app->make(BrasspressDriver::class));
             $manager->registerDriver('manual', $app->make(ManualCarrierDriver::class));
             return $manager;
         });

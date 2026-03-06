@@ -4,23 +4,31 @@ namespace App\Services\Shipping;
 
 use App\Models\Shipping\Carrier;
 
-class ManualCarrierDriver
+class ManualCarrierDriver implements ShippingDriverInterface
 {
+    public function isConfigured(): bool
+    {
+        return Carrier::active()->exists();
+    }
+
+    public function getLabel(): string
+    {
+        return 'Hub de Frete';
+    }
+
     /**
      * Retorna as opções de frete cadastradas manualmente para o CEP e peso informados.
      *
-     * @param  string $destZip     CEP somente dígitos (8 chars)
-     * @param  float  $totalWeight Peso total do pedido em kg
-     * @return array<int, array{name: string, price: float, days: int, company: string}>
+     * @return array<int, array{name: string, company: string, price: float, days: int, service_id: null}>
      */
-    public function quote(string $destZip, float $totalWeight = 0): array
+    public function quote(ShippingContext $context): array
     {
         $carriers = Carrier::active()->with('rates')->get();
 
         $options = [];
 
         foreach ($carriers as $carrier) {
-            $rate = $carrier->rateForCepAndWeight($destZip, $totalWeight);
+            $rate = $carrier->rateForCepAndWeight($context->destZip, $context->totalWeight);
 
             if ($rate === null) {
                 continue;

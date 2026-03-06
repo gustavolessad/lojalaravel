@@ -8,31 +8,40 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
-class MelhorEnvioDriver
+class MelhorEnvioDriver implements ShippingDriverInterface
 {
     private const PROD_URL    = 'https://www.melhorenvio.com.br/api/v2/me/shipment/calculate';
     private const SANDBOX_URL = 'https://sandbox.melhorenvio.com.br/api/v2/me/shipment/calculate';
 
+    public function isConfigured(): bool
+    {
+        return (bool) Setting::get('shipping_melhorenvio_active', false)
+            && trim((string) Setting::get('shipping_token', '')) !== ''
+            && strlen(preg_replace('/\D/', '', (string) Setting::get('shipping_origin_cep', ''))) === 8;
+    }
+
+    public function getLabel(): string
+    {
+        return 'Melhor Envio';
+    }
+
     /**
      * Retorna as opções de frete do Melhor Envio.
      *
-     * @param  string     $originZip  CEP de origem (somente dígitos)
-     * @param  string     $destZip    CEP de destino (somente dígitos)
-     * @param  Collection $cartItems  Itens do carrinho (com relação product carregada)
-     * @return array<int, array{name: string, price: float, days: int, company: string}>
+     * @return array<int, array{name: string, price: float, days: int, company: string, service_id: int|null}>
      */
-    public function quote(string $originZip, string $destZip, Collection $cartItems): array
+    public function quote(ShippingContext $context): array
     {
         $token     = trim((string) Setting::get('shipping_token', ''));
         $sandbox   = (bool) Setting::get('shipping_sandbox', true);
         $extraDays = (int) Setting::get('shipping_additional_days', 0);
 
-        if (! $token || $cartItems->isEmpty()) {
+        if (! $token || ! $context->cartItems?->isNotEmpty()) {
             return [];
         }
 
-        $itemsKey = $cartItems->map(fn ($i) => "{$i->id}:{$i->quantity}")->implode(',');
-        $cacheKey = 'melhorenvio_' . md5("{$originZip}_{$destZip}_{$itemsKey}");
+        $itemsKey = $context->cartItems->map(fn ($i) => "{$i->id}:{$i->quantity}")->implode(',');
+        $cacheKey = 'melhorenvio_' . md5("{$context->originZip}_{$context->destZip}_{$itemsKey}");
 
         // Só usa cache se já houver resultado válido — erros nunca são cacheados
         $cached = Cache::get($cacheKey);
@@ -40,7 +49,7 @@ class MelhorEnvioDriver
             return $cached;
         }
 
-        $result = $this->fetchFromApi($token, $sandbox, $extraDays, $originZip, $destZip, $cartItems);
+        $result = $this->fetchFromApi($token, $sandbox, $extraDays, $context->originZip, $context->destZip, $context->cartItems);
 
         if (! empty($result)) {
             Cache::put($cacheKey, $result, 1800);

@@ -2,10 +2,9 @@
 
 namespace App\Services\Shipping;
 
-use Illuminate\Support\Collection;
-
 class ShippingManager
 {
+    /** @var array<string, ShippingDriverInterface> */
     protected array $drivers = [];
 
     public function registerDriver(string $key, ShippingDriverInterface $driver): void
@@ -13,19 +12,36 @@ class ShippingManager
         $this->drivers[$key] = $driver;
     }
 
-    public function calculate(ShippingPayload $payload): Collection
+    /**
+     * Coleta cotações de todos os drivers configurados e retorna mescladas.
+     *
+     * @return array<int, array{name: string, company: string, price: float, days: int}>
+     */
+    public function quoteAll(ShippingContext $context): array
     {
-        $results = collect();
+        $options = [];
 
         foreach ($this->drivers as $driver) {
-            $results->push($driver->calculate($payload));
+            if ($driver->isConfigured()) {
+                $options = array_merge($options, $driver->quote($context));
+            }
         }
 
-        return $results->sortBy('cost');
+        return $options;
     }
 
     public function driver(string $key): ShippingDriverInterface
     {
+        if (! isset($this->drivers[$key])) {
+            throw new \InvalidArgumentException("Shipping driver [{$key}] not registered.");
+        }
+
         return $this->drivers[$key];
+    }
+
+    /** @return array<string, ShippingDriverInterface> */
+    public function getDrivers(): array
+    {
+        return $this->drivers;
     }
 }

@@ -5,17 +5,19 @@ namespace App\Services\Shipping;
 use App\Models\Shipping\FreeShippingRule;
 use App\Models\Catalog\Product;
 use App\Models\Setting;
-use App\Services\Shipping\ManualCarrierDriver;
-use App\Services\Shipping\MelhorEnvioDriver;
 use Illuminate\Support\Collection;
 
 /**
  * Cálculo de frete.
- * Prioridade: MelhorEnvio + Manual → fallback tabela fixa por faixa de CEP.
- * Frete grátis: controlado exclusivamente pelas regras do admin (Logística > Frete Grátis).
+ * Usa o ShippingManager para coletar cotações de todos os drivers registrados.
+ * Fallback: tabela fixa por faixa de CEP.
+ * Frete grátis: controlado pelas regras do admin (Logística > Frete Grátis).
  */
 class ShippingCalculator
 {
+    public function __construct(
+        protected ShippingManager $shippingManager,
+    ) {}
 
     /**
      * Retorna as opções de frete disponíveis para o CEP informado.
@@ -27,32 +29,26 @@ class ShippingCalculator
      */
     public function calculate(string $cep, float $subtotal, ?Collection $cartItems = null): array
     {
-        $digits      = preg_replace('/\D/', '', $cep);
-        $token       = Setting::get('shipping_token');
-        $originZip   = preg_replace('/\D/', '', (string) Setting::get('shipping_origin_cep', ''));
-        $totalWeight = $this->calcTotalWeight($cartItems);
+        $digits    = preg_replace('/\D/', '', $cep);
+        $originZip = preg_replace('/\D/', '', (string) Setting::get('shipping_origin_cep', ''));
 
-        $options = [];
+        $context = new ShippingContext(
+            originZip: $originZip,
+            destZip: $digits,
+            totalWeight: $this->calcTotalWeight($cartItems),
+            subtotal: $subtotal,
+            cartItems: $cartItems,
+        );
 
-        // 1. Melhor Envio — quando token e CEP de origem estão configurados
-        if ($token && strlen($originZip) === 8 && $cartItems?->isNotEmpty()) {
-            $meOptions = app(MelhorEnvioDriver::class)->quote($originZip, $digits, $cartItems);
-            $options   = array_merge($options, $meOptions);
+        $options = $this->shippingManager->quoteAll($context);
+
+        // Fallback: tabela fixa por faixa de CEP (se nenhum driver retornou resultado)
+        if (empty($options)) {
+            $prefix  = (int) substr($digits, 0, 5);
+            $options = $this->optionsForPrefix($prefix);
         }
 
-        // 2. Transportadoras manuais (Hub de Frete) — filtradas por CEP e peso
-        $manualOptions = app(ManualCarrierDriver::class)->quote($digits, $totalWeight);
-        $options       = array_merge($options, $manualOptions);
-
-        // Se obteve alguma opção, retorna mesclado e ordenado por preço
-        if (! empty($options)) {
-            usort($options, fn ($a, $b) => $a['price'] <=> $b['price']);
-            return $this->applyFreeShipping($options, $subtotal, $digits, $cartItems);
-        }
-
-        // 3. Fallback: tabela fixa por faixa de CEP
-        $prefix  = (int) substr($digits, 0, 5);
-        $options = $this->optionsForPrefix($prefix);
+        usort($options, fn ($a, $b) => $a['price'] <=> $b['price']);
 
         return $this->applyFreeShipping($options, $subtotal, $digits, $cartItems);
     }
@@ -151,25 +147,25 @@ class ShippingCalculator
             switch ($condition->type) {
                 case 'exclude_category':
                     if ($cartCategoryIds->contains($condition->item_id)) {
-                        return false; // categoria excluída está no carrinho
+                        return false;
                     }
                     break;
 
                 case 'exclude_product':
                     if ($cartProductIds->contains($condition->item_id)) {
-                        return false; // produto excluído está no carrinho
+                        return false;
                     }
                     break;
 
                 case 'include_category':
                     if (! $cartCategoryIds->contains($condition->item_id)) {
-                        return false; // categoria obrigatória não está no carrinho
+                        return false;
                     }
                     break;
 
                 case 'include_product':
                     if (! $cartProductIds->contains($condition->item_id)) {
-                        return false; // produto obrigatório não está no carrinho
+                        return false;
                     }
                     break;
             }

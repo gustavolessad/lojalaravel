@@ -209,7 +209,41 @@ class CheckoutPage extends Component
             return $this->pixTotal ?? $this->total;
         }
 
+        if ($this->paymentMethod === 'boleto') {
+            return $this->boletoTotal ?? $this->total;
+        }
+
         return round($this->total + $this->cardInterestAmount, 2);
+    }
+
+    #[Computed]
+    public function boletoTotal(): ?float
+    {
+        return app(PaymentCalculator::class)->boletoPrice($this->total);
+    }
+
+    #[Computed]
+    public function boletoSavings(): float
+    {
+        return app(PaymentCalculator::class)->boletoSavings($this->total);
+    }
+
+    #[Computed]
+    public function boletoDueDays(): int
+    {
+        return app(PaymentCalculator::class)->boletoDueDays();
+    }
+
+    /**
+     * Métodos de pagamento habilitados no gateway ativo.
+     */
+    #[Computed]
+    public function enabledPaymentMethods(): array
+    {
+        $gateway = $this->activeGateway;
+        $csv     = (string) \App\Models\Setting::get("payment_{$gateway}_methods", 'pix,credit_card');
+
+        return array_filter(explode(',', $csv));
     }
 
     /**
@@ -805,6 +839,10 @@ class CheckoutPage extends Component
                     cardCvv:              $this->cardCvv,
                     billingPostalCode:    preg_replace('/\D/', '', $this->addrZip),
                     billingAddressNumber: $this->addrNumber,
+                    billingStreet:        $this->addrStreet,
+                    billingNeighborhood:  $this->addrDistrict,
+                    billingCity:          $this->addrCity,
+                    billingState:         $this->addrState,
                     installments:         $this->installments,
                     installmentValue:     $installmentValue,
                     interestFree:         $interestFree,
@@ -852,32 +890,42 @@ class CheckoutPage extends Component
                 );
 
             // ─────────────────────────────────────────────────────────────
-            // PIX: criar pedido primeiro, depois gerar QR Code.
-            // Pedido expira em 24h se não pago (cancelado por comando artisan).
+            // PIX / BOLETO: criar pedido primeiro, depois gerar cobrança.
+            // PIX expira em 24h; Boleto expira em N dias (configurável).
             // ─────────────────────────────────────────────────────────────
             } else {
 
-                $pixDiscount = $calc->pixSavings($this->total);
+                $discount = match ($this->paymentMethod) {
+                    'pix'    => $calc->pixSavings($this->total),
+                    'boleto' => $calc->boletoSavings($this->total),
+                    default  => 0.0,
+                };
 
                 $order = $orderService->createFromCart(
                     cart:          $this->cart,
                     address:       $address,
                     shipping:      $shipping,
-                    paymentMethod: 'pix',
+                    paymentMethod: $this->paymentMethod,
                     customer:      $customer,
                     notes:         $this->notes ?: null,
-                    pixDiscount:   $pixDiscount,
+                    pixDiscount:   $discount,
                 );
 
                 $payload = new PaymentPayload(
-                    method:          'pix',
-                    amount:          (float) $order->total,
-                    description:     "Pedido #{$order->order_number}",
-                    reference:       (string) $order->id,
-                    customerName:    $order->buyer_name,
-                    customerEmail:   $order->buyer_email,
-                    customerCpfCnpj: $customer->cpf ?? $customer->cnpj,
-                    customerPhone:   preg_replace('/\D/', '', $order->shipping_phone ?? ''),
+                    method:             $this->paymentMethod,
+                    amount:             (float) $order->total,
+                    description:        "Pedido #{$order->order_number}",
+                    reference:          (string) $order->id,
+                    customerName:       $order->buyer_name,
+                    customerEmail:      $order->buyer_email,
+                    customerCpfCnpj:    $customer->cpf ?? $customer->cnpj,
+                    customerPhone:      preg_replace('/\D/', '', $order->shipping_phone ?? ''),
+                    billingPostalCode:    preg_replace('/\D/', '', $this->addrZip),
+                    billingAddressNumber: $this->addrNumber,
+                    billingStreet:        $this->addrStreet,
+                    billingNeighborhood:  $this->addrDistrict,
+                    billingCity:          $this->addrCity,
+                    billingState:         $this->addrState,
                 );
 
                 $result = $paymentManager->createCharge($payload);

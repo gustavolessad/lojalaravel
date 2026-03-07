@@ -48,6 +48,7 @@ class AsaasGateway implements PaymentGatewayInterface
         return match ($payload->method) {
             'pix'         => $this->doPixCharge($payload, $gatewayCustomerId),
             'credit_card' => $this->doCardCharge($payload, $gatewayCustomerId),
+            'boleto'      => $this->doBoletoCharge($payload, $gatewayCustomerId),
             default       => throw new \InvalidArgumentException("Método de pagamento [{$payload->method}] não suportado pelo Asaas."),
         };
     }
@@ -156,6 +157,50 @@ class AsaasGateway implements PaymentGatewayInterface
             method:        'credit_card',
             amount:        $payload->amount,
             invoiceUrl:    $payment['invoiceUrl'] ?? null,
+        );
+    }
+
+    // ── Boleto ──────────────────────────────────────────────────────────
+
+    private function doBoletoCharge(PaymentPayload $payload, string $gatewayCustomerId): PaymentResult
+    {
+        $dueDays = max(1, (int) Setting::get('payment_boleto_due_days', 3));
+        $dueDate = now()->addDays($dueDays)->format('Y-m-d');
+
+        $response = $this->post('/payments', [
+            'customer'          => $gatewayCustomerId,
+            'billingType'       => 'BOLETO',
+            'value'             => $payload->amount,
+            'dueDate'           => $dueDate,
+            'description'       => $payload->description,
+            'externalReference' => $payload->reference,
+        ]);
+
+        if (! $response->successful()) {
+            $this->lastError = $response->json();
+            Log::error('AsaasGateway: erro ao criar boleto', [
+                'status' => $response->status(),
+                'body'   => $this->lastError,
+            ]);
+            throw new \RuntimeException('Falha ao gerar o boleto. Tente novamente.');
+        }
+
+        $payment  = $response->json();
+        $boletoId = $payment['id'];
+
+        // Busca a linha digitável (não vem na resposta de criação)
+        $idFieldResponse = $this->get("/payments/{$boletoId}/identificationField");
+        $idField         = $idFieldResponse->json();
+
+        return new PaymentResult(
+            transactionId:       $boletoId,
+            status:              $payment['status'],
+            method:              'boleto',
+            amount:              $payload->amount,
+            boletoDigitableLine: $idField['identificationField'] ?? null,
+            boletoBarcode:       $idField['barCode'] ?? $payment['barCode'] ?? null,
+            boletoDueDate:       $payment['dueDate'] ?? $dueDate,
+            invoiceUrl:          $payment['bankSlipUrl'] ?? $payment['invoiceUrl'] ?? null,
         );
     }
 

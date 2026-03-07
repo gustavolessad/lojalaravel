@@ -39,6 +39,8 @@ class PaymentSettings extends Page implements HasForms
             'payment_installments_free'      => (int) Setting::get('payment_installments_free', 1),
             'payment_installment_min_value'  => (float) Setting::get('payment_installment_min_value', 10.00),
             'payment_interest_rate'          => (float) Setting::get('payment_interest_rate', 0),
+            'payment_boleto_due_days'        => (int) Setting::get('payment_boleto_due_days', 3),
+            'payment_boleto_discount'        => (float) Setting::get('payment_boleto_discount', 0),
         ]);
     }
 
@@ -122,6 +124,28 @@ class PaymentSettings extends Page implements HasForms
                             ->helperText('Aplica-se nas parcelas acima do limite sem juros (Tabela Price). 0 = sem juros em todas as parcelas.'),
                     ])
                     ->columns(2),
+
+                Forms\Components\Section::make('Boleto bancário')
+                    ->description('Configure o vencimento e desconto para pagamento via boleto.')
+                    ->schema([
+                        Forms\Components\TextInput::make('payment_boleto_due_days')
+                            ->label('Dias para vencimento')
+                            ->numeric()
+                            ->minValue(1)
+                            ->maxValue(30)
+                            ->default(3)
+                            ->helperText('Número de dias após a compra para o vencimento do boleto.'),
+
+                        Forms\Components\TextInput::make('payment_boleto_discount')
+                            ->label('Desconto boleto')
+                            ->numeric()
+                            ->minValue(0)
+                            ->maxValue(100)
+                            ->suffix('%')
+                            ->default(0)
+                            ->helperText('0 = sem desconto. O preço no boleto será: total × (1 − desconto / 100).'),
+                    ])
+                    ->columns(2),
             ])
             ->statePath('data');
     }
@@ -138,6 +162,8 @@ class PaymentSettings extends Page implements HasForms
             'payment_installments_free'     => (int) ($state['payment_installments_free'] ?? 1),
             'payment_installment_min_value' => (float) ($state['payment_installment_min_value'] ?? 10.00),
             'payment_interest_rate'         => (float) ($state['payment_interest_rate'] ?? 0),
+            'payment_boleto_due_days'       => (int) ($state['payment_boleto_due_days'] ?? 3),
+            'payment_boleto_discount'       => (float) ($state['payment_boleto_discount'] ?? 0),
         ]);
 
         Notification::make()

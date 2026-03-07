@@ -18,6 +18,11 @@ readonly class PaymentResult
         public ?string $pixQrCode    = null,   // imagem base64
         public ?string $pixExpiresAt = null,
 
+        // Boleto
+        public ?string $boletoDigitableLine = null,
+        public ?string $boletoBarcode       = null,
+        public ?string $boletoDueDate       = null,
+
         // Comum
         public ?string $invoiceUrl   = null,
     ) {}
@@ -41,7 +46,10 @@ readonly class PaymentResult
             'pix_qrcode'          => $this->pixQrCode,
             'pix_copy_paste'      => $this->pixCopyPaste,
             'expires_at'          => $this->pixExpiresAt,
-            'invoice_url'         => $this->invoiceUrl,
+            'boleto_digitable_line' => $this->boletoDigitableLine,
+            'boleto_barcode'        => $this->boletoBarcode,
+            'boleto_due_date'       => $this->boletoDueDate,
+            'invoice_url'           => $this->invoiceUrl,
             'installments'        => $installments > 1 ? $installments : null,
             'installment_value'   => $installments > 1 ? $installmentValue : null,
             'interest_free'       => $installments > 1 ? $interestFree : null,

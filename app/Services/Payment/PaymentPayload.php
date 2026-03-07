@@ -30,9 +30,13 @@ readonly class PaymentPayload
         public ?string $cardExpiryYear  = null,   // 4 dígitos: "2028"
         public ?string $cardCvv         = null,
 
-        // Endereço de cobrança (credit_card — exigido por muitos gateways para anti-fraude)
+        // Endereço de cobrança (cartão anti-fraude / boleto PagBank)
         public ?string $billingPostalCode     = null,
         public ?string $billingAddressNumber  = null,
+        public ?string $billingStreet         = null,
+        public ?string $billingNeighborhood   = null,
+        public ?string $billingCity           = null,
+        public ?string $billingState          = null,
 
         // Parcelamento (credit_card)
         public int     $installments      = 1,

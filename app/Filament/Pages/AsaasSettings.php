@@ -31,10 +31,13 @@ class AsaasSettings extends Page implements HasForms
 
     public function mount(): void
     {
+        $methods = Setting::get('payment_asaas_methods', 'pix,credit_card');
+
         $this->form->fill([
             'payment_asaas_sandbox'       => (bool) Setting::get('payment_asaas_sandbox', true),
             'payment_asaas_token'         => Setting::get('payment_asaas_token', ''),
             'payment_asaas_webhook_token' => Setting::get('payment_asaas_webhook_token', ''),
+            'payment_asaas_methods'       => array_filter(explode(',', $methods)),
         ]);
     }
 
@@ -64,6 +67,20 @@ class AsaasSettings extends Page implements HasForms
                             ->helperText('Gere um token no Asaas (Configurações → Webhooks) e cole aqui. URL do webhook: ' . url('/webhook/asaas'))
                             ->columnSpanFull(),
                     ]),
+
+                Forms\Components\Section::make('Métodos de pagamento')
+                    ->description('Selecione quais métodos de pagamento ficarão disponíveis no checkout quando o Asaas estiver ativo.')
+                    ->schema([
+                        Forms\Components\CheckboxList::make('payment_asaas_methods')
+                            ->label('')
+                            ->options([
+                                'pix'         => 'PIX',
+                                'credit_card' => 'Cartão de crédito',
+                                'boleto'      => 'Boleto bancário',
+                            ])
+                            ->columns(3)
+                            ->columnSpanFull(),
+                    ]),
             ])
             ->statePath('data');
     }
@@ -76,6 +93,7 @@ class AsaasSettings extends Page implements HasForms
             'payment_asaas_sandbox'       => $state['payment_asaas_sandbox'] ? '1' : '0',
             'payment_asaas_token'         => trim($state['payment_asaas_token'] ?? ''),
             'payment_asaas_webhook_token' => trim($state['payment_asaas_webhook_token'] ?? ''),
+            'payment_asaas_methods'       => implode(',', $state['payment_asaas_methods'] ?? ['pix', 'credit_card']),
         ]);
 
         Notification::make()

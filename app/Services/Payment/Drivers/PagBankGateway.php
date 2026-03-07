@@ -37,6 +37,7 @@ class PagBankGateway implements PaymentGatewayInterface
         return match ($payload->method) {
             'pix'         => $this->doPixCharge($payload),
             'credit_card' => $this->doCardCharge($payload),
+            'boleto'      => $this->doBoletoCharge($payload),
             default       => throw new \InvalidArgumentException("Método de pagamento [{$payload->method}] não suportado pelo PagBank."),
         };
     }
@@ -212,11 +213,134 @@ class PagBankGateway implements PaymentGatewayInterface
         );
     }
 
+    // ── Boleto ──────────────────────────────────────────────────────────
+
+    private function doBoletoCharge(PaymentPayload $payload): PaymentResult
+    {
+        $cpfCnpj = preg_replace('/\D/', '', $payload->customerCpfCnpj ?? '');
+        $phone   = preg_replace('/\D/', '', $payload->customerPhone ?? '');
+        $zip     = preg_replace('/\D/', '', $payload->billingPostalCode ?? '');
+
+        $dueDays = max(1, (int) Setting::get('payment_boleto_due_days', 3));
+        $dueDate = now()->addDays($dueDays)->format('Y-m-d');
+
+        $body = [
+            'reference_id'      => $payload->reference,
+            'customer'          => [
+                'name'   => $payload->customerName,
+                'email'  => $payload->customerEmail,
+                'tax_id' => $cpfCnpj,
+                'phones' => $phone ? [[
+                    'country' => '55',
+                    'area'    => substr($phone, 0, 2),
+                    'number'  => substr($phone, 2),
+                    'type'    => 'MOBILE',
+                ]] : [],
+            ],
+            'items' => [[
+                'name'        => $payload->description,
+                'quantity'    => 1,
+                'unit_amount' => $this->toCents($payload->amount),
+            ]],
+            'charges' => [[
+                'reference_id' => $payload->reference,
+                'description'  => $payload->description,
+                'amount'       => [
+                    'value'    => $this->toCents($payload->amount),
+                    'currency' => 'BRL',
+                ],
+                'payment_method' => [
+                    'type'   => 'BOLETO',
+                    'boleto' => [
+                        'due_date' => $dueDate,
+                        'holder'   => [
+                            'name'    => $payload->customerName,
+                            'tax_id'  => $cpfCnpj,
+                            'email'   => $payload->customerEmail,
+                            'address' => [
+                                'street'      => $payload->billingStreet ?? '',
+                                'number'      => $payload->billingAddressNumber ?? '',
+                                'locality'    => $payload->billingNeighborhood ?? '',
+                                'city'        => $payload->billingCity ?? '',
+                                'region'      => $this->stateFullName($payload->billingState ?? ''),
+                                'region_code' => $payload->billingState ?? '',
+                                'postal_code' => $zip,
+                                'country'     => 'BRA',
+                            ],
+                        ],
+                        'instruction_lines' => [
+                            'line_1' => 'Pagamento referente ao pedido na loja.',
+                            'line_2' => 'Após o vencimento, o pedido será cancelado.',
+                        ],
+                    ],
+                ],
+                'notification_urls' => [
+                    route('webhook.pagbank'),
+                ],
+            ]],
+            'notification_urls' => [
+                route('webhook.pagbank'),
+            ],
+        ];
+
+        $response = $this->post('/orders', $body);
+
+        if (! $response->successful()) {
+            $this->lastError = $response->json();
+            Log::error('PagBankGateway: erro ao criar boleto', [
+                'status' => $response->status(),
+                'body'   => $this->lastError,
+            ]);
+            throw new \RuntimeException('Falha ao gerar o boleto. Tente novamente.');
+        }
+
+        $data    = $response->json();
+        $orderId = $data['id'] ?? '';
+        $charge  = $data['charges'][0] ?? [];
+        $boleto  = $charge['payment_method']['boleto'] ?? [];
+
+        // Busca link do PDF do boleto
+        $pdfUrl = null;
+        foreach ($charge['links'] ?? [] as $link) {
+            if (($link['media'] ?? '') === 'application/pdf') {
+                $pdfUrl = $link['href'] ?? null;
+                break;
+            }
+        }
+
+        return new PaymentResult(
+            transactionId:       $orderId,
+            status:              'PENDING',
+            method:              'boleto',
+            amount:              $payload->amount,
+            boletoDigitableLine: $boleto['formatted_barcode'] ?? null,
+            boletoBarcode:       $boleto['barcode'] ?? null,
+            boletoDueDate:       $boleto['due_date'] ?? $dueDate,
+            invoiceUrl:          $pdfUrl,
+        );
+    }
+
     // ── Helpers ───────────────────────────────────────────────────────────
 
     private function toCents(float $value): int
     {
         return (int) round($value * 100);
+    }
+
+    private function stateFullName(string $uf): string
+    {
+        return match (strtoupper($uf)) {
+            'AC' => 'Acre',            'AL' => 'Alagoas',         'AP' => 'Amapá',
+            'AM' => 'Amazonas',        'BA' => 'Bahia',           'CE' => 'Ceará',
+            'DF' => 'Distrito Federal','ES' => 'Espírito Santo',  'GO' => 'Goiás',
+            'MA' => 'Maranhão',        'MT' => 'Mato Grosso',     'MS' => 'Mato Grosso do Sul',
+            'MG' => 'Minas Gerais',    'PA' => 'Pará',            'PB' => 'Paraíba',
+            'PR' => 'Paraná',          'PE' => 'Pernambuco',      'PI' => 'Piauí',
+            'RJ' => 'Rio de Janeiro',  'RN' => 'Rio Grande do Norte', 'RS' => 'Rio Grande do Sul',
+            'RO' => 'Rondônia',        'RR' => 'Roraima',         'SC' => 'Santa Catarina',
+            'SP' => 'São Paulo',       'SE' => 'Sergipe',         'TO' => 'Tocantins',
+            default => $uf,
+        };
     }
 
     // ── HTTP ──────────────────────────────────────────────────────────────

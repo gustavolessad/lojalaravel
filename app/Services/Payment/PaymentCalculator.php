@@ -68,6 +68,46 @@ class PaymentCalculator
         return round($total - $pixPrice, 2);
     }
 
+    // ── Cálculos Boleto ────────────────────────────────────────────────────
+
+    public function boletoDiscountPct(): float
+    {
+        return (float) Setting::get('payment_boleto_discount', 0);
+    }
+
+    public function boletoDueDays(): int
+    {
+        return max(1, (int) Setting::get('payment_boleto_due_days', 3));
+    }
+
+    /**
+     * Retorna o preço com desconto boleto, ou null se desconto = 0.
+     */
+    public function boletoPrice(float $total): ?float
+    {
+        $discount = $this->boletoDiscountPct();
+
+        if ($discount <= 0) {
+            return null;
+        }
+
+        return round($total * (1 - $discount / 100), 2);
+    }
+
+    /**
+     * Retorna o valor economizado pagando no boleto.
+     */
+    public function boletoSavings(float $total): float
+    {
+        $boletoPrice = $this->boletoPrice($total);
+
+        if ($boletoPrice === null) {
+            return 0.0;
+        }
+
+        return round($total - $boletoPrice, 2);
+    }
+
     // ── Cálculos de parcelamento ──────────────────────────────────────────
 
     /**

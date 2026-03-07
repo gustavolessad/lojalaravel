@@ -62,7 +62,7 @@
                                 <input id="pixCode" type="text" readonly value="{{ $pixData['pix_copy_paste'] }}"
                                        class="flex-1 text-xs text-gray-700 bg-transparent outline-none truncate">
                                 <button
-                                    onclick="navigator.clipboard.writeText(document.getElementById('pixCode').value).then(()=>{ this.textContent='Copiado!'; setTimeout(()=>{ this.textContent='Copiar' }, 2000) })"
+                                    onclick="copyToClipboard('pixCode', this)"
                                     class="text-xs font-semibold text-gray-900 flex-shrink-0 hover:text-gray-600 transition-colors"
                                 >Copiar</button>
                             </div>
@@ -83,6 +83,84 @@
                             </svg>
                         </div>
                         <p class="text-sm font-semibold text-gray-900">Pagamento PIX confirmado!</p>
+                        <p class="text-sm text-gray-500">Seu pedido está sendo preparado.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    {{-- Boleto bancário --}}
+    @elseif ($order->payment_method === 'boleto')
+        @php $boletoData = $order->payment_data ?? []; @endphp
+
+        <div
+            x-data="pixPolling({
+                statusUrl: '{{ route('order.payment-status', $order->order_number) }}',
+                initialStatus: '{{ $order->payment_status }}'
+            })"
+            x-init="init()"
+            class="bg-white rounded-2xl border border-gray-200 overflow-hidden mb-4"
+        >
+            <div class="px-5 py-4 border-b border-gray-100 flex items-center gap-2">
+                <div class="w-7 h-7 bg-gray-100 rounded-lg flex items-center justify-center">
+                    <svg class="w-3.5 h-3.5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
+                    </svg>
+                </div>
+                <h2 class="text-sm font-semibold text-gray-900">Pague com Boleto</h2>
+            </div>
+
+            <div class="p-5">
+                {{-- Aguardando pagamento --}}
+                <div x-show="!paid" x-transition>
+                    <div class="flex items-center justify-center gap-2 mb-5">
+                        <span class="relative flex h-2 w-2">
+                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                            <span class="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+                        </span>
+                        <p class="text-sm text-gray-500">Aguardando pagamento do boleto...</p>
+                    </div>
+
+                    @if (! empty($boletoData['boleto_digitable_line']))
+                        <div class="mt-2">
+                            <p class="text-xs text-gray-500 mb-2">Linha digitável:</p>
+                            <div class="flex gap-2 items-center bg-gray-50 border border-gray-200 rounded-xl px-4 py-3">
+                                <input id="boletoCode" type="text" readonly value="{{ $boletoData['boleto_digitable_line'] }}"
+                                       class="flex-1 text-xs text-gray-700 bg-transparent outline-none truncate">
+                                <button
+                                    onclick="copyToClipboard('boletoCode', this)"
+                                    class="text-xs font-semibold text-gray-900 flex-shrink-0 hover:text-gray-600 transition-colors"
+                                >Copiar</button>
+                            </div>
+                        </div>
+                    @endif
+
+                    @if (! empty($boletoData['invoice_url']))
+                        <div class="mt-4 text-center">
+                            <a href="{{ $boletoData['invoice_url'] }}" target="_blank" rel="noopener"
+                               class="inline-flex items-center gap-2 px-5 py-2.5 bg-gray-900 text-white text-sm font-medium rounded-xl hover:bg-gray-700 transition-colors">
+                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                                </svg>
+                                Baixar boleto em PDF
+                            </a>
+                        </div>
+                    @endif
+
+                    <p class="text-xs text-gray-400 mt-4 text-center">
+                        Vencimento: {{ isset($boletoData['boleto_due_date']) ? \Carbon\Carbon::parse($boletoData['boleto_due_date'])->format('d/m/Y') : 'em breve' }}
+                    </p>
+                </div>
+
+                {{-- Pagamento confirmado --}}
+                <div x-show="paid" x-transition.duration.500ms style="display:none">
+                    <div class="flex flex-col items-center gap-3 py-2">
+                        <div class="w-12 h-12 bg-emerald-50 border border-emerald-200 rounded-2xl flex items-center justify-center">
+                            <svg class="w-6 h-6 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+                            </svg>
+                        </div>
+                        <p class="text-sm font-semibold text-gray-900">Pagamento do boleto confirmado!</p>
                         <p class="text-sm text-gray-500">Seu pedido está sendo preparado.</p>
                     </div>
                 </div>
@@ -176,7 +254,7 @@
                 </div>
                 @if ($order->pix_discount > 0)
                     <div class="flex justify-between text-emerald-600">
-                        <span>Desconto PIX</span>
+                        <span>Desconto {{ $order->payment_method === 'boleto' ? 'Boleto' : 'PIX' }}</span>
                         <span>− R$ {{ number_format($order->pix_discount, 2, ',', '.') }}</span>
                     </div>
                 @endif
@@ -186,9 +264,9 @@
                 </div>
 
                 {{-- Informação complementar de pagamento --}}
-                @if ($order->payment_method === 'pix' && $order->pix_discount > 0)
+                @if (in_array($order->payment_method, ['pix', 'boleto']) && $order->pix_discount > 0)
                     <p class="text-xs text-emerald-600 text-center pt-1">
-                        Você economizou R$ {{ number_format($order->pix_discount, 2, ',', '.') }} pagando no PIX!
+                        Você economizou R$ {{ number_format($order->pix_discount, 2, ',', '.') }} pagando no {{ $order->payment_method === 'boleto' ? 'Boleto' : 'PIX' }}!
                     </p>
                 @elseif ($order->payment_method === 'credit_card' && ! empty($order->payment_data['installments']) && $order->payment_data['installments'] > 1)
                     @php
@@ -250,6 +328,19 @@
 
 @push('scripts')
 <script>
+function copyToClipboard(inputId, btn) {
+    const input = document.getElementById(inputId);
+    if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(input.value);
+    } else {
+        input.select();
+        document.execCommand('copy');
+        window.getSelection().removeAllRanges();
+    }
+    btn.textContent = 'Copiado!';
+    setTimeout(() => { btn.textContent = 'Copiar'; }, 2000);
+}
+
 function pixPolling({ statusUrl, initialStatus }) {
     return {
         paid: initialStatus === 'paid',

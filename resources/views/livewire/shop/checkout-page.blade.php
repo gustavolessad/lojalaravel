@@ -615,8 +615,10 @@
             </div>
 
             {{-- Seletor de método --}}
-            <div class="grid grid-cols-2 gap-3">
+            @php $methods = $this->enabledPaymentMethods; $methodCount = count($methods); @endphp
+            <div class="grid gap-3 {{ $methodCount === 1 ? 'grid-cols-1' : ($methodCount === 2 ? 'grid-cols-2' : 'grid-cols-3') }}">
                 {{-- PIX --}}
+                @if (in_array('pix', $methods))
                 <div wire:click="$set('paymentMethod','pix')"
                     class="relative p-3.5 border rounded-xl shadow-xs cursor-pointer transition-all
                                 {{ $paymentMethod === 'pix' ? 'border-green-500 bg-green-50/60' : 'border-gray-200 hover:border-gray-300' }}">
@@ -636,7 +638,9 @@
                     </p>
                     @endif
                 </div>
+                @endif
                 {{-- Cartão --}}
+                @if (in_array('credit_card', $methods))
                 <div wire:click="$set('paymentMethod','credit_card')"
                     class="relative p-3.5 border rounded-xl shadow-xs cursor-pointer transition-all
                                 {{ $paymentMethod === 'credit_card' ? 'border-green-500 bg-green-50/60' : 'border-gray-200 hover:border-gray-300' }}">
@@ -651,6 +655,29 @@
                     <p class="text-sm font-semibold text-gray-900 pr-7">Cartão de crédito</p>
                     <p class="text-xs text-gray-500 mt-0.5">Em até {{ app(\App\Services\Payment\PaymentCalculator::class)->installmentsMax() }}×</p>
                 </div>
+                @endif
+                {{-- Boleto --}}
+                @if (in_array('boleto', $methods))
+                <div wire:click="$set('paymentMethod','boleto')"
+                    class="relative p-3.5 border rounded-xl shadow-xs cursor-pointer transition-all
+                                {{ $paymentMethod === 'boleto' ? 'border-green-500 bg-green-50/60' : 'border-gray-200 hover:border-gray-300' }}">
+                    <div class="absolute top-2.5 right-2.5 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors
+                                {{ $paymentMethod === 'boleto' ? 'border-green-500 bg-green-500' : 'border-gray-300 bg-white' }}">
+                        @if ($paymentMethod === 'boleto')
+                        <svg class="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                        </svg>
+                        @endif
+                    </div>
+                    <p class="text-sm font-semibold text-gray-900 pr-7">Boleto bancário</p>
+                    <p class="text-xs text-gray-500 mt-0.5">Venc. em {{ $this->boletoDueDays }} dias</p>
+                    @if ($this->boletoSavings > 0)
+                    <p class="text-xs font-semibold text-emerald-600 mt-1">
+                        Economize R$ {{ number_format($this->boletoSavings, 2, ',', '.') }}
+                    </p>
+                    @endif
+                </div>
+                @endif
             </div>
 
             {{-- Formulário cartão --}}
@@ -695,7 +722,7 @@
                     </select>
                 </div>
             </div>
-            @else
+            @elseif ($paymentMethod === 'pix')
             {{-- Resumo PIX --}}
             <div class="p-4 bg-green-50 border border-green-200 rounded-xl space-y-2">
                 @if ($this->pixTotal)
@@ -711,6 +738,29 @@
                 @endif
                 <p class="text-xs text-green-700/70 pt-1 border-t border-green-200">
                     O QR Code PIX será gerado após a confirmação do pedido.
+                </p>
+            </div>
+            @elseif ($paymentMethod === 'boleto')
+            {{-- Resumo Boleto --}}
+            <div class="p-4 bg-amber-50 border border-amber-200 rounded-xl space-y-2">
+                @if ($this->boletoTotal)
+                <div class="flex items-baseline justify-between">
+                    <span class="text-sm text-amber-800">Total no Boleto:</span>
+                    <span class="text-xl font-bold text-amber-700">R$ {{ number_format($this->boletoTotal, 2, ',', '.') }}</span>
+                </div>
+                @if ($this->boletoSavings > 0)
+                <p class="text-sm font-semibold text-emerald-600">
+                    Economia de R$ {{ number_format($this->boletoSavings, 2, ',', '.') }}
+                </p>
+                @endif
+                @else
+                <div class="flex items-baseline justify-between">
+                    <span class="text-sm text-amber-800">Total:</span>
+                    <span class="text-xl font-bold text-amber-700">R$ {{ number_format($this->total, 2, ',', '.') }}</span>
+                </div>
+                @endif
+                <p class="text-xs text-amber-700/70 pt-1 border-t border-amber-200">
+                    O boleto será gerado após a confirmação do pedido. Vencimento em {{ $this->boletoDueDays }} dias.
                 </p>
             </div>
             @endif
@@ -773,7 +823,7 @@
                         <button type="button" wire:click="backTo(2)" class="text-xs text-indigo-600 hover:text-indigo-800">Alterar</button>
                     </div>
                     <p class="text-sm text-gray-700">
-                        {{ $paymentMethod === 'pix' ? 'PIX' : 'Cartão de crédito' }}
+                        {{ match($paymentMethod) { 'pix' => 'PIX', 'credit_card' => 'Cartão de crédito', 'boleto' => 'Boleto bancário', default => $paymentMethod } }}
                     </p>
                     @if ($paymentMethod === 'credit_card' && $cardNumber)
                     @php
@@ -788,6 +838,8 @@
                     </p>
                     @elseif ($paymentMethod === 'pix')
                     <p class="text-xs text-gray-400 mt-0.5">Aprovação imediata</p>
+                    @elseif ($paymentMethod === 'boleto')
+                    <p class="text-xs text-gray-400 mt-0.5">Vencimento em {{ $this->boletoDueDays }} dias</p>
                     @endif
                 </div>
 
@@ -876,7 +928,7 @@
                     wire:target="placeOrder"
                     class="w-full py-4 px-6 bg-green-700 text-white text-base font-bold rounded-2xl hover:bg-green-800 transition-colors disabled:opacity-60 disabled:cursor-not-allowed">
                     <span wire:loading.remove wire:target="placeOrder" x-show="!encrypting">
-                        Confirmar Pedido — R$ {{ number_format($this->finalTotal, 2, ',', '.') }} no {{ $paymentMethod === 'pix' ? 'PIX' : 'Cartão de crédito' }}
+                        Confirmar Pedido — R$ {{ number_format($this->finalTotal, 2, ',', '.') }} no {{ match($paymentMethod) { 'pix' => 'PIX', 'credit_card' => 'Cartão', 'boleto' => 'Boleto', default => $paymentMethod } }}
                     </span>
                     <span x-show="encrypting" x-cloak class="flex items-center justify-center gap-2">
                         <svg class="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">

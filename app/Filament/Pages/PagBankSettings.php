@@ -32,10 +32,13 @@ class PagBankSettings extends Page implements HasForms
 
     public function mount(): void
     {
+        $methods = Setting::get('payment_pagbank_methods', 'pix,credit_card');
+
         $this->form->fill([
             'payment_pagbank_sandbox'    => (bool) Setting::get('payment_pagbank_sandbox', true),
             'payment_pagbank_token'      => Setting::get('payment_pagbank_token', ''),
             'payment_pagbank_public_key' => Setting::get('payment_pagbank_public_key', ''),
+            'payment_pagbank_methods'    => array_filter(explode(',', $methods)),
         ]);
     }
 
@@ -67,6 +70,20 @@ class PagBankSettings extends Page implements HasForms
                             ->columnSpanFull(),
                     ]),
 
+                Forms\Components\Section::make('Métodos de pagamento')
+                    ->description('Selecione quais métodos de pagamento ficarão disponíveis no checkout quando o PagBank estiver ativo.')
+                    ->schema([
+                        Forms\Components\CheckboxList::make('payment_pagbank_methods')
+                            ->label('')
+                            ->options([
+                                'pix'         => 'PIX',
+                                'credit_card' => 'Cartão de crédito',
+                                'boleto'      => 'Boleto bancário',
+                            ])
+                            ->columns(3)
+                            ->columnSpanFull(),
+                    ]),
+
                 Forms\Components\Section::make('Informações')
                     ->schema([
                         Forms\Components\Placeholder::make('webhook_url')
@@ -86,6 +103,7 @@ class PagBankSettings extends Page implements HasForms
             'payment_pagbank_sandbox'    => $state['payment_pagbank_sandbox'] ? '1' : '0',
             'payment_pagbank_token'      => trim($state['payment_pagbank_token'] ?? ''),
             'payment_pagbank_public_key' => trim($state['payment_pagbank_public_key'] ?? ''),
+            'payment_pagbank_methods'    => implode(',', $state['payment_pagbank_methods'] ?? ['pix', 'credit_card']),
         ]);
 
         Notification::make()

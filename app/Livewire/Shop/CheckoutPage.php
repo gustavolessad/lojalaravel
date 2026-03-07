@@ -84,7 +84,9 @@ class CheckoutPage extends Component
     public string $cardExpiry     = '';   // MM/YY
     public string $cardCvv        = '';
     public int    $installments   = 1;
-    public string $encryptedCard  = '';   // PagBank: cartão criptografado via JS SDK
+    public string $encryptedCard        = '';   // PagBank/MercadoPago: cartão tokenizado via JS SDK
+    public string $cardPaymentMethodId = '';   // MercadoPago: 'visa', 'master', etc.
+    public int    $cardIssuerId        = 0;    // MercadoPago: issuer ID
 
     // ── Etapa 3: Notas ────────────────────────────────────────────────────
     public string $notes = '';
@@ -262,6 +264,15 @@ class CheckoutPage extends Component
     public function pagbankPublicKey(): string
     {
         return (string) \App\Models\Setting::get('payment_pagbank_public_key', '');
+    }
+
+    /**
+     * Chave pública do MercadoPago para tokenização do cartão via MercadoPago.js.
+     */
+    #[Computed]
+    public function mercadopagoPublicKey(): string
+    {
+        return (string) \App\Models\Setting::get('payment_mercadopago_public_key', '');
     }
 
     // ── Etapa 0: Autenticação ─────────────────────────────────────────────
@@ -847,6 +858,8 @@ class CheckoutPage extends Component
                     installmentValue:     $installmentValue,
                     interestFree:         $interestFree,
                     encryptedCard:        $this->encryptedCard ?: null,
+                    cardPaymentMethodId:  $this->cardPaymentMethodId ?: null,
+                    cardIssuerId:         $this->cardIssuerId ?: null,
                 );
 
                 $result = $paymentManager->createCharge($payload);

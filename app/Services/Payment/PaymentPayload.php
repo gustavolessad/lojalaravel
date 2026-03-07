@@ -43,7 +43,9 @@ readonly class PaymentPayload
         public float   $installmentValue  = 0.0,   // valor de cada parcela já com juros
         public bool    $interestFree      = true,
 
-        // Cartão criptografado (PagBank SDK — substitui dados crus do cartão)
-        public ?string $encryptedCard     = null,
+        // Cartão criptografado/tokenizado (PagBank SDK / MercadoPago.js)
+        public ?string $encryptedCard        = null,
+        public ?string $cardPaymentMethodId  = null,  // MercadoPago: 'visa', 'master', etc.
+        public ?int    $cardIssuerId         = null,   // MercadoPago: issuer ID
     ) {}
 }

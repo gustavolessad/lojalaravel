@@ -54,8 +54,9 @@ class PaymentSettings extends Page implements HasForms
                         Forms\Components\Select::make('payment_gateway')
                             ->label('Gateway de pagamento')
                             ->options([
-                                'asaas'   => 'Asaas',
-                                'pagbank' => 'PagBank',
+                                'asaas'       => 'Asaas',
+                                'pagbank'     => 'PagBank',
+                                'mercadopago' => 'Mercado Pago',
                             ])
                             ->default('asaas')
                             ->selectablePlaceholder(false)

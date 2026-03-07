@@ -32,7 +32,7 @@ readonly class PaymentResult
      */
     public function isApproved(): bool
     {
-        return in_array($this->status, ['CONFIRMED', 'RECEIVED', 'paid', 'PAID', 'AUTHORIZED'], true);
+        return in_array($this->status, ['CONFIRMED', 'RECEIVED', 'paid', 'PAID', 'AUTHORIZED', 'approved'], true);
     }
 
     /**

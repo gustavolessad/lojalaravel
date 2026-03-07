@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Services\Payment\Drivers\AsaasGateway;
+use App\Services\Payment\Drivers\MercadoPagoGateway;
 use App\Services\Payment\Drivers\PagBankGateway;
 use App\Services\Payment\PaymentManager;
 use Illuminate\Support\ServiceProvider;
@@ -15,6 +16,7 @@ class PaymentServiceProvider extends ServiceProvider
             $manager = new PaymentManager();
             $manager->registerGateway('asaas', $app->make(AsaasGateway::class));
             $manager->registerGateway('pagbank', $app->make(PagBankGateway::class));
+            $manager->registerGateway('mercadopago', $app->make(MercadoPagoGateway::class));
             return $manager;
         });
     }

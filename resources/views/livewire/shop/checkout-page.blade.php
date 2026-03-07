@@ -918,6 +918,51 @@
                         this.encrypting = false;
                     }
 
+                    // MercadoPago + cartão: tokenizar antes de enviar
+                    if (gateway === 'mercadopago' && method === 'credit_card') {
+                        if (typeof MercadoPago === 'undefined') {
+                            alert('Erro ao carregar o SDK de pagamento. Recarregue a página.');
+                            return;
+                        }
+
+                        this.encrypting = true;
+
+                        try {
+                            const mp = new MercadoPago('{{ $this->mercadopagoPublicKey }}');
+                            const cardNumber = $wire.cardNumber.replace(/\D/g, '');
+                            const expMonth   = $wire.cardExpiry.substring(0, 2);
+                            const expYear    = '20' + $wire.cardExpiry.substring(3, 5);
+
+                            const token = await mp.createCardToken({
+                                cardNumber:      cardNumber,
+                                cardholderName:  $wire.cardHolder,
+                                cardExpirationMonth: expMonth,
+                                cardExpirationYear:  expYear,
+                                securityCode:    $wire.cardCvv,
+                                identificationType:  'CPF',
+                                identificationNumber: ($wire.registerCpf || '').replace(/\D/g, ''),
+                            });
+
+                            $wire.encryptedCard = token.id;
+
+                            // Detecta bandeira pelo BIN
+                            const bin = cardNumber.substring(0, 6);
+                            const binInfo = await fetch(`https://api.mercadopago.com/v1/payment_methods/search?public_key={{ $this->mercadopagoPublicKey }}&bins=${bin}`);
+                            const binData = await binInfo.json();
+
+                            if (binData.results && binData.results.length > 0) {
+                                $wire.cardPaymentMethodId = binData.results[0].id || '';
+                                $wire.cardIssuerId = binData.results[0].issuer?.id || 0;
+                            }
+                        } catch (err) {
+                            alert('Falha ao processar o cartão: ' + (err.message || 'Verifique os dados e tente novamente.'));
+                            this.encrypting = false;
+                            return;
+                        }
+
+                        this.encrypting = false;
+                    }
+
                     $wire.placeOrder();
                 }
             }">
@@ -1056,6 +1101,11 @@
 {{-- PagBank JS SDK (carregado apenas quando PagBank é o gateway ativo) --}}
 @if ($this->activeGateway === 'pagbank')
 <script src="https://assets.pagseguro.com.br/checkout-sdk-js/rc/dist/browser/pagseguro.min.js"></script>
+@endif
+
+{{-- MercadoPago JS SDK (carregado apenas quando MercadoPago é o gateway ativo) --}}
+@if ($this->activeGateway === 'mercadopago')
+<script src="https://sdk.mercadopago.com/js/v2"></script>
 @endif
 
 </div>

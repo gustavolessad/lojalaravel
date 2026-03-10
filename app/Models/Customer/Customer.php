@@ -2,6 +2,7 @@
 
 namespace App\Models\Customer;
 
+use App\Models\Catalog\ProductReview;
 use App\Models\Sales\Order;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -77,6 +78,11 @@ class Customer extends Authenticatable implements HasMedia
     public function orders(): HasMany
     {
         return $this->hasMany(Order::class);
+    }
+
+    public function reviews(): HasMany
+    {
+        return $this->hasMany(ProductReview::class);
     }
 
     public function registerMediaCollections(): void

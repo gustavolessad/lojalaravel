@@ -127,6 +127,15 @@
         "name": "{{ addslashes($product->brand->name) }}"
     },
     @endif
+    @if ($product->rating_count > 0)
+    "aggregateRating": {
+        "@type": "AggregateRating",
+        "ratingValue": "{{ number_format($product->rating_avg, 1, '.', '') }}",
+        "reviewCount": "{{ $product->rating_count }}",
+        "bestRating": "5",
+        "worstRating": "1"
+    },
+    @endif
     "offers": {
         "@type": "Offer",
         "url": "{{ $canonicalUrl }}",

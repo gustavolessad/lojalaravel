@@ -39,6 +39,8 @@ class Product extends Model implements HasMedia
         'featured',
         'is_new',
         'active',
+        'rating_avg',
+        'rating_count',
     ];
 
     protected function casts(): array
@@ -52,9 +54,11 @@ class Product extends Model implements HasMedia
             'length'     => 'decimal:2',
             'width'      => 'decimal:2',
             'height'     => 'decimal:2',
-            'featured'   => 'boolean',
-            'is_new'     => 'boolean',
-            'active'     => 'boolean',
+            'featured'      => 'boolean',
+            'is_new'        => 'boolean',
+            'active'        => 'boolean',
+            'rating_avg'    => 'decimal:2',
+            'rating_count'  => 'integer',
         ];
     }
 
@@ -152,6 +156,23 @@ class Product extends Model implements HasMedia
     public function recommended(): BelongsToMany
     {
         return $this->belongsToMany(Product::class, 'product_recommended', 'product_id', 'recommended_id');
+    }
+
+    public function reviews(): HasMany
+    {
+        return $this->hasMany(ProductReview::class);
+    }
+
+    public function recalculateRating(): void
+    {
+        $stats = $this->reviews()->approved()
+            ->selectRaw('AVG(rating) as avg, COUNT(*) as count')
+            ->first();
+
+        $this->update([
+            'rating_avg'   => round($stats->avg ?? 0, 2),
+            'rating_count' => $stats->count ?? 0,
+        ]);
     }
 
     public function registerMediaCollections(): void

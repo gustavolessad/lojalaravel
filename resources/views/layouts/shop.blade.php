@@ -793,6 +793,8 @@ $principalMenu = Menu::location('principal');
 
     </footer>
 
+    <x-shop.lightbox />
+
     @stack('scripts')
     <script>
         document.addEventListener('livewire:init', () => {

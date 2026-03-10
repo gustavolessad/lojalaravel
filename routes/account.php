@@ -43,6 +43,9 @@ Route::prefix('minha-conta')->name('account.')->middleware(AuthenticateCustomer:
     // Trocas e Devoluções
     Route::get('/trocas-devolucoes', fn () => view('account.returns.index'))->name('returns.index');
 
+    // Avaliações
+    Route::get('/avaliacoes', fn () => view('account.reviews.index'))->name('reviews.index');
+
     // Endereços
     Route::prefix('enderecos')->name('addresses.')->group(function () {
         Route::get('/', [AddressController::class, 'index'])->name('index');

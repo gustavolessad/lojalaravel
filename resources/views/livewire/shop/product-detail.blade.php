@@ -13,18 +13,11 @@
             x-data='{
                 images: @json($this->currentImages->toArray()),
                 activeIdx: 0,
-                lightboxOpen: false,
                 prev() { this.activeIdx = (this.activeIdx - 1 + this.images.length) % this.images.length },
                 next() { this.activeIdx = (this.activeIdx + 1) % this.images.length },
-                openAt(idx) { this.activeIdx = idx; this.lightboxOpen = true },
-                close() { this.lightboxOpen = false }
+                openAt(idx) { this.activeIdx = idx; $dispatch("open-lightbox", { images: this.images, index: idx }) }
             }'
-            wire:key="gallery-{{ $this->currentVariant?->id ?? 'base' }}"
-            @keydown.window="if (lightboxOpen) {
-                if ($event.key === 'ArrowLeft')  { $event.preventDefault(); prev() }
-                if ($event.key === 'ArrowRight') { $event.preventDefault(); next() }
-                if ($event.key === 'Escape')     { close() }
-            }">
+            wire:key="gallery-{{ $this->currentVariant?->id ?? 'base' }}">
             {{-- ── Galeria: mobile = imagem + thumbs baixo | desktop = thumbs esquerda + imagem ── --}}
 
             {{-- Imagem principal --}}
@@ -110,75 +103,6 @@
                 </div>
             </div>
 
-            {{-- ── Lightbox ──────────────────────────────────────────────── --}}
-            <div
-                x-show="lightboxOpen"
-                x-transition:enter="transition ease-out duration-200"
-                x-transition:enter-start="opacity-0"
-                x-transition:enter-end="opacity-100"
-                x-transition:leave="transition ease-in duration-150"
-                x-transition:leave-start="opacity-100"
-                x-transition:leave-end="opacity-0"
-                @click.self="close()"
-                class="fixed inset-0 z-50 bg-black/90 flex flex-col items-center justify-center p-4 sm:p-8"
-                style="display: none;">
-                {{-- Botão fechar --}}
-                <button
-                    @click="close()"
-                    class="absolute top-4 right-4 bg-white/10 hover:bg-white/25 text-white/80 hover:text-white rounded-full p-2 transition-colors">
-                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                </button>
-
-                {{-- Contador (ex.: 2 / 5) --}}
-                <div x-show="images.length > 1"
-                    class="absolute top-4 left-4 text-white/50 text-sm tabular-nums select-none">
-                    <span x-text="activeIdx + 1"></span> / <span x-text="images.length"></span>
-                </div>
-
-                {{-- Imagem + botões prev / next --}}
-                <div class="relative flex items-center justify-center w-full max-w-5xl">
-
-                    <button
-                        @click.stop="prev()"
-                        x-show="images.length > 1"
-                        class="absolute left-0 sm:-left-14 z-10 bg-white/10 hover:bg-white/25 text-white rounded-full p-2 sm:p-3 transition-colors">
-                        <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
-                        </svg>
-                    </button>
-
-                    <img
-                        :src="images[activeIdx]"
-                        alt="{{ $this->product->name }}"
-                        class="max-h-[75vh] max-w-full object-contain rounded-xl select-none"
-                        @click.stop>
-
-                    <button
-                        @click.stop="next()"
-                        x-show="images.length > 1"
-                        class="absolute right-0 sm:-right-14 z-10 bg-white/10 hover:bg-white/25 text-white rounded-full p-2 sm:p-3 transition-colors">
-                        <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
-                        </svg>
-                    </button>
-                </div>
-
-                {{-- Strip de miniaturas na parte inferior --}}
-                <div x-show="images.length > 1"
-                    class="flex gap-2 mt-5 overflow-x-auto max-w-full pb-1">
-                    <template x-for="(img, idx) in images" :key="idx">
-                        <button
-                            @click.stop="activeIdx = idx"
-                            :class="activeIdx === idx ? 'opacity-100' : 'opacity-40 hover:opacity-75'"
-                            class="w-14 h-14 rounded-xl overflow-hidden shrink-0 transition-opacity duration-150">
-                            <img :src="img" class="w-full h-full object-cover">
-                        </button>
-                    </template>
-                </div>
-            </div>
-
         </div>{{-- /gallery --}}
 
         {{-- ═══════════════════════════════════════════════════════════════
@@ -208,6 +132,23 @@
                     </a></p>
                 @endif
             </div>
+            @endif
+
+            {{-- Estrelas de avaliação --}}
+            @if ($this->product->rating_count > 0)
+            <a href="#avaliacoes" class="flex items-center gap-1.5 mb-4 group">
+                <div class="flex items-center gap-0.5">
+                    @for ($i = 1; $i <= 5; $i++)
+                        <svg class="w-4 h-4 {{ $i <= round($this->product->rating_avg) ? 'text-amber-400' : 'text-gray-300' }}" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                        </svg>
+                    @endfor
+                </div>
+                <span class="text-xs text-gray-500 group-hover:text-gray-700 transition-colors">
+                    {{ number_format($this->product->rating_avg, 1, ',', '') }}
+                    ({{ $this->product->rating_count }})
+                </span>
+            </a>
             @endif
 
             {{-- Preço + hints PIX/Parcelamento --}}
@@ -599,5 +540,12 @@
         </div>
     </div>
     @endif
+
+    {{-- ═══════════════════════════════════════════════════════════════
+         AVALIAÇÕES DO PRODUTO
+    ═══════════════════════════════════════════════════════════════ --}}
+    <div class="mt-18">
+        @livewire('shop.product-reviews', ['productId' => $this->productId], key('reviews-' . $this->productId))
+    </div>
 
 </div>

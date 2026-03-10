@@ -5,11 +5,13 @@ namespace App\Providers;
 use App\Events\CustomerRegistered;
 use App\Events\OrderCreated;
 use App\Events\OrderPaid;
+use App\Events\ReviewApproved;
 use App\Listeners\NotifyAdminNewOrder;
 use App\Listeners\OptimizeOriginalImage;
 use App\Listeners\SendCustomerWelcomeEmail;
 use App\Listeners\SendOrderPlacedEmail;
 use App\Listeners\SendPaymentConfirmedEmail;
+use App\Listeners\UpdateProductRating;
 use Illuminate\Mail\Events\MessageSending;
 use Illuminate\Mail\Events\MessageSent;
 use Illuminate\Queue\Events\JobFailed;
@@ -30,6 +32,7 @@ class EventServiceProvider extends ServiceProvider
         Event::listen(OrderCreated::class, NotifyAdminNewOrder::class);
         Event::listen(OrderPaid::class, SendPaymentConfirmedEmail::class);
         Event::listen(CustomerRegistered::class, SendCustomerWelcomeEmail::class);
+        Event::listen(ReviewApproved::class, UpdateProductRating::class);
 
         // ── Email Logging ──────────────────────────────────────────────
         $addresses = fn (array $list) => array_map(fn ($a) => $a->getAddress(), $list);

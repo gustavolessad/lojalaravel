@@ -375,6 +375,7 @@
                     <option value="newest">Mais recentes</option>
                     <option value="price_asc">Menor preço</option>
                     <option value="price_desc">Maior preço</option>
+                    <option value="best_rated">Melhor avaliados</option>
                     <option value="name_asc">A–Z</option>
                 </select>
             </div>

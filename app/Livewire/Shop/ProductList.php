@@ -283,10 +283,9 @@ class ProductList extends Component
             }
         }
 
-        // Ordenação
+        // Ordenação SQL apenas para newest e name (campos do produto, sem expansão)
+        // price_asc/price_desc são aplicados após expandIntoEntries() no preço efetivo
         match ($this->sort) {
-            'price_asc'  => $query->orderBy('price', 'asc'),
-            'price_desc' => $query->orderBy('price', 'desc'),
             'name_asc'   => $query->orderBy('name', 'asc'),
             default      => $query->latest(),
         };
@@ -440,8 +439,16 @@ class ProductList extends Component
             }
         }
 
+        // Ordenação final sobre o preço efetivo dos CatalogEntry (inclui promoção + variantes)
+        $sorted = match ($this->sort) {
+            'price_asc'  => $entries->sortBy('price'),
+            'price_desc' => $entries->sortByDesc('price'),
+            'best_rated' => $entries->sortByDesc(fn ($e) => $e->product->rating_avg),
+            default      => $entries, // newest e name_asc já ordenados via SQL
+        };
+
         // Produtos sem estoque sempre ao final, preservando a ordem relativa dentro de cada grupo
-        return $entries->sortBy(fn ($e) => $e->inStock ? 0 : 1)->values();
+        return $sorted->sortBy(fn ($e) => $e->inStock ? 0 : 1)->values();
     }
 
     #[Computed]
